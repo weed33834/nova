@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate outlines for interactive scenes that support branching and user-driven navigation.",
+  "tags": ["generation", "outline"],
+  "deprecated": false
+}

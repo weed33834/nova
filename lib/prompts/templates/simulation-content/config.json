@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate content elements for simulation scenes.",
+  "tags": ["generation", "content"],
+  "deprecated": false
+}

@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Rewrite and refine user queries into optimized web-search queries.",
+  "tags": ["utility"],
+  "deprecated": false
+}

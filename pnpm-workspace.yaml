@@ -1,0 +1,4 @@
+packages:
+  - "packages/*"
+  - "packages/@nova/*"
+  - "!packages/docs" # standalone docs sub-app: own lockfile, build, deploy

@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "System prompt defining the core agent's role, capabilities, and behavioral bounds.",
+  "tags": ["orchestration", "agent"],
+  "deprecated": false
+}

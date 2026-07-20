@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate interaction actions for slide scenes.",
+  "tags": ["generation", "actions"],
+  "deprecated": false
+}

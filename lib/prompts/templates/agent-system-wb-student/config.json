@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "System prompt for the whiteboard student agent role.",
+  "tags": ["orchestration", "agent"],
+  "deprecated": false
+}

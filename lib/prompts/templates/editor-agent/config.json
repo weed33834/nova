@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "System prompt for the slide-editor sidebar agent. Bounds its capabilities to read/regenerate scenes and edit elements; migrated from a hardcoded TS string in build-agent.ts.",
+  "tags": ["orchestration", "agent", "editor"],
+  "deprecated": false
+}

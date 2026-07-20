@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate interaction actions for PBL (project-based learning) scenes.",
+  "tags": ["generation", "actions", "pbl"],
+  "deprecated": false
+}

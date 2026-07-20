@@ -1,0 +1,25 @@
+# Server-managed provider configuration for Nova.
+# Copy to server-providers.yml and replace environment-variable placeholders.
+# Do not commit server-providers.yml or real credentials.
+
+providers:
+  # Any OpenAI-compatible endpoint can use the OpenAI provider adapter.
+  openai:
+    apiKey: ${OPENAI_API_KEY}
+    baseUrl: ${OPENAI_BASE_URL}
+    models:
+      - gpt-5.6-terra
+
+  # Fully local option. Start it with docker compose -f docker-compose.ollama.yml up -d.
+  ollama:
+    baseUrl: http://ollama:11434/v1
+    models:
+      - qwen2.5:7b-instruct
+
+# Optional services use the same shape. Remove sections you do not use.
+# tts:
+#   lemonade-tts:
+#     baseUrl: http://lemonade:13305/v1
+# asr:
+#   lemonade-asr:
+#     baseUrl: http://lemonade:13305/v1

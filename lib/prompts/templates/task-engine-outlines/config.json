@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate outlines driven by the task engine for goal-oriented scene sequences.",
+  "tags": ["generation", "outline"],
+  "deprecated": false
+}

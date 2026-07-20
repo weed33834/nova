@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate structured scene outlines from high-level requirements; the entry point of the outline-generation pipeline.",
+  "tags": ["generation", "outline"],
+  "deprecated": false
+}

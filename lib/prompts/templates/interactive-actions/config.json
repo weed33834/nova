@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Generate interaction actions for interactive scenes.",
+  "tags": ["generation", "actions"],
+  "deprecated": false
+}

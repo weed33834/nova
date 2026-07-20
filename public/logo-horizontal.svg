@@ -1,0 +1,19 @@
+<svg width="280" height="64" viewBox="0 0 280 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Nova horizontal logo: sparkle + wordmark -->
+  <defs>
+    <linearGradient id="markGrad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F472B6"/>
+      <stop offset="1" stop-color="#DB2777"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="78" y1="20" x2="270" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4C1D95"/>
+      <stop offset="1" stop-color="#DB2777"/>
+    </linearGradient>
+  </defs>
+  <!-- Mark: sparkle (32x32 within 64 viewBox, centered vertically) -->
+  <path d="M32 6 C 35 24, 40 29, 58 32 C 40 35, 35 40, 32 58 C 29 40, 24 35, 6 32 C 24 29, 29 24, 32 6 Z" fill="url(#markGrad)"/>
+  <!-- Trajectory trail -->
+  <path d="M58 14 Q 70 32, 46 54" stroke="#DB2777" stroke-width="2.5" stroke-linecap="round" opacity="0.3" fill="none"/>
+  <!-- Wordmark: Nova -->
+  <text x="78" y="44" font-family="Inter, -apple-system, 'Segoe UI', sans-serif" font-size="38" font-weight="700" letter-spacing="-1.5" fill="url(#textGrad)">Nova</text>
+</svg>

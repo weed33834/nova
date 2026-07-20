@@ -1,0 +1,27 @@
+<svg width="680" height="200" viewBox="0 0 680 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Nova banner: gradient backdrop + sparkle + wordmark + tagline -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="680" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4C1D95"/>
+      <stop offset="0.5" stop-color="#831843"/>
+      <stop offset="1" stop-color="#DB2777"/>
+    </linearGradient>
+    <linearGradient id="starGrad" x1="120" y1="60" x2="200" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FCE7F3"/>
+      <stop offset="1" stop-color="#F472B6"/>
+    </linearGradient>
+  </defs>
+  <rect width="680" height="200" fill="url(#bgGrad)"/>
+  <!-- Decorative ambient sparkles -->
+  <path d="M560 30 C 562 38, 566 42, 574 44 C 566 46, 562 50, 560 58 C 558 50, 554 46, 546 44 C 554 42, 558 38, 560 30 Z" fill="#FFFFFF" opacity="0.25"/>
+  <path d="M600 150 C 601 155, 603 157, 608 158 C 603 159, 601 161, 600 166 C 599 161, 597 159, 592 158 C 597 157, 599 155, 600 150 Z" fill="#FFFFFF" opacity="0.35"/>
+  <path d="M120 30 C 121 35, 123 37, 128 38 C 123 39, 121 41, 120 46 C 119 41, 117 39, 112 38 C 117 37, 119 35, 120 30 Z" fill="#FFFFFF" opacity="0.3"/>
+  <!-- Main sparkle mark -->
+  <path d="M160 50 C 167 90, 180 103, 220 110 C 180 117, 167 130, 160 170 C 153 130, 140 117, 100 110 C 140 103, 153 90, 160 50 Z" fill="url(#starGrad)"/>
+  <!-- Trajectory trail -->
+  <path d="M210 60 Q 240 110, 180 160" stroke="#FCE7F3" stroke-width="4" stroke-linecap="round" opacity="0.4" fill="none"/>
+  <!-- Wordmark -->
+  <text x="260" y="118" font-family="Inter, -apple-system, 'Segoe UI', sans-serif" font-size="72" font-weight="700" letter-spacing="-2.5" fill="#FFFFFF">Nova</text>
+  <!-- Tagline -->
+  <text x="266" y="150" font-family="Inter, -apple-system, 'Segoe UI', sans-serif" font-size="18" font-weight="400" letter-spacing="0.3" fill="#FBCFE8" opacity="0.9">A new star in personalized learning.</text>
+</svg>

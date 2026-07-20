@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "description": "Prompt for the Director agent that orchestrates and routes scene generation across content and action stages.",
+  "tags": ["orchestration", "agent"],
+  "deprecated": false
+}
