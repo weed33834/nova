@@ -1,14 +1,21 @@
-# Security Policy
+# 安全策略
 
-## Reporting a Vulnerability
+## 报告漏洞
 
-If you discover a security vulnerability, please open a private issue on the repository or contact the maintainer directly.
+如果你发现安全漏洞，请不要通过公开 Issue 报告。请发送邮件至项目维护者，我们会在 48 小时内回复。
 
-We will acknowledge receipt within 48 hours and work on a fix.
+## 支持的版本
 
-## Supported Versions
+| 版本 | 支持状态 |
+|------|---------|
+| 最新 main 分支 | ✅ |
+| 旧版本 | ❌ |
 
-| Version | Supported |
-| ------- | --------- |
-| latest  | ✅ |
-| older   | ❌ |
+## 安全措施
+
+本项目已内置以下安全机制：
+
+- **SSRF 防护** — 所有出站请求经过 URL 验证，阻止内网地址访问
+- **内容安全护栏** — 生成内容经过 PII 检测、毒性过滤、幻觉识别
+- **密钥隔离** — 服务端托管配置（`server-providers.yml`）中的 API 密钥不会暴露给客户端
+- **访问码** — 可选的访问码机制，限制未经授权的用户使用

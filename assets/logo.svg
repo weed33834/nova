@@ -1,0 +1,47 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="capGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="120" cy="120" r="115" fill="#0f0f23"/>
+  <!-- Star burst rays -->
+  <g filter="url(#glow)">
+    <path d="M120 30 L132 100 L200 88 L140 120 L180 180 L120 140 L60 180 L100 120 L40 88 L108 100 Z"
+          fill="url(#starGrad)" opacity="0.9"/>
+    <!-- Small inner star -->
+    <path d="M120 70 L127 108 L165 100 L133 120 L153 155 L120 135 L87 155 L107 120 L75 100 L113 108 Z"
+          fill="url(#starGrad)" opacity="0.7"/>
+  </g>
+  <!-- Graduation cap (centered, smaller) -->
+  <g transform="translate(120, 125)">
+    <!-- Cap base (mortarboard) -->
+    <path d="M-40,-5 L0,-20 L40,-5 L0,10 Z" fill="url(#capGrad)"/>
+    <!-- Cap top -->
+    <path d="M-30,-8 L0,-20 L30,-8 L0,3 Z" fill="#c4b5fd" opacity="0.8"/>
+    <!-- Tassel -->
+    <line x1="30" y1="-8" x2="38" y2="15" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="38" cy="18" r="4" fill="#fbbf24"/>
+    <!-- Cap band -->
+    <path d="M-15,3 L-15,15 Q0,22 15,15 L15,3" fill="none" stroke="url(#capGrad)" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Sparkle dots -->
+  <circle cx="55" cy="55" r="2.5" fill="#a78bfa" opacity="0.8"/>
+  <circle cx="190" cy="60" r="2" fill="#ec4899" opacity="0.6"/>
+  <circle cx="200" cy="170" r="2.5" fill="#6366f1" opacity="0.7"/>
+  <circle cx="50" cy="175" r="2" fill="#8b5cf6" opacity="0.5"/>
+</svg>
