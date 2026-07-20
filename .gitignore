@@ -6,8 +6,8 @@ CLAUDE.local.md
 
 # dependencies
 /node_modules
-/openclaw/node_modules
-/openclaw/package-lock.json
+/nova/node_modules
+/nova/package-lock.json
 /.pnp
 .pnp.*
 .yarn/*
@@ -33,8 +33,8 @@ CLAUDE.local.md
 /build
 /dist
 
-# generated: synced from packages/@openmaic/importer/dist for runtime URL import
-/public/vendor/maic-importer
+# generated: synced from packages/@nova/importer/dist for runtime URL import
+/public/vendor/importer
 
 # misc
 .DS_Store

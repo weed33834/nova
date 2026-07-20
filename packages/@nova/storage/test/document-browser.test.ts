@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
 import { DSL_VERSION, DSL_VERSION_KEY, validateScene } from '@nova/dsl';
-import { BrowserDocumentStore, type MaicDocument } from '../src/index.js';
+import { BrowserDocumentStore, type NovaDocument } from '../src/index.js';
 import { runDocumentStoreContract, makeDocument, slideScene } from './document-contract.js';
 
 // Each store gets its own in-memory IndexedDB factory so contract cases stay
@@ -47,7 +47,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('stamps a legacy (unversioned) document forward on load', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-legacy';
+    const dbName = 'nova-documents-legacy';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
     await reStampStage(idb, dbName, 'stage-1', undefined);
@@ -58,7 +58,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('returns a future-versioned document untouched (no downgrade)', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-future';
+    const dbName = 'nova-documents-future';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
     await reStampStage(idb, dbName, 'stage-1', '99.0.0');
@@ -69,7 +69,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('getScene reads a future-versioned document without downgrade', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-future-scene';
+    const dbName = 'nova-documents-future-scene';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
     await reStampStage(idb, dbName, 'stage-1', '99.0.0');
@@ -82,7 +82,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('getScene migrates a stale (legacy) document on read', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-stale-scene';
+    const dbName = 'nova-documents-stale-scene';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
     await reStampStage(idb, dbName, 'stage-1', undefined); // legacy
@@ -94,7 +94,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('putScene rejects when the stored document is not current', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-putscene-noncurrent';
+    const dbName = 'nova-documents-putscene-noncurrent';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
 
@@ -114,7 +114,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('refuses to overwrite a stored document written by a newer client', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-overwrite-future';
+    const dbName = 'nova-documents-overwrite-future';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument()); // current
     await reStampStage(idb, dbName, 'stage-1', '99.0.0'); // stored as future
@@ -133,7 +133,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('deleteScene rejects when the stored document is not current', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-deletescene-noncurrent';
+    const dbName = 'nova-documents-deletescene-noncurrent';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
 
@@ -153,7 +153,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('fails loud on a malformed stored version stamp', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-malformed';
+    const dbName = 'nova-documents-malformed';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
     // A present-but-corrupt stamp makes a false version claim; reads must throw
@@ -168,7 +168,7 @@ describe('BrowserDocumentStore migrate-on-read', () => {
 
   test('listDocuments tolerates a malformed version stamp', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-documents-list-malformed';
+    const dbName = 'nova-documents-list-malformed';
     const store = new BrowserDocumentStore({ indexedDB: idb, dbName });
     await store.saveDocument(makeDocument());
     await reStampStage(idb, dbName, 'stage-1', 'not-a-version');
@@ -207,7 +207,7 @@ describe('BrowserDocumentStore with an app-widened scene union', () => {
     return validateScene(scene);
   };
 
-  const interactiveDoc: MaicDocument<InteractiveScene> = {
+  const interactiveDoc: NovaDocument<InteractiveScene> = {
     stage: { id: 'stage-1', name: 'Interactive Course', createdAt: 1, updatedAt: 2 },
     scenes: [
       {
@@ -237,7 +237,7 @@ describe('BrowserDocumentStore with an app-widened scene union', () => {
 
   test('the default store (DSL validator) rejects an app-only scene kind', async () => {
     const store = new BrowserDocumentStore({ indexedDB: new IDBFactory() });
-    await expect(store.saveDocument(interactiveDoc as unknown as MaicDocument)).rejects.toThrow();
+    await expect(store.saveDocument(interactiveDoc as unknown as NovaDocument)).rejects.toThrow();
   });
 
   test('supports incremental scene ops for an app scene union', async () => {
@@ -270,7 +270,7 @@ describe('BrowserDocumentStore with an app-widened scene union', () => {
       indexedDB: new IDBFactory(),
       validateScene: () => ({ valid: true }),
     });
-    const mismatched: MaicDocument<InteractiveScene> = {
+    const mismatched: NovaDocument<InteractiveScene> = {
       stage: { id: 'stage-1', name: 'C', createdAt: 1, updatedAt: 2 },
       scenes: [
         {

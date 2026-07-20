@@ -37,10 +37,10 @@ describe('model-routes', () => {
     expect(getStageModel('pbl-chat')).toBe('anthropic:claude-sonnet-4');
   });
 
-  it('routes the Nova editor agent stage (maic-agent)', async () => {
-    process.env.MODEL_ROUTES = JSON.stringify({ 'maic-agent': 'anthropic:claude-opus-4' });
+  it('routes the Nova editor agent stage (nova-agent)', async () => {
+    process.env.MODEL_ROUTES = JSON.stringify({ 'nova-agent': 'anthropic:claude-opus-4' });
     const { getStageModel } = await import('@/lib/server/model-routes');
-    expect(getStageModel('maic-agent')).toBe('anthropic:claude-opus-4');
+    expect(getStageModel('nova-agent')).toBe('anthropic:claude-opus-4');
   });
 
   it('returns undefined for a routable stage that is not listed', async () => {

@@ -126,15 +126,15 @@ function PooledIframe({ sceneId, entry, visible }: PooledIframeProps) {
     const onMessage = (e: MessageEvent) => {
       if (e.source !== iframeRef.current?.contentWindow) return;
       const d = e.data as
-        | { __maicInteractive?: boolean; kind?: string; errorKind?: string; message?: unknown }
+        | { __novaInteractive?: boolean; kind?: string; errorKind?: string; message?: unknown }
         | undefined;
-      if (!d || d.__maicInteractive !== true || d.kind !== 'runtime-error') return;
+      if (!d || d.__novaInteractive !== true || d.kind !== 'runtime-error') return;
       const kind = typeof d.errorKind === 'string' ? d.errorKind : 'error';
       const msg = typeof d.message === 'string' ? d.message : String(d.message ?? '');
       useSceneRuntimeErrors.getState().addError(sceneId, `[${kind}] ${msg}`);
     };
     window.addEventListener('message', onMessage);
-    iframeRef.current?.contentWindow?.postMessage({ __maicErrorReplayRequest: true }, '*');
+    iframeRef.current?.contentWindow?.postMessage({ __novaErrorReplayRequest: true }, '*');
     return () => window.removeEventListener('message', onMessage);
   }, [sceneId, entry.srcDoc]);
 

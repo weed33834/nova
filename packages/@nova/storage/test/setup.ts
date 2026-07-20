@@ -27,7 +27,7 @@ const objectUrls = new Map<string, Blob>();
 let seq = 0;
 
 URL.createObjectURL = (obj: Blob | MediaSource): string => {
-  const url = `blob:maic-test/${seq++}`;
+  const url = `blob:nova-test/${seq++}`;
   objectUrls.set(url, obj as Blob);
   return url;
 };

@@ -53,7 +53,7 @@ export type SceneValidator = (
  * `dslVersion` is the migrate() envelope stamp ({@link DSL_VERSION_KEY}); absent
  * on legacy data written before the version field existed.
  */
-export interface MaicDocument<TScene extends SceneLike = Scene> {
+export interface NovaDocument<TScene extends SceneLike = Scene> {
   stage: Stage;
   scenes: TScene[];
   outline?: unknown;
@@ -86,13 +86,13 @@ export interface DocumentStore<TScene extends SceneLike = Scene> {
    * opaque scene content is not attempted; cheap per-scene writes use
    * {@link putScene}.)
    */
-  saveDocument(doc: MaicDocument<TScene>): Promise<void>;
+  saveDocument(doc: NovaDocument<TScene>): Promise<void>;
 
   /**
    * Reassemble the document for `stageId` (scenes sorted by `order`, outline
    * attached), migrated forward to the current DSL version. `null` if absent.
    */
-  loadDocument(stageId: string): Promise<MaicDocument<TScene> | null>;
+  loadDocument(stageId: string): Promise<NovaDocument<TScene> | null>;
 
   /**
    * A summary per stored document. Returns only version-independent fields

@@ -632,12 +632,12 @@ describe('drainProjectRuntime', () => {
     const kv = new BrowserKVStore({ storage });
     const project = makeProject([runtimeEvent('evt-1')]);
     const key = watermarkKey();
-    storage.setItem(`maic:device:${key}`, '{invalid json');
+    storage.setItem(`nova:device:${key}`, '{invalid json');
 
     await drain(project, store, kv);
 
     expect(store.records.map((record) => record.id)).toEqual(['evt-1']);
-    const raw = storage.getItem(`maic:device:${key}`);
+    const raw = storage.getItem(`nova:device:${key}`);
     expect(raw).not.toBeNull();
     expect(JSON.parse(raw!)).toEqual({ lastRuntimeEventId: 'evt-1' });
     expect(warn).toHaveBeenCalled();

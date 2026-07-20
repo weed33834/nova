@@ -3,7 +3,7 @@ import type { AssetMeta, AssetRef, BinaryBlob, StorageProvider } from '@nova/dsl
 export interface BrowserAssetProviderOptions {
   /** IndexedDB factory. Defaults to the ambient `indexedDB`. Injectable for tests. */
   indexedDB?: IDBFactory;
-  /** Database name. Defaults to `maic-assets`. */
+  /** Database name. Defaults to `nova-assets`. */
   dbName?: string;
 }
 
@@ -40,7 +40,7 @@ export class BrowserAssetProvider implements StorageProvider {
 
   constructor(options: BrowserAssetProviderOptions = {}) {
     this.idb = options.indexedDB ?? globalThis.indexedDB;
-    this.dbName = options.dbName ?? 'maic-assets';
+    this.dbName = options.dbName ?? 'nova-assets';
   }
 
   private openDb(): Promise<IDBDatabase> {

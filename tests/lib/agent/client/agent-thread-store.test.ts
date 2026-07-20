@@ -148,7 +148,7 @@ describe('agent edit session store', () => {
 
   it('migrateLegacyThread imports a non-empty localStorage thread once', async () => {
     localStorage.setItem(
-      'maic-agent-threads',
+      'nova-agent-threads',
       JSON.stringify({
         state: { threads: { 'stage-a': { messages: [userMsg('legacy')], updatedAt: 42 } } },
         version: 1,

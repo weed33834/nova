@@ -27,8 +27,8 @@ const log = createLogger('BuildAgent');
 // Nova's resolved model, so this is a metadata stub (high contextWindow so
 // the harness never tries to compact).
 const STUB_MODEL = {
-  id: 'maic-connector',
-  name: 'maic-connector',
+  id: 'nova-connector',
+  name: 'nova-connector',
   api: 'unknown',
   provider: 'unknown',
   baseUrl: '',

@@ -30,7 +30,7 @@ describe('getLearnerKey', () => {
     const kv = new BrowserKVStore({ storage });
     const key = await getLearnerKey(kv);
 
-    // BrowserKVStore encodes the scope in the storage key: `maic:<scope>:<key>`
+    // BrowserKVStore encodes the scope in the storage key: `nova:<scope>:<key>`
     const entries = [...Array(storage.length).keys()].map((i) => storage.key(i));
     const deviceEntry = entries.find((k) => k?.includes(':device:'));
     expect(deviceEntry).toContain(LEARNER_KEY_KV_KEY);

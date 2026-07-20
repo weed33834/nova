@@ -81,7 +81,7 @@
     "success": "課堂導入成功",
     "pptxSuccess": "PPTX 解析成功（共 {{count}} 頁，輸出已打印到控制台）",
     "error": {
-      "invalidZip": "無效文件，請選擇有效的 .maic.zip 文件。",
+      "invalidZip": "無效文件，請選擇有效的 .nova.zip 文件。",
       "invalidPptx": "PPTX 解析失敗，請檢查文件是否有效。",
       "parserUnavailable": "PPTX 導入不可用：解析器未部署。請重新執行安裝/同步步驟。",
       "invalidManifest": "無效課堂文件：manifest.json 缺失或已損壞。",

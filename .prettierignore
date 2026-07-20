@@ -6,7 +6,7 @@ node_modules/
 packages/pptxgenjs/
 packages/mathml2omml/
 
-# @openmaic workspace packages: the source is formatted to the root style, but skip
+# @nova workspace packages: the source is formatted to the root style, but skip
 # generated build output and the vendored legacy reference under the importer.
 packages/@nova/*/dist/
 packages/@nova/importer/src1/

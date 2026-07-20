@@ -7,7 +7,7 @@
  */
 import type { NextRequest } from 'next/server';
 import type { AgentEvent, AgentMessage } from '@earendil-works/pi-agent-core';
-import { isMaicEditorEnabled } from '@/lib/config/feature-flags';
+import { isNovaEditorEnabled } from '@/lib/config/feature-flags';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import type { LlmStage } from '@/lib/server/model-routes';
 import { createCallLlmStreamFn } from '@/lib/agent/runtime/stream-fn';
@@ -94,7 +94,7 @@ function toHistoryMessages(history: AgentEditBody['history']): AgentMessage[] {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isMaicEditorEnabled()) {
+  if (!isNovaEditorEnabled()) {
     return new Response('Not found', { status: 404 });
   }
 
@@ -104,21 +104,21 @@ export async function POST(req: NextRequest) {
     return new Response('message is required', { status: 400 });
   }
 
-  // Resolve via the 'maic-agent' stage so operators can route the editor agent
+  // Resolve via the 'nova-agent' stage so operators can route the editor agent
   // to a dedicated model via MODEL_ROUTES (per-stage config). When unrouted it
   // falls back to the client's active frontend model config (x-model headers +
   // thinkingConfig body), then DEFAULT_MODEL — see resolveModel.
   const { model, modelInfo, thinkingConfig, modelString } = await resolveModelFromRequest(
     req,
     body,
-    'maic-agent',
+    'nova-agent',
   );
 
   // Per-stage model resolution for the generation tools. Each tool is a
   // self-contained black box that names the generation stage it produces (e.g.
   // `scene-content:interactive`, `scene-content:slide`, `scene-actions`); we
   // resolve that stage's model via MODEL_ROUTES (cached per stage for this turn),
-  // independent of the `maic-agent` conversation model that drives streamFn below.
+  // independent of the `nova-agent` conversation model that drives streamFn below.
   // Unrouted stages fall back to the client's active frontend model, so default
   // behaviour is unchanged unless an operator routes a stage explicitly.
   const stageCache = new Map<LlmStage, Awaited<ReturnType<typeof resolveModelFromRequest>>>();
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
         // passes each tool an AbortSignal, which the tools thread through here.
         abortSignal: signal,
       },
-      'maic-agent-regen',
+      'nova-agent-regen',
       undefined,
       resolved.thinkingConfig,
     );
@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
     languageModel: model,
     maxOutputTokens: modelInfo?.outputWindow,
     thinkingConfig,
-    source: 'maic-agent',
+    source: 'nova-agent',
     abortSignal: abortController.signal,
   });
 

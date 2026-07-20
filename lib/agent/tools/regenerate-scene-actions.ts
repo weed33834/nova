@@ -69,7 +69,7 @@ export interface RegenerateActionsDeps {
    * Each tool is a self-contained generation black box: it names the stage it is
    * generating for (e.g. `scene-content:interactive`, `scene-content:slide`,
    * `scene-actions`) and the route resolves that stage's model via MODEL_ROUTES
-   * — independent of the `maic-agent` model driving the agent conversation. The
+   * — independent of the `nova-agent` model driving the agent conversation. The
    * agent only decides WHICH tool to call; the tool owns its model.
    *
    * `signal` is the tool's abort signal (from `execute`): when the user cancels

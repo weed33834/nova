@@ -49,7 +49,7 @@ const STORAGE_SHIM = `<script data-iframe-storage-shim>
  * listener (which it installs from a passive effect after inserting the iframe).
  * To avoid losing exactly the errors this feature exists to surface, every post is
  * also buffered, and the shim re-emits the whole buffer when the parent sends a
- * `{ __maicErrorReplayRequest: true }` message once its listener is ready. The
+ * `{ __novaErrorReplayRequest: true }` message once its listener is ready. The
  * parent dedups, so the live + replayed copies collapse to one.
  */
 const ERROR_CAPTURE_SHIM = `<script data-iframe-error-shim>
@@ -58,7 +58,7 @@ const ERROR_CAPTURE_SHIM = `<script data-iframe-error-shim>
   function emit(errorKind, message) {
     try {
       window.parent.postMessage(
-        { __maicInteractive: true, kind: 'runtime-error', errorKind: errorKind, message: message },
+        { __novaInteractive: true, kind: 'runtime-error', errorKind: errorKind, message: message },
         '*'
       );
     } catch (e) {}
@@ -70,7 +70,7 @@ const ERROR_CAPTURE_SHIM = `<script data-iframe-error-shim>
   }
   window.addEventListener('message', function (e) {
     var d = e && e.data;
-    if (d && d.__maicErrorReplayRequest === true) {
+    if (d && d.__novaErrorReplayRequest === true) {
       for (var i = 0; i < buffer.length; i++) emit(buffer[i][0], buffer[i][1]);
     }
   });

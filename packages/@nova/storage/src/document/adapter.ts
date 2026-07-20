@@ -1,6 +1,6 @@
 /**
  * The aggregate ↔ normalized adapter: the one translation point between the
- * portable, embedded {@link MaicDocument} and the per-entity rows a backend
+ * portable, embedded {@link NovaDocument} and the per-entity rows a backend
  * stores. Pure and dependency-free (beyond DSL constants) so every backend —
  * browser today, HTTP later — shares the same split/reassemble semantics.
  *
@@ -9,7 +9,7 @@
  */
 import { DSL_VERSION, DSL_VERSION_KEY } from '@nova/dsl';
 import type { Stage } from '@nova/dsl';
-import type { MaicDocument, SceneLike } from './types.js';
+import type { NovaDocument, SceneLike } from './types.js';
 
 /** The stage (root) row: stage metadata plus the document's version stamp. */
 export type StageRow = Stage & { [DSL_VERSION_KEY]: string };
@@ -35,7 +35,7 @@ export interface DocumentRows<TScene extends SceneLike> {
  * no outline produces no outline row (and the backend removes any stale one).
  */
 export function splitDocument<TScene extends SceneLike>(
-  doc: MaicDocument<TScene>,
+  doc: NovaDocument<TScene>,
 ): DocumentRows<TScene> {
   const stageRow: StageRow = { ...doc.stage, [DSL_VERSION_KEY]: DSL_VERSION };
   const rows: DocumentRows<TScene> = { stageRow, sceneRows: doc.scenes };
@@ -56,10 +56,10 @@ export function reassembleDocument<TScene extends SceneLike>(
   stageRow: StageRow,
   sceneRows: TScene[],
   outlineRow?: OutlineRow,
-): MaicDocument<TScene> {
+): NovaDocument<TScene> {
   const { [DSL_VERSION_KEY]: dslVersion, ...stage } = stageRow;
   const scenes = [...sceneRows].sort((a, b) => a.order - b.order);
-  const doc: MaicDocument<TScene> = { stage, scenes, dslVersion };
+  const doc: NovaDocument<TScene> = { stage, scenes, dslVersion };
   if (outlineRow) doc.outline = outlineRow.outline;
   return doc;
 }

@@ -10,7 +10,7 @@
  */
 
 /** Object-storage origin that serves the woff2 files. */
-export const FONT_CDN_BASE_URL = 'https://file.maic.chat';
+export const FONT_CDN_BASE_URL = 'https://file.nova.chat';
 
 /** Path segment under the origin where the woff2 files live. */
 export const FONT_DIR = 'fonts';

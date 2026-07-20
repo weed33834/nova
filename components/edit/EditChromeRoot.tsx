@@ -6,7 +6,7 @@ import { SlideNavRail } from '@/components/edit/SlideNavRail';
 import { ActionsBar } from '@/components/edit/ActionsBar/ActionsBar';
 import { HeaderControls } from '@/components/stage/header-controls';
 import { useAgentRuntime } from '@/lib/agent/client/use-agent-runtime';
-import { isMaicEditorEnabled } from '@/lib/config/feature-flags';
+import { isNovaEditorEnabled } from '@/lib/config/feature-flags';
 import { preloadEditor } from '@/lib/edit/preload-editor';
 import { sceneEditorRegistry } from '@/lib/edit/scene-editor-registry';
 import { supportsNarrationTimeline } from './scene-timeline';
@@ -48,9 +48,9 @@ export function EditChromeRoot({ scene, isEditable, onToggleEditMode }: EditChro
   // SlideCanvas (which was mounted only for slide scenes) so the
   // attribute now covers read-only scene types in Pro mode too.
   useEffect(() => {
-    document.body.dataset.maicEditor = 'true';
+    document.body.dataset.novaEditor = 'true';
     return () => {
-      delete document.body.dataset.maicEditor;
+      delete document.body.dataset.novaEditor;
     };
   }, []);
 
@@ -90,7 +90,7 @@ export function EditChromeRoot({ scene, isEditable, onToggleEditMode }: EditChro
     <HeaderControls
       mode="edit"
       canEdit={isEditable}
-      onToggleEditMode={isMaicEditorEnabled() ? onToggleEditMode : undefined}
+      onToggleEditMode={isNovaEditorEnabled() ? onToggleEditMode : undefined}
     />
   );
 

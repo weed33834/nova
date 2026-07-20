@@ -26,7 +26,7 @@ export {
 
 export type {
   DocumentStore,
-  MaicDocument,
+  NovaDocument,
   DocumentSummary,
   SceneLike,
   SceneValidator,

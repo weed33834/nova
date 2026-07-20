@@ -20,7 +20,7 @@ import type { Scene } from '@nova/dsl';
 import type {
   DocumentStore,
   DocumentSummary,
-  MaicDocument,
+  NovaDocument,
   SceneLike,
   SceneValidator,
 } from './types.js';
@@ -34,7 +34,7 @@ const SCENES_BY_STAGE = 'by-stage';
 export interface BrowserDocumentStoreOptions {
   /** IndexedDB factory. Defaults to the ambient `indexedDB`. Injectable for tests. */
   indexedDB?: IDBFactory;
-  /** Database name. Defaults to `maic-documents`. */
+  /** Database name. Defaults to `nova-documents`. */
   dbName?: string;
   /**
    * Scene validator run at the write boundary. Defaults to the DSL
@@ -123,10 +123,10 @@ function isFutureVersioned(versioned: unknown): boolean {
  * no contract for at all.
  */
 function migrateDocument<TScene extends SceneLike>(
-  doc: MaicDocument<TScene>,
-): MaicDocument<TScene> {
+  doc: NovaDocument<TScene>,
+): NovaDocument<TScene> {
   const { outline, ...core } = doc;
-  const migrated = migrate(core) as MaicDocument<TScene>;
+  const migrated = migrate(core) as NovaDocument<TScene>;
   return outline === undefined ? migrated : { ...migrated, outline };
 }
 
@@ -140,7 +140,7 @@ export class BrowserDocumentStore<
 
   constructor(options: BrowserDocumentStoreOptions = {}) {
     this.idb = options.indexedDB ?? globalThis.indexedDB;
-    this.dbName = options.dbName ?? 'maic-documents';
+    this.dbName = options.dbName ?? 'nova-documents';
     this.validateScene = options.validateScene ?? validateScene;
   }
 
@@ -207,7 +207,7 @@ export class BrowserDocumentStore<
     });
   }
 
-  async saveDocument(doc: MaicDocument<TScene>): Promise<void> {
+  async saveDocument(doc: NovaDocument<TScene>): Promise<void> {
     // Forward-compatibility: refuse to persist (and thereby downgrade) a document
     // written by a newer client. `loadDocument` returns such documents untouched;
     // saving one back would relabel its newer-shaped rows as this older version.
@@ -292,7 +292,7 @@ export class BrowserDocumentStore<
     });
   }
 
-  async loadDocument(stageId: string): Promise<MaicDocument<TScene> | null> {
+  async loadDocument(stageId: string): Promise<NovaDocument<TScene> | null> {
     const rows = await this.txRun([STAGES, SCENES, OUTLINES], 'readonly', async (tx) => {
       const stageRow = await reqP<StageRow | undefined>(tx.objectStore(STAGES).get(stageId));
       if (!stageRow) return null;

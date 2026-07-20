@@ -224,7 +224,7 @@ async function pump(
     content: [],
     api: 'unknown' as AssistantMessage['api'],
     provider: 'unknown' as AssistantMessage['provider'],
-    model: 'maic-connector',
+    model: 'nova-connector',
     usage: { ...EMPTY_USAGE },
     stopReason: 'stop',
     timestamp: Date.now(),
@@ -243,7 +243,7 @@ async function pump(
         maxOutputTokens: opts.maxOutputTokens,
         abortSignal: opts.abortSignal,
       },
-      opts.source ?? 'maic-agent',
+      opts.source ?? 'nova-agent',
       opts.thinkingConfig,
     );
 

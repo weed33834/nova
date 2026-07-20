@@ -123,7 +123,7 @@ describe('patchHtmlForIframe', () => {
     expect(posts).toHaveLength(2);
 
     // Parent now subscribes and requests a replay.
-    handlers.message({ data: { __maicErrorReplayRequest: true } });
+    handlers.message({ data: { __novaErrorReplayRequest: true } });
     expect(posts).toHaveLength(4);
     expect(String(posts[2][0].message)).toContain('first boom');
     expect(String(posts[3][0].message)).toContain('second boom');

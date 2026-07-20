@@ -17,7 +17,7 @@ function readBoolean(envValue: string | undefined): boolean {
  * existing code paths typecheck identically with the flag in either
  * state.
  */
-export function isMaicEditorEnabled(): boolean {
+export function isNovaEditorEnabled(): boolean {
   return readBoolean(process.env.NEXT_PUBLIC_Nova_EDITOR_ENABLED);
 }
 

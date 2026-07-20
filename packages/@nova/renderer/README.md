@@ -191,7 +191,7 @@ import '@nova/renderer/fonts.css';
 ```
 
 > **Runtime dependency — read this.** The `@font-face` `src` URLs point at an
-> external font host (`https://file.maic.chat/fonts/<name>.woff2`); the woff2
+> external font host (`https://file.nova.chat/fonts/<name>.woff2`); the woff2
 > files are **not** bundled in the package. So this is a hard runtime dependency:
 > the host must be **reachable and CORS-enabled** from the consumer's app, or the
 > browser will **silently fall back to system fonts** (no error, just different

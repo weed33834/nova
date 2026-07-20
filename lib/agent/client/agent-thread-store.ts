@@ -6,7 +6,7 @@
  * One stage owns many sessions (history). Backed by IndexedDB via Dexie
  * (`db.agentEditSessions`) so large message histories don't hit the ~5MB
  * localStorage cap, matching upstream's client-storage model. The previous
- * single-thread localStorage store ('maic-agent-threads') is migrated once via
+ * single-thread localStorage store ('nova-agent-threads') is migrated once via
  * migrateLegacyThread(), then dropped per-stage.
  */
 import { nanoid } from 'nanoid';
@@ -14,8 +14,8 @@ import { db } from '@/lib/utils/database';
 import { MAX_SESSIONS_PER_STAGE, type AgentEditSessionRecord } from './agent-edit-session-types';
 import type { SerializedMessage } from './serialize-thread';
 
-const LEGACY_KEY = 'maic-agent-threads';
-const ACTIVE_KEY = 'maic-agent-active-session';
+const LEGACY_KEY = 'nova-agent-threads';
+const ACTIVE_KEY = 'nova-agent-active-session';
 
 /**
  * Per-stage pointer to the session the user last had open, persisted so a

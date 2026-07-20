@@ -1,12 +1,12 @@
 # Nova Editor Agent — `regenerate_scene` (next-release capability widening)
 
 - Date: 2026-06-21
-- Base branch: `feat/maic-editor-agent-v0`
+- Base branch: `feat/nova-editor-agent-v0`
 - Status: design approved, pending spec review → implementation plan
 
 ## 1. Background
 
-The Nova Editor Agent v0 (`feat/maic-editor-agent-v0`) stands up a server-side
+The Nova Editor Agent v0 (`feat/nova-editor-agent-v0`) stands up a server-side
 `pi` Agent that streams `AgentEvent`s to the editor sidebar over SSE. Its
 capability surface is deliberately one tool — `regenerate_scene_actions` — gated
 by a tool allowlist (`V0_ALLOWLIST`). The design philosophy is **capability =
@@ -128,7 +128,7 @@ next release; other branches ignore it (slide-only scope).
 
 - Wire the two new tools through `buildToolset` (no new request fields needed —
   `sceneContextMap` already carries everything).
-- The existing `aiCall` (resolved `maic-agent` model) is shared by all tools.
+- The existing `aiCall` (resolved `nova-agent` model) is shared by all tools.
 
 ### 5.6 System prompt — `lib/agent/runtime/build-agent.ts`
 
@@ -176,7 +176,7 @@ user: "这页太满了，精简成3个要点"
 
 ## 7. Guardrails
 
-- Master gate unchanged: `isMaicEditorEnabled()` 404s the route when off.
+- Master gate unchanged: `isNovaEditorEnabled()` 404s the route when off.
 - `beforeToolCall` allowlist gate now admits the 3 tools; everything else denied.
 - `regenerate_scene` hard-refuses non-slide types inside `execute`.
 - Quota: unchanged v0 unlimited stub (shape aligned to the planned quota hook);

@@ -6,14 +6,14 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { createLogger } from '@/lib/logger';
 import type { Slide } from '@nova/dsl';
 // Type-only import: stripped at compile time, never reaches the bundler.
-// pdfjs-dist (transitively pulled by `maic-importer/src`) uses dynamic
+// pdfjs-dist (transitively pulled by `nova-importer/src`) uses dynamic
 // `require()` patterns Turbopack refuses to bundle, so values flow through
 // the URL-loaded dist instead. The workspace package only contributes types.
-import type * as MaicImport from '@nova/importer';
+import type * as NovaImport from '@nova/importer';
 
 const log = createLogger('ImportPptx');
 
-export type PptxUpload = NonNullable<MaicImport.ImportPptxOptions['upload']>;
+export type PptxUpload = NonNullable<NovaImport.ImportPptxOptions['upload']>;
 
 export interface UseImportPptxOptions {
   /**
@@ -32,7 +32,7 @@ export interface UseImportPptxOptions {
 
 /**
  * PPTX import flow: parse + convert + (optionally) upload media, all inside
- * the bundled `maic-importer` dist that we load by URL to bypass
+ * the bundled `nova-importer` dist that we load by URL to bypass
  * Turbopack's hard rejection of pdfjs-dist's dynamic require.
  */
 export function useImportPptx(options: UseImportPptxOptions = {}) {
@@ -57,7 +57,7 @@ export function useImportPptx(options: UseImportPptxOptions = {}) {
 
       try {
         // Static URL → bundler never sees the import target.
-        // `scripts/sync-maic-importer.mjs` copies the prebuilt dist into
+        // `scripts/sync-nova-importer.mjs` copies the prebuilt dist into
         // `public/vendor/` after every `pnpm install`.
         const url = '/vendor/importer/index.js';
 
@@ -80,7 +80,7 @@ export function useImportPptx(options: UseImportPptxOptions = {}) {
           /* turbopackIgnore: true */
           /* @vite-ignore */
           url
-        )) as typeof MaicImport;
+        )) as typeof NovaImport;
 
         const slides = (await mod.importPptx(file, { upload })) as Slide[];
 

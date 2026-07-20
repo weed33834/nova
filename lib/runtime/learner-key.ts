@@ -14,7 +14,7 @@ import { BrowserKVStore, type KVStore } from '@nova/storage';
 
 export const LEARNER_KEY_KV_KEY = 'runtime.learnerKey';
 
-const LEARNER_KEY_LOCK = 'maic:learner-key';
+const LEARNER_KEY_LOCK = 'nova:learner-key';
 
 let defaultKv: KVStore | undefined;
 let defaultInFlight: Promise<string> | undefined;

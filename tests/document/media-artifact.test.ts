@@ -10,7 +10,7 @@ describe('media extraction artifact', () => {
         fileSize: 1024,
         mimeType: 'video/mp4',
         durationMs: 90_000,
-        providerId: 'maic-media',
+        providerId: 'nova-media',
       },
       transcript: [
         {
@@ -45,7 +45,7 @@ describe('media extraction artifact', () => {
       error: {
         code: 'UNSUPPORTED_MEDIA_CODEC',
         message: 'The uploaded media codec is not supported by the configured extractor.',
-        providerId: 'maic-media',
+        providerId: 'nova-media',
         retryable: false,
       },
     };

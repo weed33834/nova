@@ -8,7 +8,7 @@ export interface BrowserKVStoreOptions {
   storage?: Storage;
   /**
    * Key namespace prefix, keeping KV entries from colliding with other
-   * `localStorage` keys the app writes. Defaults to `maic`.
+   * `localStorage` keys the app writes. Defaults to `nova`.
    */
   namespace?: string;
 }
@@ -27,7 +27,7 @@ export class BrowserKVStore implements KVStore {
 
   constructor(options: BrowserKVStoreOptions = {}) {
     this.storage = options.storage ?? globalThis.localStorage;
-    this.namespace = options.namespace ?? 'maic';
+    this.namespace = options.namespace ?? 'nova';
   }
 
   private prefix(scope: KVScope): string {
@@ -53,7 +53,8 @@ export class BrowserKVStore implements KVStore {
     if (json === undefined) {
       return this.remove(key, scope);
     }
-    this.storage.setItem(this.storageKey(key, scope), json);
+    const storageKey = this.storageKey(key, scope);
+    this.storage.setItem(storageKey, json);
   }
 
   async remove(key: string, scope: KVScope = DEFAULT_KV_SCOPE): Promise<void> {

@@ -7,7 +7,7 @@
 import { describe, expect, test } from 'vitest';
 import { DSL_VERSION } from '@nova/dsl';
 import type { Scene } from '@nova/dsl';
-import type { DocumentStore, MaicDocument } from '../src/index.js';
+import type { DocumentStore, NovaDocument } from '../src/index.js';
 
 // --- fixtures ---------------------------------------------------------------
 
@@ -43,7 +43,7 @@ export function quizScene(stageId: string, id: string, order: number, title = id
 }
 
 /** A valid document: stage metadata + two scenes + an outline snapshot. */
-export function makeDocument(stageId = 'stage-1'): MaicDocument {
+export function makeDocument(stageId = 'stage-1'): NovaDocument {
   return {
     stage: { id: stageId, name: 'Intro Course', createdAt: 1000, updatedAt: 2000 },
     scenes: [slideScene(stageId, 'scene-a', 0), quizScene(stageId, 'scene-b', 1)],

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  isMaicEditorEnabled,
+  isNovaEditorEnabled,
   isVocationalTaskEngineEnabled,
   resolveVocationalActive,
   shouldShowVocationalTestUi,
@@ -8,7 +8,7 @@ import {
 
 const FLAG = 'NEXT_PUBLIC_Nova_EDITOR_ENABLED';
 
-describe('isMaicEditorEnabled', () => {
+describe('isNovaEditorEnabled', () => {
   let original: string | undefined;
 
   beforeEach(() => {
@@ -25,27 +25,27 @@ describe('isMaicEditorEnabled', () => {
 
   it('returns false when the env var is unset', () => {
     delete process.env[FLAG];
-    expect(isMaicEditorEnabled()).toBe(false);
+    expect(isNovaEditorEnabled()).toBe(false);
   });
 
   it("returns true for 'true'", () => {
     process.env[FLAG] = 'true';
-    expect(isMaicEditorEnabled()).toBe(true);
+    expect(isNovaEditorEnabled()).toBe(true);
   });
 
   it("returns true for '1'", () => {
     process.env[FLAG] = '1';
-    expect(isMaicEditorEnabled()).toBe(true);
+    expect(isNovaEditorEnabled()).toBe(true);
   });
 
   it("returns false for 'false'", () => {
     process.env[FLAG] = 'false';
-    expect(isMaicEditorEnabled()).toBe(false);
+    expect(isNovaEditorEnabled()).toBe(false);
   });
 
   it('returns false for an unrecognized string', () => {
     process.env[FLAG] = 'yes';
-    expect(isMaicEditorEnabled()).toBe(false);
+    expect(isNovaEditorEnabled()).toBe(false);
   });
 });
 

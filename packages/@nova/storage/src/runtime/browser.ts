@@ -69,7 +69,7 @@ const DEFAULT_PAYLOAD_VALIDATORS: Record<string, RuntimePayloadValidator> = {
 export interface BrowserRuntimeStoreOptions {
   /** IndexedDB factory. Defaults to the ambient `indexedDB`. Injectable for tests. */
   indexedDB?: IDBFactory;
-  /** Database name. Defaults to `maic-runtime`. */
+  /** Database name. Defaults to `nova-runtime`. */
   dbName?: string;
   /**
    * Per-kind payload validators run at the append boundary, keyed by
@@ -142,7 +142,7 @@ export class BrowserRuntimeStore implements RuntimeStore {
 
   constructor(options: BrowserRuntimeStoreOptions = {}) {
     this.idb = options.indexedDB ?? globalThis.indexedDB;
-    this.dbName = options.dbName ?? 'maic-runtime';
+    this.dbName = options.dbName ?? 'nova-runtime';
     this.payloadValidators = options.payloadValidators ?? DEFAULT_PAYLOAD_VALIDATORS;
   }
 

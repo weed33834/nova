@@ -1,5 +1,5 @@
 /**
- * Lazy app-wide RuntimeStore singleton (#869). One `maic-runtime` IndexedDB
+ * Lazy app-wide RuntimeStore singleton (#869). One `nova-runtime` IndexedDB
  * per origin, shared by every runtime kind (pbl, chat, quizAttempt, playback)
  * as they migrate onto the runtime layer. Nothing reads or writes it yet
  * except the stage-deletion cascade; Part C2 adds the first real writer.
@@ -11,7 +11,7 @@ import { BrowserRuntimeStore, type RuntimeStore } from '@nova/storage';
 
 // BrowserRuntimeStore's default dbName; passed explicitly below so the probe
 // in deleteStageRuntimeSafely and the store itself can never drift apart.
-const RUNTIME_DB_NAME = 'maic-runtime';
+const RUNTIME_DB_NAME = 'nova-runtime';
 
 let store: RuntimeStore | undefined;
 
@@ -55,7 +55,7 @@ async function withTimeout(work: Promise<void>, ms: number): Promise<void> {
 /**
  * Cascade a stage deletion into the runtime store without ever throwing or
  * hanging. The runtime layer lives in a separate IndexedDB database
- * (`maic-runtime`), so a broken or hung runtime DB must not brick stage
+ * (`nova-runtime`), so a broken or hung runtime DB must not brick stage
  * deletion in the main app DB — the cascade is bounded by a timeout, and any
  * failure warns and moves on. A failed or timed-out cascade leaves orphaned
  * runtime rows, which are inert today (nothing reads them yet); a startup

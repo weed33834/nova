@@ -60,7 +60,7 @@ async function reStampSession(
 describe('BrowserRuntimeStore migrate-on-read', () => {
   test('a below-epoch stamp fails loud on read (no ladder path)', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-stale';
+    const dbName = 'nova-runtime-stale';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession());
     await reStampSession(idb, dbName, 'sess-1', '0.0.9');
@@ -79,7 +79,7 @@ describe('BrowserRuntimeStore migrate-on-read', () => {
 describe('BrowserRuntimeStore forward-compatibility', () => {
   test('a future-stamped session reads through unchanged but rejects writes', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-future';
+    const dbName = 'nova-runtime-future';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession());
     await reStampSession(idb, dbName, 'sess-1', '9.9.9');
@@ -139,7 +139,7 @@ describe('BrowserRuntimeStore injected payload validators', () => {
 describe('BrowserRuntimeStore corrupt rows', () => {
   test('a raw row missing its runtime stamp fails loud on read', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-unstamped';
+    const dbName = 'nova-runtime-unstamped';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession());
     await reStampSession(idb, dbName, 'sess-1', undefined); // strip the stamp
@@ -153,7 +153,7 @@ describe('BrowserRuntimeStore corrupt rows', () => {
 
   test('writes against a stamp-stripped row fail loud too', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-unstamped-writes';
+    const dbName = 'nova-runtime-unstamped-writes';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession());
     await reStampSession(idb, dbName, 'sess-1', undefined);
@@ -170,7 +170,7 @@ describe('BrowserRuntimeStore corrupt rows', () => {
 
   test('a version-valid row with a corrupt envelope fails loud on direct read', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-corrupt-envelope';
+    const dbName = 'nova-runtime-corrupt-envelope';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession());
     // The stamp stays valid; another field is corrupted — version resolution
@@ -184,7 +184,7 @@ describe('BrowserRuntimeStore corrupt rows', () => {
 
   test('envelope-corrupt rows are omitted from listings like version-corrupt ones', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-corrupt-envelope-listing';
+    const dbName = 'nova-runtime-corrupt-envelope-listing';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession({ id: 'h1' }));
     await store.createSession(makeSession({ id: 'h2' }));
@@ -206,7 +206,7 @@ describe('BrowserRuntimeStore corrupt rows', () => {
 
   test('a corrupt row is omitted from listings but stays loud on direct read', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-tolerant-listing';
+    const dbName = 'nova-runtime-tolerant-listing';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession({ id: 'h1' }));
     await store.createSession(makeSession({ id: 'h2' }));
@@ -227,7 +227,7 @@ describe('BrowserRuntimeStore corrupt rows', () => {
 describe('BrowserRuntimeStore mergeLearner guards', () => {
   test('a sibling-stamped row aborts the whole merge atomically', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-merge-poison';
+    const dbName = 'nova-runtime-merge-poison';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     // 'a-healthy' sorts before 'z-poison' in the index walk, so its re-key is
     // written first and the poison row's throw must roll it back.
@@ -252,7 +252,7 @@ describe('BrowserRuntimeStore mergeLearner guards', () => {
 
   test('a below-epoch stale row aborts the merge with nothing moved', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-merge-stale';
+    const dbName = 'nova-runtime-merge-stale';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession({ id: 'a-healthy' }));
     await store.createSession(makeSession({ id: 'z-stale' }));
@@ -274,7 +274,7 @@ describe('BrowserRuntimeStore mergeLearner guards', () => {
 
   test('a future-stamped row aborts the merge with nothing moved', async () => {
     const idb = new IDBFactory();
-    const dbName = 'maic-runtime-merge-future';
+    const dbName = 'nova-runtime-merge-future';
     const store = new BrowserRuntimeStore({ indexedDB: idb, dbName });
     await store.createSession(makeSession({ id: 'a-healthy' }));
     await store.createSession(makeSession({ id: 'z-future' }));

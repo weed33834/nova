@@ -1,5 +1,5 @@
 This file is the SIL Open Font License 1.1, which governs the following faces
-served by @openmaic/renderer (see ../FONTS.md). Each face's copyright notice is
+served by @nova/renderer (see ../FONTS.md). Each face's copyright notice is
 listed below, followed by the shared license text (OFL §2 requires the notice
 and license to accompany every redistributed copy).
 

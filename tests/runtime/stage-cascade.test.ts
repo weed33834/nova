@@ -30,7 +30,7 @@ describe('deleteStageRuntimeSafely', () => {
 
   it('cascades when the probe reports the runtime DB exists', async () => {
     vi.stubGlobal('indexedDB', {
-      databases: vi.fn().mockResolvedValue([{ name: 'maic-runtime', version: 1 }]),
+      databases: vi.fn().mockResolvedValue([{ name: 'nova-runtime', version: 1 }]),
     });
     const deleteStageRuntime = vi.fn().mockResolvedValue(undefined);
 

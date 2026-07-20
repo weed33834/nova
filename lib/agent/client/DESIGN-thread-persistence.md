@@ -35,7 +35,7 @@ persisting the in-flight (mid-stream) turn.
 
 ### 1. Thread store — `lib/agent/client/agent-thread-store.ts` (new)
 
-A zustand `persist` store (localStorage key `maic-agent-threads`):
+A zustand `persist` store (localStorage key `nova-agent-threads`):
 
 ```ts
 export interface SerializedThread {
@@ -52,7 +52,7 @@ interface AgentThreadStoreState {
 
 `SerializedMessage` mirrors the slim shape below. `save` writes
 `threads[stageId]`; `clear` deletes the key. Persisted via
-`persist(..., { name: 'maic-agent-threads', version: 1 })`.
+`persist(..., { name: 'nova-agent-threads', version: 1 })`.
 
 ### 2. Serialize / deserialize — `lib/agent/client/serialize-thread.ts` (new, pure)
 

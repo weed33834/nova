@@ -2,7 +2,7 @@
 
 `@nova/renderer` does **not** embed any font binaries. `fonts.css` only declares
 `@font-face` rules whose `src` points at self-hosted woff2 files on object
-storage (`https://file.maic.chat/fonts/<name>.woff2`). Serving those faces is a
+storage (`https://file.nova.chat/fonts/<name>.woff2`). Serving those faces is a
 form of redistribution, so each face below must be cleared for redistribution
 and attributed here. This file is the font attribution/clearance record; it is
 **separate** from the package's own `LICENSE` (MIT), which does not cover
