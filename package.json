@@ -36,7 +36,7 @@
     "eval:orchestration:answer-content": "tsx eval/orchestration/answer-content-runner.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.71",
+    "@ai-sdk/anthropic": "^4.0.16",
     "@ai-sdk/azure": "^3.0.88",
     "@ai-sdk/google": "^3.0.64",
     "@ai-sdk/openai": "^3.0.84",
