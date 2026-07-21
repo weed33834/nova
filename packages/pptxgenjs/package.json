@@ -50,7 +50,7 @@
 		"@stylistic/eslint-plugin": "^4.2.0",
 		"@typescript-eslint/eslint-plugin": "^8.31.0",
 		"@typescript-eslint/parser": "^8.31.0",
-		"eslint": "^9.25.1",
+		"eslint": "^10.7.0",
 		"express": "^5.1.0",
 		"gulp": "^5.0.0",
 		"gulp-concat": "^2.6.1",
