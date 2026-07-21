@@ -48,8 +48,8 @@
   },
   "devDependencies": {
     "ajv": "^8.17.1",
-    "ts-json-schema-generator": "~2.4.0",
-    "typescript": "^5",
+    "ts-json-schema-generator": "~2.9.0",
+    "typescript": "^7",
     "vitest": "^4.1.8"
   }
 }
