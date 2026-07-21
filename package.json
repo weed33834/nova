@@ -93,7 +93,7 @@
     "js-yaml": "^4.1.1",
     "jsonrepair": "^3.13.2",
     "jszip": "^3.10.1",
-    "katex": "^0.16.33",
+    "katex": "^0.18.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.562.0",
     "mathml2omml": "workspace:*",
