@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Report a Security Vulnerability
-    url: https://gitcode.com/badhope/nova/issues
-    about: Privately report a security vulnerability instead of opening a public issue
-  - name: Community
-    url: https://gitcode.com/badhope/nova
-    about: Ask questions and discuss
+  - name: Security Report
+    url: https://github.com/weed33834/nova/security/advisories/new
+    about: Report security vulnerabilities privately
+  - name: Discussions
+    url: https://github.com/weed33834/nova/discussions
+    about: Ask questions and share ideas in Discussions

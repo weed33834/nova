@@ -3,7 +3,11 @@
 </div>
 
 <p align="center">
-  <strong>个性化多智能体学习平台 · 将任意主题转化为互动课堂体验</strong>
+  <strong>An AI-powered multi-agent classroom that turns any topic into an interactive learning experience.</strong>
+</p>
+
+<p align="center">
+  <a href="./README.md">English</a> · <a href="./README-zh.md">中文</a> · <a href="./README-ja.md">日本語</a>
 </p>
 
 <p align="center">
@@ -18,60 +22,60 @@
 </p>
 
 <p align="center">
-  <a href="#features">功能</a> ·
-  <a href="#quick-start">快速开始</a> ·
-  <a href="#architecture">架构</a> ·
-  <a href="#testing">测试</a> ·
-  <a href="#project-structure">项目结构</a> ·
-  <a href="README-zh.md">中文文档</a>
+  <a href="#features">Features</a> ·
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#testing">Testing</a> ·
+  <a href="#project-structure">Structure</a> ·
+  <a href="#contributing">Contributing</a>
 </p>
 
 ---
 
-## 概述
+## Overview
 
-Nova 是一个基于多智能体的智能教学平台。输入任意学习主题，AI 教师会自动生成结构化课程大纲、制作幻灯片、编写讲解词，并在虚拟课堂中实时授课。多个 AI 智能体各司其职——教师主导讲解，助教补充答疑，活跃者调节气氛——构建出沉浸式的学习体验。
+Nova is a multi-agent teaching platform. Give it a topic and an AI teacher generates a structured course outline, produces slides, writes narration scripts, and delivers the lesson in a virtual classroom. Multiple AI agents collaborate — a teacher leads the lecture, an assistant answers questions, and a class clown keeps the mood light.
 
-**核心理念**：不只是一个课件生成器，而是一个有角色分工、有安全护栏、有知识追踪的完整教学系统。
+The core idea: not just a slide generator, but a complete teaching system with role separation, safety guardrails, and knowledge tracking.
 
-## 功能
+## Features
 
-### 课程生成
+### Course Generation
 
-- **AI 大纲生成** — 输入主题后自动拆解为多个递进式场景，按知识点依赖排序
-- **幻灯片制作** — 每个场景自动生成包含标题、要点、流程图的幻灯片
-- **语音讲解** — AI 教师用自然语音逐场景讲解，支持多 TTS 引擎
-- **互动测验** — 自动生成选择题、填空题，实时评估学习效果
-- **知识图谱** — 可视化概念关联图，帮助构建知识体系
-- **PBL 模式** — 项目式学习模式，生成可交互的实践项目
+- **AI Outline Generation** — Breaks a topic into progressive scenes ordered by knowledge dependencies
+- **Slide Production** — Each scene ships with titles, bullet points, and flow diagrams
+- **Voice Narration** — The AI teacher narrates each scene with natural TTS across multiple engines
+- **Interactive Quizzes** — Auto-generated multiple-choice and fill-in-the-blank questions with real-time scoring
+- **Knowledge Graph** — Visual concept maps that connect key ideas across the course
+- **PBL Mode** — Project-based learning with interactive practice tasks
 
-### 多智能体课堂
+### Multi-Agent Classroom
 
-| 智能体 | 职责 | 权限 |
-|--------|------|------|
-| AI 教师 | 主导教学进程，讲解核心知识 | 发言、幻灯片控制、聚光灯、白板绘制 |
-| AI 助教 | 辅助教学，回答问题 | 发言、白板绘制、幻灯片控制 |
-| 课堂活跃者 | 调节课堂气氛 | 发言 |
+| Agent | Role | Permissions |
+|-------|------|-------------|
+| AI Teacher | Leads the lesson, explains core concepts | Speak, slide control, spotlight, whiteboard |
+| AI Assistant | Supports the teacher, answers questions | Speak, whiteboard, slide control |
+| Class Clown | Lightens the mood | Speak |
 
-- **角色持久化** — 自定义 10 种内置角色的名称、描述、权限，修改跨会话保留
-- **运行时约束** — 每个角色的最大动作数和发言轮次在运行时强制执行
-- **讨论编排** — Director Graph 管理智能体间的讨论流程和发言顺序
+- **Role Persistence** — Customize names, descriptions, and permissions for 10 built-in roles; changes persist across sessions
+- **Runtime Constraints** — Per-role `max_actions` and `max_turns` enforced at runtime
+- **Discussion Orchestration** — A Director Graph manages turn-taking and discussion flow
 
-### 提示词工程与治理
+### Prompt Engineering & Governance
 
-- **34 个模板** — 覆盖大纲生成、内容创作、动作编排、测验生成等场景
-- **Snippet 系统** — 角色指南、动作类型等以 Markdown 片段形式管理，无需重新编译
-- **安全护栏** — PII 检测、毒性过滤、幻觉识别三重扫描，保障内容安全
-- **Skill 目录** — 5 个已注册技能，受白名单门控
-- **REST API** — `GET /api/prompts` 查询模板，`GET /api/skills` 查询技能
+- **34 Templates** — Covering outline generation, content creation, action sequencing, and quiz generation
+- **Snippet System** — Role guidelines and action types stored as Markdown snippets, editable without recompiling
+- **Guardrails** — PII detection, toxicity filtering, and hallucination scanning on every generated scene
+- **Skill Registry** — 5 registered skills gated by a whitelist
+- **REST API** — `GET /api/prompts` to list templates, `GET /api/skills` to list skills
 
-### 基础设施
+### Infrastructure
 
 <details>
-<summary><strong>20+ LLM 提供商</strong></summary>
+<summary><strong>20+ LLM Providers</strong></summary>
 
-| 提供商 | 代表模型 |
-|--------|---------|
+| Provider | Example Models |
+|----------|---------------|
 | OpenAI | GPT-4o, GPT-4o-mini |
 | Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
 | Google | Gemini 2.0 Flash, Gemini 1.5 Pro |
@@ -80,124 +84,124 @@ Nova 是一个基于多智能体的智能教学平台。输入任意学习主题
 | GLM | GLM-5.2, GLM-5.1 |
 | Kimi | Kimi-K2.6 |
 | MiniMax | MiniMax-M3 |
-| SiliconFlow | 全系列模型聚合 |
-| 豆包 | Doubao 全系列 |
-| Ollama | 本地模型 |
-| Lemonade | 本地 AMD 模型 |
+| SiliconFlow | Full model aggregation |
+| Doubao | Doubao series |
+| Ollama | Local models |
+| Lemonade | Local AMD models |
 
 </details>
 
-- **TTS** — OpenAI、SiliconFlow、Doubao、Minimax、Volcano
-- **图片生成** — SiliconFlow、Minimax、ComfyUI
-- **网页搜索** — Tavily、SearXNG
-- **文档解析** — AliDocMind、MinerU
-- **MCP 工具** — 通过 Model Context Protocol 接入外部工具
-- **国际化** — 英语、简体中文、繁体中文、日语、韩语、阿拉伯语、葡语、俄语
-- **暗色模式** — 全站支持
+- **TTS** — OpenAI, SiliconFlow, Doubao, Minimax, Volcano
+- **Image Generation** — SiliconFlow, Minimax, ComfyUI
+- **Web Search** — Tavily, SearXNG
+- **Document Parsing** — AliDocMind, MinerU
+- **MCP Tools** — Connect external tools via Model Context Protocol
+- **i18n** — English, Simplified Chinese, Traditional Chinese, Japanese, Korean, Arabic, Portuguese, Russian
+- **Dark Mode** — Site-wide support
 
-## 架构
+## Architecture
 
 <div align="center">
   <img src="assets/architecture.svg" alt="Nova Architecture" width="800" />
 </div>
 
-数据流向：用户输入主题 → 提示词引擎组装 Prompt → LLM 生成内容 → 安全护栏扫描 → 多智能体编排 → 交互式课堂渲染。整个流程通过 Zustand 持久化到浏览器本地存储。
+Data flow: user enters a topic → the prompt engine assembles the prompt → LLM generates content → guardrails scan for safety → multi-agent orchestration → interactive classroom rendering. State is persisted to browser-local storage via Zustand.
 
-## 快速开始
+## Quick Start
 
-### 前置要求
+### Prerequisites
 
 - Node.js 22+
 - pnpm 10+
 
-### 安装
+### Installation
 
 ```bash
-git clone https://gitcode.com/badhope/nova.git
+git clone https://github.com/weed33834/nova.git
 cd nova
 pnpm install
 ```
 
-### 配置
+### Configuration
 
-创建 `.env.local` 文件，至少配置一个 LLM 提供商：
+Create a `.env.local` file with at least one LLM provider:
 
 ```bash
-# 方式一：直接配置 API 密钥
+# Option A: direct API key
 SILICONFLOW_API_KEY=your-key
 SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
 
-# 方式二：使用服务端托管配置（推荐）
+# Option B: server-side managed config (recommended)
 cp server-providers.example.yml server-providers.yml
-# 编辑 server-providers.yml 填入凭证，密钥不会暴露给客户端
+# Edit server-providers.yml with your credentials — keys stay server-side
 ```
 
-### 运行
+### Run
 
 ```bash
 pnpm dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000)，输入你想学的主题即可开始。
+Open [http://localhost:3000](http://localhost:3000) and enter a topic to start.
 
-### 免密钥体验
+### No API Key? Try the Demo
 
-点击首页 **「秒开缓存演示课程」**，无需 API 密钥即可加载预置的「人工智能导论」课程，立即体验课堂 UI。
+Click **"Open Cached Demo Course"** on the home page to load a pre-built Introduction to AI course — no API key required.
 
-## 测试
+## Testing
 
 ```bash
-pnpm test          # 单元 & 组件测试（312 文件 / 2768 用例）
-pnpm test:e2e      # 端到端测试（Playwright）
-pnpm test:e2e:ui   # 带交互界面的 E2E
+pnpm test          # Unit & component tests (312 files / 2768 cases)
+pnpm test:e2e      # End-to-end tests (Playwright)
+pnpm test:e2e:ui   # E2E with interactive UI
 pnpm lint          # ESLint
-pnpm typecheck     # TypeScript 类型检查
+pnpm typecheck     # TypeScript type checking
 ```
 
-E2E 测试覆盖完整流程：首页 → 生成 → 课堂导航 → 测验交互，全部使用 Mock API，无需 LLM 密钥。
+E2E tests cover the full flow: home → generation → classroom navigation → quiz interaction. All tests use mock APIs — no LLM key needed.
 
-## 项目结构
+## Project Structure
 
 ```
 nova/
 ├── app/                  # Next.js App Router
-│   ├── api/              # API 路由（prompts, skills, generate/*）
-│   └── [locale]/         # 国际化路由
-├── lib/                  # 核心逻辑
-│   ├── ai/               # 多 LLM 提供商集成
-│   ├── agent/            # 多智能体运行时
-│   ├── choreography/     # 动画与特效
-│   ├── guardrails/       # 安全护栏管线
-│   ├── orchestration/    # 角色管理与约束
-│   └── prompts/          # 提示词模板与代码片段
-├── components/           # React 组件
-├── packages/             # 工作区子包
+│   ├── api/              # API routes (prompts, skills, generate/*)
+│   └── [locale]/         # i18n routing
+├── lib/                  # Core logic
+│   ├── ai/               # Multi-LLM provider integration
+│   ├── agent/            # Multi-agent runtime
+│   ├── choreography/     # Animations & effects
+│   ├── guardrails/       # Safety pipeline
+│   ├── orchestration/    # Role management & constraints
+│   └── prompts/          # Prompt templates & snippets
+├── components/           # React components
+├── packages/             # Workspace sub-packages
 │   └── @nova/
-│       ├── dsl/          # 领域类型定义
-│       ├── renderer/     # 幻灯片渲染引擎
-│       ├── importer/     # 文档导入
-│       └── storage/      # 持久化层
-├── e2e/                  # Playwright 测试
-├── configs/              # 共享常量
-└── assets/               # 静态资源与 Logo
+│       ├── dsl/          # Domain type definitions
+│       ├── renderer/     # Slide rendering engine
+│       ├── importer/     # Document import
+│       └── storage/      # Persistence layer
+├── e2e/                  # Playwright tests
+├── configs/              # Shared constants
+└── assets/               # Static assets & logo
 ```
 
-## 技术栈
+## Tech Stack
 
-| 层面 | 技术 |
-|------|------|
-| 框架 | Next.js 16 (App Router, Turbopack) |
-| 语言 | TypeScript 5.8 |
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript 5.8 |
 | UI | React 19, Tailwind CSS 4, Radix UI |
-| 状态 | Zustand (持久化) |
-| AI | Vercel AI SDK, 多提供商 |
-| 测试 | Vitest, Playwright |
-| 包管理 | pnpm Workspaces |
+| State | Zustand (persisted) |
+| AI | Vercel AI SDK, multi-provider |
+| Testing | Vitest, Playwright |
+| Package Manager | pnpm Workspaces |
 
-## 贡献
+## Contributing
 
-欢迎提交 Issue 和 Pull Request。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.
 
-## 许可证
+## License
 
 [MIT](LICENSE)

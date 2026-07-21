@@ -1,26 +1,40 @@
 ---
-name: Bug 报告
-about: 报告一个问题帮助我们改进
+name: Bug Report
+about: Report something that isn't working as expected
 title: "[Bug] "
 labels: bug
+assignees: ''
 ---
 
-**问题描述**
-简要描述遇到了什么问题。
+## Bug Description
 
-**复现步骤**
-1. 进入 '...'
-2. 点击 '...'
-3. 看到 '...'
+A clear description of what the bug is.
 
-**预期行为**
-描述你期望发生什么。
+## Steps to Reproduce
 
-**实际行为**
-描述实际发生了什么。
+1. Go to '...'
+2. Click on '...'
+3. See error
 
-**环境信息**
-- 操作系统：[如 macOS, Windows, Linux]
-- 浏览器：[如 Chrome 120]
-- Node.js 版本：
-- 使用的 LLM 提供商：
+## Expected Behavior
+
+What you expected to happen.
+
+## Actual Behavior
+
+What actually happened.
+
+## Environment
+
+- OS: [e.g. macOS 14, Windows 11, Ubuntu 24.04]
+- Browser: [e.g. Chrome 126, Firefox 127]
+- Node.js version: [e.g. 22.3.0]
+- Nova version: [e.g. commit hash or tag]
+
+## Screenshots
+
+If applicable, add screenshots to help explain the issue.
+
+## Additional Context
+
+Any other information about the problem.

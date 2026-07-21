@@ -1,70 +1,67 @@
-# 贡献指南
+# Contributing to Nova
 
-感谢你对 Nova 项目的兴趣！本文档描述了参与开发的工作流程。
+Thanks for your interest in contributing! This guide covers the basics.
 
-## 开发流程
-
-1. Fork 仓库并从 `main` 创建分支
-2. 进行修改并在本地测试
-3. 运行检查：`pnpm lint && pnpm typecheck`
-4. 提交 Pull Request
-
-## 提交 Pull Request 前
-
-运行完整测试套件：
+## Development Setup
 
 ```bash
-pnpm test          # 全部测试（312 个文件，约 2700 个测试）
-pnpm typecheck     # TypeScript 类型检查
-pnpm lint          # ESLint
+git clone https://github.com/weed33834/nova.git
+cd nova
+pnpm install
+pnpm dev
 ```
 
-如果添加或修改了提示词模板，请运行 prompt-config 测试验证 `config.json` sidecar 是否有效：
+See the [README](README.md) for full prerequisites and configuration.
 
-```bash
-pnpm test tests/prompts/prompt-config.test.ts
-```
+## Workflow
 
-## 提示词模板开发
+1. **Fork** the repository
+2. Create a branch: `git checkout -b feat/your-feature`
+3. **Commit** with a clear message following [Conventional Commits](https://www.conventionalcommits.org/):
+   - `feat:` new feature
+   - `fix:` bug fix
+   - `docs:` documentation only
+   - `refactor:` code restructuring without behavior change
+   - `test:` adding or fixing tests
+   - `chore:` build, deps, config
+4. **Push** to your fork and open a Pull Request against `main`
 
-提示词位于 `lib/prompts/templates/<id>/`，包含 `system.md` 和可选的 `user.md`。
-每个模板目录必须包含 `config.json` sidecar（version, description, tags, deprecated）。
+## Code Style
 
-角色指南基于 snippet 系统 —— 编辑 `lib/prompts/snippets/role-guidelines-*.md`
-即可修改智能体行为文本，无需重新编译。
+- TypeScript strict mode is enforced
+- Run `pnpm lint` and `pnpm typecheck` before pushing
+- Follow existing formatting (Prettier config is in the repo)
+- No `any` types without a justification comment
 
-详见 `lib/prompts/README.md`。
+## Testing
 
-## 提交消息规范
+- Every new feature needs tests
+- Run `pnpm test` for unit/component tests
+- Run `pnpm test:e2e` for end-to-end tests
+- Aim to keep coverage stable or improving
 
-使用 Conventional Commits 格式：
+## Pull Request Checklist
 
-```
-<type>: <description>
+- [ ] Tests pass locally (`pnpm test`)
+- [ ] Lint passes (`pnpm lint`)
+- [ ] Types check (`pnpm typecheck`)
+- [ ] Commit messages follow Conventional Commits
+- [ ] No debug logging left in the code
+- [ ] Documentation updated if needed
 
-类型包括: feat, fix, docs, refactor, test, chore, perf
-```
+## Reporting Issues
 
-示例：
-- `feat: 添加知识图谱导出功能`
-- `fix: 修复 SSRF 防护在测试环境下的 DNS 解析问题`
-- `docs: 更新 README 安装说明`
+Use the [GitHub Issue Templates](https://github.com/weed33834/nova/issues/new/choose). Include:
 
-## 代码规范
+- Steps to reproduce
+- Expected vs actual behavior
+- Browser/OS and Node.js version
+- Screenshots if applicable
 
-- TypeScript 严格模式
-- 使用 `lib/logger` 而非 `console.log`
-- 新增的 `<img>` 标签需添加 `loading="lazy"` 和 `decoding="async"`
-- 新增的 Context provider 需使用 `useMemo` / `useCallback` 优化
-- 所有用户可见文本需通过 i18n 的 `t()` 函数
+## Code of Conduct
 
-## 测试规范
+All contributors are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-- 单元测试放在 `tests/` 目录下，文件名 `*.test.ts`
-- E2E 测试放在 `e2e/tests/` 目录下，文件名 `*.spec.ts`
-- 组件测试使用 React 19 的 `act` + `globalThis.IS_REACT_ACT_ENVIRONMENT`
-- 测试不应依赖外部网络服务（使用 mock）
+## License
 
-## 许可证
-
-提交的代码将在 MIT 许可证下发布。
+By contributing, you agree that your contributions are licensed under the MIT License.

@@ -7,8 +7,9 @@
   "author": "Badhope",
   "repository": {
     "type": "git",
-    "url": "https://gitcode.com/badhope/nova.git"
+    "url": "https://github.com/weed33834/nova.git"
   },
+  "homepage": "https://github.com/weed33834/nova",
   "engines": {
     "node": ">=22 <23"
   },
