@@ -2,12 +2,10 @@
   <img src="assets/banner.svg" alt="Nova Banner" width="800" />
 </div>
 
-<p align="center">
-  <strong>An AI-powered multi-agent classroom that turns any topic into an interactive learning experience.</strong>
-</p>
+[English](README.md) | [中文](README.zh.md) | [日本語](README.ja.md)
 
 <p align="center">
-  <a href="./README.md">English</a> · <a href="./README-zh.md">中文</a> · <a href="./README-ja.md">日本語</a>
+  <strong>A multi-agent AI classroom that turns any topic into an interactive learning experience.</strong>
 </p>
 
 <p align="center">
@@ -34,9 +32,9 @@
 
 ## Overview
 
-Nova is a multi-agent teaching platform. Give it a topic and an AI teacher generates a structured course outline, produces slides, writes narration scripts, and delivers the lesson in a virtual classroom. Multiple AI agents collaborate — a teacher leads the lecture, an assistant answers questions, and a class clown keeps the mood light.
+Nova is a multi-agent teaching platform. Given a topic, an AI teacher generates a structured course outline, produces slides, writes narration scripts, and delivers the lesson in a virtual classroom. Several AI agents take on distinct roles — a teacher leads the lecture, an assistant answers questions, and a class clown keeps the mood light.
 
-The core idea: not just a slide generator, but a complete teaching system with role separation, safety guardrails, and knowledge tracking.
+The core idea is not to be another slide generator, but a complete teaching system with role separation, safety guardrails, and knowledge tracking.
 
 ## Features
 
@@ -55,7 +53,7 @@ The core idea: not just a slide generator, but a complete teaching system with r
 |-------|------|-------------|
 | AI Teacher | Leads the lesson, explains core concepts | Speak, slide control, spotlight, whiteboard |
 | AI Assistant | Supports the teacher, answers questions | Speak, whiteboard, slide control |
-| Class Clown | Lightens the mood | Speak |
+| Class Clown | Lightens the mood | Speak, whiteboard |
 
 - **Role Persistence** — Customize names, descriptions, and permissions for 10 built-in roles; changes persist across sessions
 - **Runtime Constraints** — Per-role `max_actions` and `max_turns` enforced at runtime
@@ -63,7 +61,7 @@ The core idea: not just a slide generator, but a complete teaching system with r
 
 ### Prompt Engineering & Governance
 
-- **34 Templates** — Covering outline generation, content creation, action sequencing, and quiz generation
+- **24 Templates** — Covering outline generation, content creation, action sequencing, and quiz generation
 - **Snippet System** — Role guidelines and action types stored as Markdown snippets, editable without recompiling
 - **Guardrails** — PII detection, toxicity filtering, and hallucination scanning on every generated scene
 - **Skill Registry** — 5 registered skills gated by a whitelist
@@ -72,20 +70,24 @@ The core idea: not just a slide generator, but a complete teaching system with r
 ### Infrastructure
 
 <details>
-<summary><strong>20+ LLM Providers</strong></summary>
+<summary><strong>LLM Providers</strong></summary>
 
 | Provider | Example Models |
 |----------|---------------|
-| OpenAI | GPT-4o, GPT-4o-mini |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
-| Google | Gemini 2.0 Flash, Gemini 1.5 Pro |
+| OpenAI | GPT-5.6, GPT-5.5, GPT-5.4 |
+| Anthropic | Claude Opus 4.7, Claude Sonnet 4.5, Claude Haiku 4.5 |
+| Google | Gemini 3.5 Flash, Gemini 3 Pro, Gemini 2.5 Pro |
 | DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash |
-| Qwen | Qwen3.5-397B, Qwen3.6-35B |
+| Qwen | Qwen3.7-Max, Qwen3.6-Plus, Qwen3.5-Flash |
 | GLM | GLM-5.2, GLM-5.1 |
-| Kimi | Kimi-K2.6 |
-| MiniMax | MiniMax-M3 |
+| Kimi | Kimi-K2.7, Kimi-K2.6 |
+| MiniMax | MiniMax-M3, MiniMax-M2.7 |
+| Grok | Grok-4.20 |
+| Tencent Hunyuan | Hunyuan-3 (preview) |
+| Xiaomi | MiMo v2.5 |
+| OpenRouter | Multi-provider aggregation |
 | SiliconFlow | Full model aggregation |
-| Doubao | Doubao series |
+| Doubao | Doubao Seed 2.x series |
 | Ollama | Local models |
 | Lemonade | Local AMD models |
 
@@ -96,7 +98,7 @@ The core idea: not just a slide generator, but a complete teaching system with r
 - **Web Search** — Tavily, SearXNG
 - **Document Parsing** — AliDocMind, MinerU
 - **MCP Tools** — Connect external tools via Model Context Protocol
-- **i18n** — English, Simplified Chinese, Traditional Chinese, Japanese, Korean, Arabic, Portuguese, Russian
+- **i18n** — English, Simplified Chinese, Traditional Chinese, Japanese, Korean, Arabic, Portuguese, Russian (client-side, via i18next)
 - **Dark Mode** — Site-wide support
 
 ## Architecture
@@ -105,7 +107,7 @@ The core idea: not just a slide generator, but a complete teaching system with r
   <img src="assets/architecture.svg" alt="Nova Architecture" width="800" />
 </div>
 
-Data flow: user enters a topic → the prompt engine assembles the prompt → LLM generates content → guardrails scan for safety → multi-agent orchestration → interactive classroom rendering. State is persisted to browser-local storage via Zustand.
+Data flow: the user enters a topic → the prompt engine assembles the prompt → an LLM generates content → guardrails scan for safety → multi-agent orchestration → interactive classroom rendering. State is persisted to browser-local storage via Zustand.
 
 ## Quick Start
 
@@ -166,12 +168,14 @@ E2E tests cover the full flow: home → generation → classroom navigation → 
 nova/
 ├── app/                  # Next.js App Router
 │   ├── api/              # API routes (prompts, skills, generate/*)
-│   └── [locale]/         # i18n routing
+│   ├── classroom/        # Classroom playback route
+│   └── generation-preview/
 ├── lib/                  # Core logic
 │   ├── ai/               # Multi-LLM provider integration
 │   ├── agent/            # Multi-agent runtime
 │   ├── choreography/     # Animations & effects
 │   ├── guardrails/       # Safety pipeline
+│   ├── i18n/             # Client-side i18next locale resources
 │   ├── orchestration/    # Role management & constraints
 │   └── prompts/          # Prompt templates & snippets
 ├── components/           # React components
