@@ -1,8 +1,19 @@
 import { useEffect, type RefObject } from 'react';
 import { useCanvasStore } from '@/lib/store';
 
-export function useDrop(elementRef: RefObject<HTMLElement | null>) {
+interface UseDropOptions {
+  /** Insert a text element at the given canvas coordinates. */
+  onTextDrop?: (canvasX: number, canvasY: number, text: string) => void;
+}
+
+export function useDrop(
+  elementRef: RefObject<HTMLElement | null>,
+  viewportRef: RefObject<HTMLElement | null>,
+  options: UseDropOptions = {},
+) {
   const disableHotkeys = useCanvasStore.use.disableHotkeys();
+  const canvasScale = useCanvasStore.use.canvasScale();
+  const { onTextDrop } = options;
 
   useEffect(() => {
     const element = elementRef.current;
@@ -13,9 +24,17 @@ export function useDrop(elementRef: RefObject<HTMLElement | null>) {
 
       const firstItem = e.dataTransfer.items[0];
       if (firstItem && firstItem.kind === 'string' && firstItem.type === 'text/plain') {
-        firstItem.getAsString((_text) => {
+        firstItem.getAsString((text) => {
           if (disableHotkeys) return;
-          // TODO: implement createTextElement
+          if (!onTextDrop) return;
+          // Convert drop point (screen coords) → canvas coords using the
+          // viewport element's bounding rect and the current canvas scale.
+          const viewport = viewportRef.current;
+          if (!viewport) return;
+          const rect = viewport.getBoundingClientRect();
+          const canvasX = (e.clientX - rect.x) / canvasScale;
+          const canvasY = (e.clientY - rect.y) / canvasScale;
+          onTextDrop(canvasX, canvasY, text);
         });
       }
     };
@@ -41,5 +60,5 @@ export function useDrop(elementRef: RefObject<HTMLElement | null>) {
       document.removeEventListener('dragenter', preventDefault);
       document.removeEventListener('dragover', preventDefault);
     };
-  }, [elementRef, disableHotkeys]);
+  }, [elementRef, viewportRef, canvasScale, disableHotkeys, onTextDrop]);
 }

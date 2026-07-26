@@ -36,21 +36,6 @@ export function preload(task: PreloadTask): void {
   if (!flushing) flush();
 }
 
-export function preloadComponent(importFn: () => Promise<unknown>): void {
-  preload(() => importFn().then(() => {}));
-}
-
 export function preloadData<T>(fetcher: () => Promise<T>): void {
   preload(() => fetcher().then(() => {}));
-}
-
-const idleCallbacks: (() => void)[] = [];
-
-export function onIdle(fn: () => void): void {
-  idleCallbacks.push(fn);
-}
-
-export function flushIdle(): void {
-  const fns = idleCallbacks.splice(0);
-  for (const fn of fns) fn();
 }

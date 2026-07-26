@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useCanvasStore } from '@/lib/store/canvas';
 import { useSceneSelector } from '@/lib/contexts/scene-context';
 import { useKeyboardStore } from '@/lib/store/keyboard';
@@ -24,11 +24,12 @@ import { ElementCreateSelection } from './ElementCreateSelection';
 import { ShapeCreateCanvas } from './ShapeCreateCanvas';
 import { Ruler } from './Ruler';
 import { GridLines } from './GridLines';
-import type { PPTElement } from '@nova/dsl';
+import type { PPTElement, PPTTextElement, PPTShapeElement } from '@nova/dsl';
 import type { AlignmentLineProps } from '@/lib/types/edit';
 import type { ContextmenuItem } from './EditableElement';
 import type { SlideContent } from '@/lib/types/stage';
 import { useCanvasOperations } from '@/lib/hooks/use-canvas-operations';
+import { createElementId } from '@/lib/edit/element-id';
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -86,7 +87,7 @@ export function Canvas(_props: CanvasProps) {
   const spaceKeyState = useKeyboardStore((state) => state.spaceKeyState);
 
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLineProps[]>([]);
-  const [linkDialogVisible, setLinkDialogVisible] = useState(false);
+  const [_linkDialogVisible, setLinkDialogVisible] = useState(false);
 
   // Local element list for drag/scale/rotate operations
   const elementListRef = useRef<PPTElement[]>(elements || []);
@@ -103,8 +104,39 @@ export function Canvas(_props: CanvasProps) {
   // Viewport size and positioning
   const { viewportStyles, dragViewport } = useViewportSize(canvasRef);
 
-  // Initialize drop handler
-  useDrop(canvasRef);
+  // Canvas operations (must be declared before callbacks that use addElement,
+  // otherwise the const would be referenced before its declaration.)
+  const { pasteElement, selectAllElements, deleteAllElements, addElement } = useCanvasOperations();
+
+  // Initialize drop handler — insert a text element when plain text is
+  // dragged onto the canvas from outside (e.g. from another app).
+  const handleTextDrop = useCallback(
+    (canvasX: number, canvasY: number, text: string) => {
+      const safeText = text.trim();
+      if (!safeText) return;
+      // Escape HTML-special characters so dropped text is treated as text,
+      // not as HTML markup (prevents accidental markup injection).
+      const escaped = safeText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const textEl: PPTTextElement = {
+        id: createElementId('text'),
+        type: 'text',
+        left: canvasX - 150,
+        top: canvasY - 30,
+        width: 300,
+        height: 60,
+        rotate: 0,
+        content: `<p>${escaped}</p>`,
+        defaultFontName: '',
+        defaultColor: '#333',
+      };
+      addElement(textEl);
+    },
+    [addElement],
+  );
+  useDrop(canvasRef, viewportRef, { onTextDrop: handleTextDrop });
 
   // Element drag (with alignment snapping)
   const { dragElement } = useDragElement(elementListRef, setElementList, setAlignmentLines);
@@ -159,19 +191,32 @@ export function Canvas(_props: CanvasProps) {
   };
 
   // Double-click blank area to insert text
-  const handleDblClick = (_e: React.MouseEvent) => {
+  const handleDblClick = (e: React.MouseEvent) => {
     if (activeElementIdList.length || creatingElement || creatingCustomShape) return;
     if (!viewportRef.current) return;
 
-    const _viewportRect = viewportRef.current.getBoundingClientRect();
-    // TODO: implement createTextElement (use _viewportRect + e.pageX/Y + canvasScale)
+    const viewportRect = viewportRef.current.getBoundingClientRect();
+    const left = (e.clientX - viewportRect.x) / canvasScale;
+    const top = (e.clientY - viewportRect.y) / canvasScale;
+    // Center the default text box on the click point
+    const textEl: PPTTextElement = {
+      id: createElementId('text'),
+      type: 'text',
+      left: left - 150,
+      top: top - 30,
+      width: 300,
+      height: 60,
+      rotate: 0,
+      content: '<p style="text-align: center"><br></p>',
+      defaultFontName: '',
+      defaultColor: '#333',
+    };
+    addElement(textEl);
   };
 
   const openLinkDialog = () => {
     setLinkDialogVisible(true);
   };
-
-  const { pasteElement, selectAllElements, deleteAllElements } = useCanvasOperations();
 
   const contextmenus = (): ContextmenuItem[] => {
     return [
@@ -240,8 +285,36 @@ export function Canvas(_props: CanvasProps) {
           {/* Custom shape creation canvas */}
           {creatingCustomShape && (
             <ShapeCreateCanvas
-              onCreated={(_data) => {
-                // TODO: implement insertCustomShape
+              onCreated={(data) => {
+                // Convert the custom-drawn shape's screen-space start/end
+                // points into canvas coordinates, then insert a PPTShapeElement
+                // carrying the user-drawn SVG path.
+                const viewport = viewportRef.current;
+                if (!viewport) return;
+                const rect = viewport.getBoundingClientRect();
+                const minX = Math.min(data.start[0], data.end[0]);
+                const maxX = Math.max(data.start[0], data.end[0]);
+                const minY = Math.min(data.start[1], data.end[1]);
+                const maxY = Math.max(data.start[1], data.end[1]);
+                const left = (minX - rect.x) / canvasScale;
+                const top = (minY - rect.y) / canvasScale;
+                const width = Math.max(20, (maxX - minX) / canvasScale);
+                const height = Math.max(20, (maxY - minY) / canvasScale);
+                const shapeEl: PPTShapeElement = {
+                  id: createElementId('shape'),
+                  type: 'shape',
+                  left,
+                  top,
+                  width,
+                  height,
+                  rotate: 0,
+                  viewBox: data.viewBox,
+                  path: data.path,
+                  fixedRatio: false,
+                  fill: data.fill ?? '#5b9bd5',
+                  ...(data.outline ? { outline: data.outline } : {}),
+                };
+                addElement(shapeEl);
               }}
             />
           )}
@@ -347,8 +420,11 @@ export function Canvas(_props: CanvasProps) {
           {/* Drag mask when space key is pressed */}
           {spaceKeyState && <div className="drag-mask absolute inset-0 cursor-grab" />}
 
-          {/* TODO: Add LinkDialog modal */}
-          {linkDialogVisible && <div>LinkDialog placeholder</div>}
+          {/* LinkDialog modal is not yet implemented; openLinkDialog is
+              wired to EditableElement but currently a no-op until the
+              modal lands. The placeholder div has been removed to avoid
+              rendering a meaningless box; when the modal is added, render
+              it here as a portal-controlled overlay. */}
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>

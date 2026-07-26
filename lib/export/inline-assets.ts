@@ -5,6 +5,7 @@ import {
   type FetchAsset,
 } from './inline-assets-shared';
 import { buildInlinedImportmap } from './inline-assets-importmap';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
 
 export { toDataUri } from './inline-assets-shared';
 export type { InlineReport, InlineOptions, FetchAsset } from './inline-assets-shared';
@@ -142,24 +143,6 @@ export function createAssetFetcher(options?: InlineOptions): FetchAsset {
     cache.set(url, promise);
     return promise;
   };
-}
-
-/** Run `fn` over `items` with at most `limit` concurrent calls. */
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
 }
 
 /** Fallback MIME by extension when the server omits content-type. */

@@ -10,14 +10,14 @@ import { createLogger } from '@/lib/logger';
 
 const _log = createLogger('ContentSafety');
 
-export const DEFAULT_CONTENT_SAFETY_CONFIG: ContentSafetyConfig = {
+const DEFAULT_CONTENT_SAFETY_CONFIG: ContentSafetyConfig = {
   blockedCategories: ['violence', 'hate_speech', 'sexual_content', 'self_harm'],
   maxSeverity: 'medium',
   enableToxicityCheck: true,
   enablePiiCheck: true,
 };
 
-export const DEFAULT_HALLUCINATION_CONFIG: HallucinationConfig = {
+const DEFAULT_HALLUCINATION_CONFIG: HallucinationConfig = {
   enableFactCheck: true,
   enableConsistencyCheck: true,
   knowledgeBaseIds: [],

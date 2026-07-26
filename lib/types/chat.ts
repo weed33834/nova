@@ -91,30 +91,6 @@ export interface ToolCallRecord {
 }
 
 /**
- * Server-Sent Event types for streaming session updates
- */
-export type SessionEvent =
-  | { type: 'message'; data: UIMessage<ChatMessageMetadata> }
-  | {
-      type: 'tool_request';
-      data: { sessionId: string; toolCalls: ToolCallRequest[] };
-    }
-  | { type: 'tool_complete'; data: ToolCallRecord }
-  | {
-      type: 'agent_switch';
-      data: { fromAgentId: string | null; toAgentId: string };
-    }
-  | { type: 'session_status'; data: { status: SessionStatus; reason?: string } }
-  | { type: 'error'; data: { message: string } }
-  | { type: 'done'; data: SessionSummary }
-  | {
-      type: 'text_start';
-      data: { messageId: string; agentId: string; agentName: string };
-    }
-  | { type: 'text_delta'; data: { messageId: string; delta: string } }
-  | { type: 'text_end'; data: { messageId: string; content: string } };
-
-/**
  * Summary data sent when session completes
  */
 export interface SessionSummary {
@@ -123,43 +99,6 @@ export interface SessionSummary {
   totalMessages: number;
   totalToolCalls: number;
   endReason: string;
-}
-
-/**
- * Request body for creating a new session
- */
-export interface CreateSessionRequest {
-  type: SessionType;
-  title?: string;
-  trigger: {
-    message?: string;
-    agentIds: string[];
-    triggerAgentId?: string;
-  };
-}
-
-/**
- * Request body for sending a message to a session
- */
-export interface SendMessageRequest {
-  content: string;
-  apiKey?: string;
-  baseUrl?: string;
-  model?: string;
-  storeState: {
-    stage: unknown;
-    scenes: unknown[];
-    currentSceneId: string | null;
-    mode: 'autonomous' | 'playback';
-    whiteboardOpen: boolean;
-  };
-}
-
-/**
- * Request body for submitting tool results
- */
-export interface ToolResultsRequest {
-  results: ToolCallRecord[];
 }
 
 /**
@@ -174,22 +113,6 @@ export interface SessionListItem {
   toolCallCount: number;
   createdAt: number;
   updatedAt: number;
-}
-
-/**
- * Convert a full ChatSession to a list item (without messages)
- */
-export function toSessionListItem(session: ChatSession): SessionListItem {
-  return {
-    id: session.id,
-    type: session.type,
-    title: session.title,
-    status: session.status,
-    messageCount: session.messages.length,
-    toolCallCount: session.toolCalls.length,
-    createdAt: session.createdAt,
-    updatedAt: session.updatedAt,
-  };
 }
 
 /**
@@ -328,9 +251,6 @@ export interface ParsedAction {
   actionName: string;
   params: Record<string, unknown>;
 }
-
-/** @deprecated Use ParsedAction instead */
-export type ParsedToolCall = ParsedAction;
 
 /**
  * Server-Sent Events for stateless chat API

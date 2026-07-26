@@ -49,7 +49,9 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
 
     const newFirstSnapshot = {
       index: stageStore.getSceneIndex(stageStore.currentSceneId || ''),
-      slides: JSON.parse(JSON.stringify(stageStore.scenes)),
+      // structuredClone is faster than JSON.parse(JSON.stringify(...)) and
+      // preserves Date/Map/Set where the scenes happen to contain them.
+      slides: structuredClone(stageStore.scenes),
     };
     await db.snapshots.add(newFirstSnapshot);
 
@@ -81,7 +83,9 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
     // Add new snapshot
     const snapshot = {
       index: stageStore.getSceneIndex(stageStore.currentSceneId || ''),
-      slides: JSON.parse(JSON.stringify(stageStore.scenes)),
+      // structuredClone is faster than JSON.parse(JSON.stringify(...)) and
+      // preserves Date/Map/Set where the scenes happen to contain them.
+      slides: structuredClone(stageStore.scenes),
     };
     await db.snapshots.add(snapshot);
 

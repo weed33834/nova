@@ -6,6 +6,7 @@ import {
   applyOutlineFallbacks,
   generateSceneOutlinesFromRequirements,
 } from '@/lib/generation/outline-generator';
+import { parseJsonResponse } from '@/lib/generation/json-repair';
 import {
   createSceneWithActions,
   generateSceneActions,
@@ -144,9 +145,17 @@ Return a JSON object with this exact structure:
 
   const response = await aiCall(systemPrompt, userPrompt);
   const rawText = stripCodeFences(response);
-  const parsed = JSON.parse(rawText) as {
-    agents: Array<{ name: string; role: string; persona: string }>;
-  };
+  // LLMs occasionally emit JSON with trailing commas, unescaped quotes,
+  // or trailing prose. parseJsonResponse runs jsonrepair + our HTML-quote
+  // repair scanner and returns null on hard failure instead of throwing
+  // a bare SyntaxError. Plain JSON.parse is kept as the fast path.
+  const parsed = parseJsonResponse<{ agents: Array<{ name: string; role: string; persona: string }> }>(rawText);
+  if (!parsed) {
+    // Include a short excerpt of the raw text to aid debugging — without
+    // it the upstream catch only sees "Cannot read properties of null".
+    const excerpt = rawText.slice(0, 200).replace(/\n/g, '\\n');
+    throw new Error(`Agent profile generation failed: JSON could not be parsed. Raw: ${excerpt}`);
+  }
 
   if (!parsed.agents || !Array.isArray(parsed.agents) || parsed.agents.length < 2) {
     throw new Error(`Expected at least 2 agents, got ${parsed.agents?.length ?? 0}`);
@@ -157,12 +166,19 @@ Return a JSON object with this exact structure:
     throw new Error(`Expected exactly 1 teacher, got ${teacherCount}`);
   }
 
-  return parsed.agents.map((a, i) => ({
-    id: `gen-server-${i}`,
-    name: a.name,
-    role: a.role,
-    persona: a.persona,
-  }));
+  // Validate each agent field — LLMs occasionally return null/number for
+  // string fields, which would crash downstream rendering (e.g.
+  // agent.name.charAt(0) in agent-reveal-modal).
+  return parsed.agents.map((a, i) => {
+    const name = typeof a.name === 'string' ? a.name : `Agent ${i + 1}`;
+    const role = typeof a.role === 'string' && ['teacher', 'student'].includes(a.role)
+      ? (a.role as 'teacher' | 'student')
+      : i === 0
+        ? 'teacher'
+        : 'student';
+    const persona = typeof a.persona === 'string' ? a.persona : '';
+    return { id: `gen-server-${i}`, name, role, persona };
+  });
 }
 
 export async function generateClassroom(

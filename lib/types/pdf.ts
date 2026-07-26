@@ -57,20 +57,3 @@ export interface ParsedPdfContent {
     [key: string]: unknown;
   };
 }
-
-/**
- * Request parameters for PDF parsing
- */
-export interface ParsePdfRequest {
-  /** PDF file to parse */
-  pdf: File;
-}
-
-/**
- * Response from PDF parsing API
- */
-export interface ParsePdfResponse {
-  success: boolean;
-  data?: ParsedPdfContent;
-  error?: string;
-}

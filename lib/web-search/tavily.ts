@@ -11,6 +11,10 @@ export { formatSearchResultsAsContext } from './format';
 
 const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com';
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 const TAVILY_MAX_QUERY_LENGTH = 400;
 
 function buildTavilySearchUrl(baseUrl?: string): string {
@@ -48,7 +52,7 @@ export async function searchWithTavily(params: {
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => '');
-    throw new Error(`Tavily API error (${res.status}): ${errorText || res.statusText}`);
+    throw new Error(`Tavily API error (${res.status}): ${truncateErrorText(errorText || '') || res.statusText}`);
   }
 
   const data = (await res.json()) as {

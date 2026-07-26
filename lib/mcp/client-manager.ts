@@ -130,9 +130,17 @@ export class MCPClientManager {
     if (!config.url) {
       throw new Error('http transport requires a "url"');
     }
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(config.url);
+    } catch {
+      throw new Error(
+        `MCP server "${config.name}" has an invalid URL: "${config.url}". Expected a full URL like https://example.com/mcp.`,
+      );
+    }
     const headers: Record<string, string> = {};
     if (config.authToken) headers.Authorization = `Bearer ${config.authToken}`;
-    return new StreamableHTTPClientTransport(new URL(config.url), {
+    return new StreamableHTTPClientTransport(parsedUrl, {
       requestInit: { headers },
     });
   }

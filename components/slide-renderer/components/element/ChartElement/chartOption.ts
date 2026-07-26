@@ -285,11 +285,6 @@ export const getChartOption = ({
   }
   if (type === 'radar') {
     // Display is broken without max in indicator; setting max triggers console warnings. No workaround — waiting for ECharts to fix this bug
-    // const values: number[] = []
-    // for (const item of data.series) {
-    //   values.push(...item)
-    // }
-    // const max = Math.max(...values)
 
     return {
       color: themeColors,

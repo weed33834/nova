@@ -24,14 +24,6 @@ export function cacheSet<T>(key: string, data: T, ttlMs = 60_000): void {
   store.set(key, { data, expiresAt: Date.now() + ttlMs });
 }
 
-export function cacheDelete(key: string): void {
-  store.delete(key);
-}
-
-export function cacheClear(): void {
-  store.clear();
-}
-
 export async function cacheFetch<T>(
   key: string,
   fetcher: () => Promise<T>,

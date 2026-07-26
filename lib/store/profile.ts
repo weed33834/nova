@@ -379,10 +379,6 @@ export const useProfileStore = create<ProfileState>()(
   ),
 );
 
-export function selectProfileCompleteness() {
-  return useProfileStore.getState().profile;
-}
-
 export function useProfileSelector<T>(selector: (profile: StudentProfile) => T): T {
   return useProfileStore((state) => selector(state.profile));
 }

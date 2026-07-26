@@ -18,21 +18,6 @@ const typeMap = {
 };
 
 /**
- * 简单解析SVG路径
- * @param d SVG path d属性
- */
-export const parseSvgPath = (d: string) => {
-  const pathData = new SVGPathData(d);
-
-  const ret = pathData.commands.map((item) => {
-    return { ...item, type: typeMap[item.type] };
-  });
-  return ret;
-};
-
-export type SvgPath = ReturnType<typeof parseSvgPath>;
-
-/**
  * 解析SVG路径，并将圆弧（A）类型的路径转为三次贝塞尔（C）类型的路径
  * @param d SVG path d属性
  *

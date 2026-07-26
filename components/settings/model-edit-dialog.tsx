@@ -267,15 +267,20 @@ export function ModelEditDialog({
                   type="number"
                   placeholder={t('settings.contextWindowPlaceholder')}
                   value={editingModel.model.contextWindow || ''}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    // parseInt without radix/NaN guard would propagate NaN
+                    // into the model config and out to LLM API requests.
+                    // Parse with radix 10; fall back to undefined on NaN so
+                    // the field shows as empty rather than as "NaN".
+                    const parsed = parseInt(e.target.value, 10);
                     setEditingModel({
                       ...editingModel,
                       model: {
                         ...editingModel.model,
-                        contextWindow: e.target.value ? parseInt(e.target.value) : undefined,
+                        contextWindow: Number.isFinite(parsed) ? parsed : undefined,
                       },
-                    })
-                  }
+                    });
+                  }}
                   onBlur={() => onAutoSave?.()}
                 />
               </div>
@@ -286,15 +291,16 @@ export function ModelEditDialog({
                   type="number"
                   placeholder={t('settings.outputWindowPlaceholder')}
                   value={editingModel.model.outputWindow || ''}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value, 10);
                     setEditingModel({
                       ...editingModel,
                       model: {
                         ...editingModel.model,
-                        outputWindow: e.target.value ? parseInt(e.target.value) : undefined,
+                        outputWindow: Number.isFinite(parsed) ? parsed : undefined,
                       },
-                    })
-                  }
+                    });
+                  }}
                   onBlur={() => onAutoSave?.()}
                 />
               </div>

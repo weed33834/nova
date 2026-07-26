@@ -249,7 +249,16 @@ export function useAgentRuntime(opts: UseAgentRuntimeOptions) {
       messages: serialized,
       createdAt: now,
       updatedAt: now,
-    }).then(() => refreshSessions());
+    })
+      .then(() => refreshSessions())
+      .catch((error) => {
+        // Persistence is best-effort: a failed IndexedDB write (quota
+        // exceeded, storage blocked) shouldn't surface as an unhandled
+        // rejection or take down the in-memory chat. The next save will
+        // retry; if it persistently fails the user will see stale history
+        // on reload rather than a broken chat.
+        console.warn('[use-agent-runtime] saveSession failed:', error);
+      });
   }, [messages, isRunning, refreshSessions]);
 
   // Per-run accumulated state: chronological turns + tool results.

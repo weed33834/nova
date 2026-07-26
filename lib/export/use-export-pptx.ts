@@ -28,6 +28,18 @@ const DEFAULT_FONT_SIZE = 16;
 const DEFAULT_FONT_FAMILY = 'Microsoft YaHei';
 const REMOTE_ASSET_TIMEOUT_MS = 3_000;
 
+// ── Helpers ──
+
+/**
+ * Parse a CSS length value (e.g. "20px", "1.5em", "large") to a number.
+ * Returns NaN for non-numeric values; callers must guard with Number.isFinite.
+ * Always passes radix 10 to avoid leading-zero octal interpretation.
+ */
+function parseCssLength(value: string | undefined): number {
+  if (!value) return NaN;
+  return parseInt(value, 10);
+}
+
 // ── Color formatting ──
 
 function formatColor(_color: string) {
@@ -107,7 +119,8 @@ function formatHTML(html: string, ratioPx2Pt: number) {
         const options: pptxgen.TextPropsOptions = {};
 
         if (styleObj['font-size']) {
-          options.fontSize = parseInt(styleObj['font-size']) / ratioPx2Pt;
+          const px = parseCssLength(styleObj['font-size']);
+          if (Number.isFinite(px)) options.fontSize = px / ratioPx2Pt;
         }
         if (styleObj['color']) {
           options.color = formatColor(styleObj['color']).color;
@@ -425,14 +438,20 @@ export async function buildPptxBlob(
         };
       } else if (bg.type === 'gradient' && bg.gradient) {
         const colors = bg.gradient.colors;
-        const color1 = colors[0].color;
-        const color2 = colors[colors.length - 1].color;
-        const mixed = tinycolor.mix(color1, color2).toHexString();
-        const c = formatColor(mixed);
-        pptxSlide.background = {
-          color: c.color,
-          transparency: (1 - c.alpha) * 100,
-        };
+        // Guard against malformed gradient definitions: an empty or
+        // single-color array would crash on indexing or yield a useless mix.
+        if (Array.isArray(colors) && colors.length >= 2) {
+          const color1 = colors[0]?.color;
+          const color2 = colors[colors.length - 1]?.color;
+          if (color1 && color2) {
+            const mixed = tinycolor.mix(color1, color2).toHexString();
+            const c = formatColor(mixed);
+            pptxSlide.background = {
+              color: c.color,
+              transparency: (1 - c.alpha) * 100,
+            };
+          }
+        }
       }
     }
 
@@ -533,27 +552,49 @@ export async function buildPptxBlob(
           const linkOption = getLinkOption(el.link, slides);
           if (linkOption) options.hyperlink = linkOption;
         }
-        if (el.filters?.opacity) options.transparency = 100 - parseInt(el.filters.opacity);
+        if (el.filters?.opacity) {
+          const op = parseCssLength(el.filters.opacity);
+          if (Number.isFinite(op)) options.transparency = 100 - op;
+        }
         if (el.clip) {
           if (el.clip.shape === 'ellipse') options.rounding = true;
 
-          const [start, end] = el.clip.range;
-          const [startX, startY] = start;
-          const [endX, endY] = end;
+          // Guard against malformed clip ranges: missing points, short
+          // arrays, or degenerate (zero-area) crops that would divide by
+          // zero below and produce Infinity/NaN dimensions.
+          const range = el.clip.range;
+          if (
+            !Array.isArray(range) ||
+            range.length < 2 ||
+            !Array.isArray(range[0]) ||
+            range[0].length < 2 ||
+            !Array.isArray(range[1]) ||
+            range[1].length < 2
+          ) {
+            // Skip crop — fall through to default image sizing.
+          } else {
+            const [start, end] = range;
+            const [startX, startY] = start;
+            const [endX, endY] = end;
+            const dx = endX - startX;
+            const dy = endY - startY;
+            // Degenerate crop (zero width or height) → skip to avoid /0.
+            if (dx > 0 && dy > 0) {
+              const originW = el.width / (dx / ratioPx2Inch);
+              const originH = el.height / (dy / ratioPx2Inch);
 
-          const originW = el.width / ((endX - startX) / ratioPx2Inch);
-          const originH = el.height / ((endY - startY) / ratioPx2Inch);
+              options.w = originW / ratioPx2Inch;
+              options.h = originH / ratioPx2Inch;
 
-          options.w = originW / ratioPx2Inch;
-          options.h = originH / ratioPx2Inch;
-
-          options.sizing = {
-            type: 'crop',
-            x: ((startX / ratioPx2Inch) * originW) / ratioPx2Inch,
-            y: ((startY / ratioPx2Inch) * originH) / ratioPx2Inch,
-            w: (((endX - startX) / ratioPx2Inch) * originW) / ratioPx2Inch,
-            h: (((endY - startY) / ratioPx2Inch) * originH) / ratioPx2Inch,
-          };
+              options.sizing = {
+                type: 'crop',
+                x: ((startX / ratioPx2Inch) * originW) / ratioPx2Inch,
+                y: ((startY / ratioPx2Inch) * originH) / ratioPx2Inch,
+                w: (((endX - startX) / ratioPx2Inch) * originW) / ratioPx2Inch,
+                h: (((endY - startY) / ratioPx2Inch) * originH) / ratioPx2Inch,
+              };
+            }
+          }
         }
 
         pptxSlide.addImage(options);
@@ -853,7 +894,11 @@ export async function buildPptxBlob(
               align: cell.style?.align || 'left',
               valign: 'middle',
               fontFace: cell.style?.fontname || DEFAULT_FONT_FAMILY,
-              fontSize: (cell.style?.fontsize ? parseInt(cell.style.fontsize) : 14) / ratioPx2Pt,
+              fontSize:
+                (() => {
+                  const px = parseCssLength(cell.style?.fontsize);
+                  return Number.isFinite(px) ? px : 14;
+                })() / ratioPx2Pt,
             };
             if (theme && themeColor) {
               let c: FormatColor;

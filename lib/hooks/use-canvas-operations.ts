@@ -181,33 +181,64 @@ export function useCanvasOperations() {
   );
 
   // Copy selected element data to clipboard
-  const copyElement = () => {
-    // if (!activeElementIdList.length) return
-
-    // const text = JSON.stringify({
-    //   type: 'elements',
-    //   data: activeElementList,
-    // })
-
-    // copyText(text).then(() => {
-    //   setEditorareaFocus(true)
-    // })
-    toast.warning(t('toolbar.notImplemented'));
+  const copyElement = async () => {
+    if (!activeElementList.length) return;
+    const payload = JSON.stringify({ type: 'elements', data: activeElementList });
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(payload);
+      } else {
+        // Fallback for non-secure contexts (HTTP) where Clipboard API is unavailable
+        const ta = document.createElement('textarea');
+        ta.value = payload;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    } catch (_err) {
+      toast.warning(t('toolbar.copyFailed', { defaultValue: 'Copy failed' }));
+    }
   };
 
   // Copy and delete selected elements (cut)
-  const cutElement = () => {
-    // copyElement()
-    // deleteElement()
-    toast.warning(t('toolbar.notImplemented'));
+  const cutElement = async () => {
+    if (!activeElementList.length) return;
+    await copyElement();
+    deleteElement();
   };
 
   // Attempt to paste element data from clipboard
-  const pasteElement = () => {
-    // readClipboard().then(text => {
-    //   pasteTextClipboardData(text)
-    // }).catch(err => toast.warning(err))
-    toast.warning(t('toolbar.notImplemented'));
+  const pasteElement = async () => {
+    let text = '';
+    try {
+      if (navigator.clipboard?.readText) {
+        text = await navigator.clipboard.readText();
+      } else {
+        // execCommand('paste') is deprecated and blocked in most browsers;
+        // there is no synchronous fallback for reading the system clipboard.
+        toast.warning(t('toolbar.pasteUnsupported', { defaultValue: 'Paste requires HTTPS' }));
+        return;
+      }
+    } catch (_err) {
+      toast.warning(t('toolbar.pasteFailed', { defaultValue: 'Paste failed' }));
+      return;
+    }
+
+    if (!text) return;
+    try {
+      const parsed = JSON.parse(text) as { type?: string; data?: PPTElement[] };
+      if (parsed.type === 'elements' && Array.isArray(parsed.data) && parsed.data.length > 0) {
+        // Re-id elements so pasted copies don't collide with originals
+        const clones = parsed.data.map((el) => ({ ...el, id: nanoid() }));
+        addElement(clones);
+        addHistorySnapshot();
+      }
+    } catch {
+      // Not JSON or wrong shape — silently ignore (plain text clipboard content)
+    }
   };
 
   // Copy and immediately paste selected elements

@@ -50,7 +50,9 @@ export const useWhiteboardHistoryStore = create<WhiteboardHistoryState>((set, ge
     }
 
     const snapshot: WhiteboardSnapshot = {
-      elements: JSON.parse(JSON.stringify(elements)), // Deep copy
+      // structuredClone is faster than JSON.parse(JSON.stringify(...)) and
+      // handles non-JSON-safe values (Date, Map, etc.) correctly.
+      elements: structuredClone(elements),
       timestamp: Date.now(),
       fingerprint: newFingerprint,
     };

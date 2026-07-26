@@ -22,8 +22,3 @@ export const CHROME_EASE_CSS = `cubic-bezier(${CHROME_EASE.join(', ')})`;
 
 /** Inter-element stagger between chrome layers (seconds). */
 export const CHROME_STAGGER = 0.1;
-
-export const CHROME_TRANSITION = {
-  duration: CHROME_DURATION,
-  ease: CHROME_EASE,
-} as const;

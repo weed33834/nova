@@ -164,7 +164,7 @@ export async function generateSceneOutlinesFromRequirements(
  * - interactive without interactiveConfig OR widgetType+widgetOutline → slide
  * - pbl without pblConfig or languageModel → slide
  */
-export function sanitizeProceduralSkillOutline(outline: SceneOutline): SceneOutline {
+function sanitizeProceduralSkillOutline(outline: SceneOutline): SceneOutline {
   const widgetOutline = { ...(outline.widgetOutline ?? {}) };
   delete widgetOutline.procedureType;
   delete widgetOutline.task;

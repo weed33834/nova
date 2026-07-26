@@ -44,6 +44,31 @@ function jobFilePath(jobId: string) {
   return path.join(CLASSROOM_JOBS_DIR, `${jobId}.json`);
 }
 
+/**
+ * Minimal runtime shape check for parsed job data.
+ *
+ * Job files are normally written by `writeJsonFileAtomic`, but a corrupt
+ * or hand-edited file would otherwise be returned as if valid, then crash
+ * downstream code on `job.status`/`job.progress` access. Returning null
+ * here matches the "not found" semantics callers already handle.
+ */
+function isValidJob(value: unknown): value is ClassroomGenerationJob {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === 'string' &&
+    typeof v.status === 'string' &&
+    typeof v.step === 'string' &&
+    typeof v.progress === 'number' &&
+    typeof v.message === 'string' &&
+    typeof v.createdAt === 'string' &&
+    typeof v.updatedAt === 'string' &&
+    !!v.inputSummary &&
+    typeof v.inputSummary === 'object' &&
+    typeof v.scenesGenerated === 'number'
+  );
+}
+
 function buildInputSummary(input: GenerateClassroomInput): ClassroomGenerationJob['inputSummary'] {
   return {
     requirementPreview:
@@ -124,8 +149,12 @@ export async function readClassroomGenerationJob(
 ): Promise<ClassroomGenerationJob | null> {
   try {
     const content = await fs.readFile(jobFilePath(jobId), 'utf-8');
-    const job = JSON.parse(content) as ClassroomGenerationJob;
-    return markStaleIfNeeded(job);
+    const parsed: unknown = JSON.parse(content);
+    // Treat corrupt-but-parseable files the same as missing: callers map
+    // null → 404, so a half-written job file degrades to "not found"
+    // rather than a 500 from accessing undefined fields.
+    if (!isValidJob(parsed)) return null;
+    return markStaleIfNeeded(parsed);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;

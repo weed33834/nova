@@ -45,11 +45,14 @@ export function parseJsonResponse<T>(response: string): T | null {
   const parsed = parseJsonResponseCandidate<T>(response);
   if (parsed !== null) return parsed;
 
-  log.error('Failed to parse JSON from response');
-  log.error('Raw response (first 500 chars):', cleanedResponse.substring(0, 500));
-  log.error(
-    'Raw response (last 500 chars):',
-    cleanedResponse.substring(Math.max(0, cleanedResponse.length - 500)),
+  // Downgraded from error→warn: this is a recoverable parse failure, not a
+  // crash. Truncated to 200 chars each (from 500) because LLM output may
+  // echo user-submitted document text and shouldn't flood the logs.
+  log.warn('Failed to parse JSON from response');
+  log.warn('Raw response (first 200 chars):', cleanedResponse.substring(0, 200));
+  log.warn(
+    'Raw response (last 200 chars):',
+    cleanedResponse.substring(Math.max(0, cleanedResponse.length - 200)),
   );
 
   return null;
@@ -339,11 +342,6 @@ function repairUnescapedQuotesInHtmlStrings(input: string): string {
       // by `:`, which is a delimiter, so the tolerant logic below would
       // never need to re-escape inside them anyway.
       if (ch === '"') {
-        // Look backwards to see if this string is a value (preceded by `:`)
-        // vs a key (preceded by `{` or `,`).
-        let j = i - 1;
-        while (j >= 0 && /\s/.test(input[j])) j--;
-        const isValue = j >= 0 && input[j] === ':';
         inString = true;
         stringLooksLikeHtml = false;
         stringContentStart = i + 1;

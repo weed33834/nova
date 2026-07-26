@@ -43,11 +43,36 @@ export function isValidClassroomId(id: string): boolean {
   return /^[a-zA-Z0-9_-]+$/.test(id);
 }
 
+/**
+ * Minimal runtime shape check for parsed classroom data.
+ *
+ * Files on disk are normally written by `persistClassroom` (atomic rename),
+ * but a partially-written file from a crashed process or a hand-edited JSON
+ * with a missing field would otherwise be returned as if valid, then crash
+ * downstream code on `classroom.scenes`/`classroom.stage` access. Returning
+ * null here matches the "not found" semantics callers already handle (404).
+ */
+function isValidClassroomData(value: unknown): value is PersistedClassroomData {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === 'string' &&
+    !!v.stage &&
+    typeof v.stage === 'object' &&
+    Array.isArray(v.scenes) &&
+    typeof v.createdAt === 'string'
+  );
+}
+
 export async function readClassroom(id: string): Promise<PersistedClassroomData | null> {
   const filePath = path.join(CLASSROOMS_DIR, `${id}.json`);
   try {
     const content = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(content) as PersistedClassroomData;
+    const parsed: unknown = JSON.parse(content);
+    // Treat corrupt-but-parseable files the same as missing: callers map
+    // null → 404, so a half-written file degrades to "not found" rather
+    // than a 500 from accessing undefined fields.
+    return isValidClassroomData(parsed) ? parsed : null;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;

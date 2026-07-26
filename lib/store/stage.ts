@@ -349,15 +349,23 @@ const useStageStoreBase = create<StageState>()((set, get) => ({
     const stageId = get().stage?.id;
     if (stageId) {
       const generationComplete = get().generationComplete;
-      import('@/lib/utils/database').then(({ db }) => {
-        db.stageOutlines.put({
-          stageId,
-          outlines,
-          generationComplete,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
+      // Attach a .catch() so a failed dynamic import or a rejected
+      // IndexedDB write (quota exceeded, storage blocked, etc.) doesn't
+      // surface as an unhandled promise rejection — the in-memory state
+      // is already updated, only the persistence is best-effort.
+      import('@/lib/utils/database')
+        .then(({ db }) => {
+          db.stageOutlines.put({
+            stageId,
+            outlines,
+            generationComplete,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        })
+        .catch((error) => {
+          log.warn('Failed to persist outlines to IndexedDB:', error);
         });
-      });
     }
   },
 
@@ -386,6 +394,9 @@ const useStageStoreBase = create<StageState>()((set, get) => ({
               updatedAt: Date.now(),
             });
           });
+        })
+        .catch((error) => {
+          log.warn('Failed to persist generationComplete flag to IndexedDB:', error);
         });
     }
   },

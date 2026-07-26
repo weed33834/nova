@@ -151,6 +151,10 @@ import type { ASRModelConfig } from './types';
 import { isCustomASRProvider } from './types';
 import { ASR_PROVIDERS } from './constants';
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 /**
  * Result of ASR transcription
  */
@@ -236,7 +240,7 @@ async function transcribeLemonadeASR(
     if (errorText.includes('audio is empty') || errorText.includes('too short')) {
       return { text: '' };
     }
-    throw new Error(`Lemonade ASR API error: ${errorText || response.statusText}`);
+    throw new Error(`Lemonade ASR API error: ${truncateErrorText(errorText || '') || response.statusText}`);
   }
 
   const data = await response.json();
@@ -399,7 +403,7 @@ async function transcribeQwenASR(
     if (errorText.includes('audio is empty') || errorText.includes('InvalidParameter')) {
       return { text: '' };
     }
-    throw new Error(`Qwen ASR API error: ${errorText}`);
+    throw new Error(`Qwen ASR API error: ${truncateErrorText(errorText)}`);
   }
 
   const data = await response.json();
@@ -412,7 +416,7 @@ async function transcribeQwenASR(
     !Array.isArray(data.output.choices) ||
     data.output.choices.length === 0
   ) {
-    throw new Error(`Qwen ASR error: No choices in response. Response: ${JSON.stringify(data)}`);
+    throw new Error(`Qwen ASR error: No choices in response. Response: ${truncateErrorText(JSON.stringify(data))}`);
   }
 
   const firstChoice = data.output.choices[0];
@@ -449,7 +453,17 @@ async function transcribeAzureASR(
   if (!/\/speechtotext\/transcriptions:transcribe/i.test(endpoint)) {
     endpoint = `${endpoint}/speechtotext/transcriptions:transcribe`;
   }
-  const url = new URL(endpoint);
+  // User-supplied baseUrl may not parse as a URL (typos, bare region
+  // names). new URL throws TypeError — surface a friendly error rather
+  // than letting the raw TypeError propagate as an unhandled exception.
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw new Error(
+      `Azure STT endpoint is not a valid URL: "${endpoint}". Check the ASR provider baseUrl setting.`,
+    );
+  }
   if (!url.searchParams.get('api-version')) {
     url.searchParams.set('api-version', '2025-10-15');
   }
@@ -492,7 +506,7 @@ async function transcribeAzureASR(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`Azure STT error (${response.status}): ${errorText}`);
+    throw new Error(`Azure STT error (${response.status}): ${truncateErrorText(errorText)}`);
   }
 
   const data = (await response.json()) as {

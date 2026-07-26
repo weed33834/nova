@@ -162,12 +162,24 @@ export function ImageClipHandler({
 
   // Calculate and update clip area range data
   const updateRange = useCallback(() => {
-    const retPosition = {
-      left: parseInt(topImgPositionStyle.left),
-      top: parseInt(topImgPositionStyle.top),
-      width: parseInt(topImgPositionStyle.width),
-      height: parseInt(topImgPositionStyle.height),
+    // CSS length values may be "auto" or other non-numeric strings; parse
+    // defensively to avoid NaN propagating into currentRange (which would
+    // corrupt the clip rect and produce Infinity/NaN dimensions downstream).
+    const parse = (v: string | undefined): number => {
+      const n = parseInt(v ?? '', 10);
+      return Number.isFinite(n) ? n : 0;
     };
+    const retPosition = {
+      left: parse(topImgPositionStyle.left),
+      top: parse(topImgPositionStyle.top),
+      width: parse(topImgPositionStyle.width),
+      height: parse(topImgPositionStyle.height),
+    };
+
+    // Guard against zero-width/height (would divide by zero below). A
+    // degenerate range would also corrupt the clip rect, so bail out and
+    // leave the previous range intact.
+    if (retPosition.width <= 0 || retPosition.height <= 0) return;
 
     const widthScale = 100 / retPosition.width;
     const heightScale = 100 / retPosition.height;

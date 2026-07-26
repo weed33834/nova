@@ -20,6 +20,12 @@ const log = createLogger('ProxyMedia');
 
 export const maxDuration = 60;
 
+// Per-hop timeout for upstream CDN fetches. Without this, a slow remote host
+// can hold the request open up to the full maxDuration (60s), tying up a
+// serverless instance. 15s is generous for a single CDN hop while still
+// leaving headroom for the redirect chain.
+const UPSTREAM_HOP_TIMEOUT_MS = 15_000;
+
 export async function POST(request: NextRequest) {
   let url: string | undefined;
   try {
@@ -39,7 +45,10 @@ export async function POST(request: NextRequest) {
     let currentUrl = url;
     let response: Response;
     for (let hop = 0; ; hop++) {
-      response = await fetch(currentUrl, { redirect: 'manual' });
+      response = await fetch(currentUrl, {
+        redirect: 'manual',
+        signal: AbortSignal.timeout(UPSTREAM_HOP_TIMEOUT_MS),
+      });
       if (response.status < 300 || response.status >= 400) break; // not a redirect
       const location = response.headers.get('location');
       if (!location)
@@ -128,6 +137,17 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    // AbortSignal.timeout throws a DOMException with name 'TimeoutError';
+    // surface it as 504 Gateway Timeout so callers can distinguish a slow
+    // upstream from a genuine server-side failure.
+    const isTimeout =
+      error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+    if (isTimeout) {
+      log.warn(
+        `Proxy media timed out [url="${url?.substring(0, 100) ?? 'unknown'}"] after ${UPSTREAM_HOP_TIMEOUT_MS}ms`,
+      );
+      return apiError('CONNECTION_TIMEOUT', 504, 'Upstream request timed out');
+    }
     log.error(`Proxy media failed [url="${url?.substring(0, 100) ?? 'unknown'}"]:`, error);
     return apiError('INTERNAL_ERROR', 500, error instanceof Error ? error.message : String(error));
   }

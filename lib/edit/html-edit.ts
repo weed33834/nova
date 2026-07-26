@@ -40,7 +40,7 @@ interface FuzzyMatchResult {
   contentForReplacement: string;
 }
 
-export function detectLineEnding(content: string): '\r\n' | '\n' {
+function detectLineEnding(content: string): '\r\n' | '\n' {
   const crlfIdx = content.indexOf('\r\n');
   const lfIdx = content.indexOf('\n');
   if (lfIdx === -1) return '\n';
@@ -48,11 +48,11 @@ export function detectLineEnding(content: string): '\r\n' | '\n' {
   return crlfIdx < lfIdx ? '\r\n' : '\n';
 }
 
-export function normalizeToLF(text: string): string {
+function normalizeToLF(text: string): string {
   return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
 
-export function restoreLineEndings(text: string, ending: '\r\n' | '\n'): string {
+function restoreLineEndings(text: string, ending: '\r\n' | '\n'): string {
   return ending === '\r\n' ? text.replace(/\n/g, '\r\n') : text;
 }
 
@@ -60,7 +60,7 @@ export function restoreLineEndings(text: string, ending: '\r\n' | '\n'): string 
  * Normalize text for fuzzy matching: strip trailing whitespace per line,
  * normalize smart quotes / Unicode dashes / special spaces to ASCII.
  */
-export function normalizeForFuzzyMatch(text: string): string {
+function normalizeForFuzzyMatch(text: string): string {
   return (
     text
       .normalize('NFKC')
@@ -136,7 +136,7 @@ function applyReplacements(content: string, replacements: TextReplacement[], off
  * Apply replacements matched against `baseContent` to `originalContent` while
  * preserving unchanged line blocks from the original.
  */
-export function applyReplacementsPreservingUnchangedLines(
+function applyReplacementsPreservingUnchangedLines(
   originalContent: string,
   baseContent: string,
   replacements: TextReplacement[],
@@ -178,7 +178,7 @@ export function applyReplacementsPreservingUnchangedLines(
 }
 
 /** Find oldText in content, exact match first, then fuzzy match. */
-export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResult {
+function fuzzyFindText(content: string, oldText: string): FuzzyMatchResult {
   const exactIndex = content.indexOf(oldText);
   if (exactIndex !== -1) {
     return {
@@ -211,7 +211,7 @@ export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResul
 }
 
 /** Strip a UTF-8 BOM if present, returning the BOM (if any) and the rest. */
-export function stripBom(content: string): { bom: string; text: string } {
+function stripBom(content: string): { bom: string; text: string } {
   return content.charCodeAt(0) === 0xfeff
     ? { bom: content[0], text: content.slice(1) }
     : { bom: '', text: content };

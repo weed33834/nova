@@ -27,6 +27,10 @@ import type {
 } from '../types';
 import { aspectRatioToDimensions, IMAGE_PROVIDERS } from '../image-providers';
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 // ---------------------------------------------------------------------------
 // Logger  (matches nova's [TIMESTAMP] [LEVEL] [Component] format)
 // ---------------------------------------------------------------------------
@@ -463,7 +467,7 @@ async function queuePrompt(
   if (!response.ok) {
     const text = await response.text();
     log.error(`/prompt request failed (HTTP ${response.status}): ${text}`);
-    throw new Error(`ComfyUI /prompt failed (${response.status}): ${text}`);
+    throw new Error(`ComfyUI /prompt failed (${response.status}): ${truncateErrorText(text)}`);
   }
 
   const data = (await response.json()) as QueuePromptResponse;

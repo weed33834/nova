@@ -775,6 +775,12 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
 
       const abortController = new AbortController();
       const signal = abortController.signal;
+      // Store on the shared ref so stop() can abort this retry's in-flight
+      // fetchSceneContent / fetchSceneActions calls. Without this, clicking
+      // stop() during a single-outline retry leaves the LLM fetch running
+      // (wasting tokens) because fetchAbortRef.current still points at the
+      // previous generation's controller (or null).
+      fetchAbortRef.current = abortController;
 
       try {
         // Step 1: Content

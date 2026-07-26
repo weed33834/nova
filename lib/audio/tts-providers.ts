@@ -103,6 +103,10 @@ import {
   type VoxCPMProviderOptions,
 } from './voxcpm';
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 /**
  * Result of TTS generation
  */
@@ -671,7 +675,7 @@ async function generateQwenTTS(config: TTSModelConfig, text: string): Promise<TT
   if (!response.ok) {
     throwIfTtsRateLimited('Qwen', response.status);
     const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`Qwen TTS API error: ${errorText}`);
+    throw new Error(`Qwen TTS API error: ${truncateErrorText(errorText)}`);
   }
 
   const data = await response.json();
@@ -738,13 +742,13 @@ async function generateMiniMaxTTS(
   if (!response.ok) {
     throwIfTtsRateLimited('MiniMax', response.status);
     const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`MiniMax TTS API error: ${errorText}`);
+    throw new Error(`MiniMax TTS API error: ${truncateErrorText(errorText)}`);
   }
 
   const data = await response.json();
   const hexAudio = data?.data?.audio;
   if (!hexAudio || typeof hexAudio !== 'string') {
-    throw new Error(`MiniMax TTS error: No audio returned. Response: ${JSON.stringify(data)}`);
+    throw new Error(`MiniMax TTS error: No audio returned. Response: ${truncateErrorText(JSON.stringify(data))}`);
   }
 
   const cleanedHex = hexAudio.trim();
@@ -804,7 +808,7 @@ async function generateElevenLabsTTS(
   if (!response.ok) {
     throwIfTtsRateLimited('ElevenLabs', response.status);
     const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`ElevenLabs TTS API error: ${errorText || response.statusText}`);
+    throw new Error(`ElevenLabs TTS API error: ${truncateErrorText(errorText || '') || response.statusText}`);
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -911,7 +915,7 @@ async function generateDoubaoTTS(
   if (!response.ok) {
     throwIfTtsRateLimited('Doubao', response.status);
     const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`Doubao TTS API error (${response.status}): ${errorText}`);
+    throw new Error(`Doubao TTS API error (${response.status}): ${truncateErrorText(errorText)}`);
   }
 
   const responseText = await response.text();

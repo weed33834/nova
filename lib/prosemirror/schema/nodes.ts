@@ -125,10 +125,17 @@ const paragraph: NodeSpec = {
 
         let textIndentLevel = 0;
         if (textIndent) {
+          // Parse with radix 10 and a NaN guard; a malformed DOM style string
+          // like "auto" or "" would otherwise yield NaN and propagate into
+          // the paragraph node's textIndent attribute.
+          const parseIndent = (v: string): number => {
+            const n = parseInt(v, 10);
+            return Number.isFinite(n) ? n : 0;
+          };
           if (/em/.test(textIndent)) {
-            textIndentLevel = parseInt(textIndent);
+            textIndentLevel = parseIndent(textIndent);
           } else if (/px/.test(textIndent)) {
-            textIndentLevel = Math.floor(parseInt(textIndent) / 16);
+            textIndentLevel = Math.floor(parseIndent(textIndent) / 16);
             if (!textIndentLevel) textIndentLevel = 1;
           }
         }

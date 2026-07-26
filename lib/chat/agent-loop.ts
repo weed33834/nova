@@ -17,6 +17,10 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('AgentLoop');
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 // ==================== Types ====================
 
 /** Store state snapshot sent with each /api/chat request */
@@ -160,7 +164,7 @@ export async function runAgentLoop(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      throw new Error(`API error: ${response.status} - ${truncateErrorText(errorText)}`);
     }
 
     // Parse SSE stream and process events

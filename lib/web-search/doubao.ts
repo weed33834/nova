@@ -13,6 +13,10 @@
 import { proxyFetch } from '@/lib/server/proxy-fetch';
 import type { WebSearchResult, WebSearchSource } from '@/lib/types/web-search';
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 const DOUBAO_DEFAULT_BASE_URL = 'https://open.feedcoopapi.com';
 const DOUBAO_SEARCH_PATH = '/search_api/web_search';
 /** Query is truncated past 100 chars by the API; trim defensively first. */
@@ -93,7 +97,7 @@ export async function searchWithDoubao(params: {
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => '');
-    throw new Error(`Doubao Web Search API error (${res.status}): ${errorText || res.statusText}`);
+    throw new Error(`Doubao Web Search API error (${res.status}): ${truncateErrorText(errorText || '') || res.statusText}`);
   }
 
   const raw = (await res.json()) as DoubaoSearchResponse;

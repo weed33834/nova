@@ -146,6 +146,7 @@ import { createLogger } from '@/lib/logger';
 import { extractMinerUResult } from './mineru-parser';
 import { parseWithMinerUCloud } from './mineru-cloud';
 import { parseWithAliDocMindClient } from './alidocmind-client';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
 
 const log = createLogger('PDFProviders');
 const DEFAULT_MINERU_BACKEND = 'pipeline';
@@ -470,24 +471,6 @@ export async function fetchAliDocMindImageAsBase64(url: string): Promise<string 
   }
 }
 
-/** Run `fn` over items with a bounded number of concurrent workers. */
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
-}
-
 /**
  * Map AliDocMind layouts[] shape → ParsedPdfContent.
  *
@@ -567,7 +550,7 @@ async function aliDocMindLayoutsToParsedPdf(
     return src ? { src, pageNumber: ref.pageNumber } : null;
   });
   const pdfImagesMeta = fetched
-    .filter((x): x is { src: string; pageNumber: number } => x !== null)
+    .filter((x): x is { src: string; pageNumber: number } => x != null)
     .map((x, i) => ({ id: `img_${i + 1}`, src: x.src, pageNumber: x.pageNumber }));
   const images = pdfImagesMeta.map((m) => m.src);
 

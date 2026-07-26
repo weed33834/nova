@@ -12,6 +12,10 @@ import { proxyFetch } from '@/lib/server/proxy-fetch';
 import type { WebSearchResult, WebSearchSource } from '@/lib/types/web-search';
 import { normalizeWebSearchQuery } from './utils';
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 const BRAVE_DEFAULT_BASE_URL = 'https://search.brave.com';
 
 const BRAVE_HEADERS: Record<string, string> = {
@@ -130,7 +134,7 @@ async function searchWithBraveApi(
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => '');
-    throw new Error(`Brave API error (${res.status}): ${errorText || res.statusText}`);
+    throw new Error(`Brave API error (${res.status}): ${truncateErrorText(errorText || '') || res.statusText}`);
   }
 
   const data = (await res.json()) as {
@@ -169,7 +173,7 @@ async function searchWithBraveScrape(
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => '');
-    throw new Error(`Brave Search error (${res.status}): ${errorText || res.statusText}`);
+    throw new Error(`Brave Search error (${res.status}): ${truncateErrorText(errorText || '') || res.statusText}`);
   }
 
   const html = await res.text();

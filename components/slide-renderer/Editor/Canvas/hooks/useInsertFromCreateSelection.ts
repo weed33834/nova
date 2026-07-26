@@ -3,7 +3,7 @@ import { useCanvasStore } from '@/lib/store';
 import { createElementId } from '@/lib/edit/element-id';
 import { useCanvasOperations } from '@/lib/hooks/use-canvas-operations';
 import type { CreateElementSelectionData } from '@/lib/types/edit';
-import type { PPTTextElement } from '@nova/dsl';
+import type { PPTTextElement, PPTShapeElement, PPTLineElement } from '@nova/dsl';
 
 // Click-fallback default size when the user clicks instead of drags (or wobbles
 // under this in either dimension): a sensibly-sized text box at the start point.
@@ -119,12 +119,45 @@ export function useInsertFromCreateSelection(viewportRef: RefObject<HTMLElement 
       } else if (type === 'shape') {
         const position = formatCreateSelection(selectionData);
         if (position) {
-          // TODO: Implement createShapeElement
+          // Click (sub-threshold wobble) → default-sized rectangle so a
+          // single click still produces a visible shape. A real drag
+          // uses the dragged rect.
+          const width = position.width < TEXT_CLICK_MIN ? 200 : position.width;
+          const height = position.height < TEXT_CLICK_MIN ? 140 : position.height;
+          const shapeEl: PPTShapeElement = {
+            id: createElementId('shape'),
+            type: 'shape',
+            left: position.left,
+            top: position.top,
+            width,
+            height,
+            rotate: 0,
+            // Unit-rect path → rectangle. Shape presets replace this path
+            // when the user picks a specific shape from the toolbar.
+            viewBox: [1, 1],
+            path: 'M 0 0 L 1 0 L 1 1 L 0 1 Z',
+            fixedRatio: false,
+            fill: '#5b9bd5',
+          };
+          addElement(shapeEl);
         }
       } else if (type === 'line') {
         const position = formatCreateSelectionForLine(selectionData);
         if (position) {
-          // TODO: Implement createLineElement
+          const lineEl: PPTLineElement = {
+            id: createElementId('line'),
+            type: 'line',
+            left: position.left,
+            top: position.top,
+            // Stroke thickness in px (not visual span). 3 = medium.
+            width: 3,
+            start: position.start,
+            end: position.end,
+            style: 'solid',
+            color: '#333333',
+            points: ['', ''],
+          };
+          addElement(lineEl);
         }
       }
       setCreatingElement(null);

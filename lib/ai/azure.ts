@@ -10,7 +10,26 @@ export function normalizeAzureBaseUrl(baseUrl?: string): string | undefined {
   const value = baseUrl?.trim();
   if (!value) return undefined;
 
-  const url = new URL(value);
+  // User-supplied baseUrl may not be a valid URL (typos, missing scheme,
+  // pasting just a region name). `new URL` throws TypeError on those —
+  // return the original value so the caller can surface a friendly error
+  // rather than crashing the whole model-creation flow.
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    // If it looks like a bare hostname (no scheme), retry with https://
+    // so users can type "my-resource.openai.azure.com" without a scheme.
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(value) && /\./.test(value)) {
+      try {
+        url = new URL(`https://${value}`);
+      } catch {
+        return value;
+      }
+    } else {
+      return value;
+    }
+  }
   url.search = '';
   url.hash = '';
 

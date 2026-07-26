@@ -84,38 +84,3 @@ export function findElementGeometry(
 
   return getElementPercentageGeometry(element, viewportSize);
 }
-
-/**
- * Calculate which corner has the shortest distance to the element center
- *
- * @param geometry - Percentage geometry info
- * @returns Nearest corner coordinates { x: 0-100, y: 0-100 }
- */
-export function findNearestCorner(geometry: PercentageGeometry): {
-  x: number;
-  y: number;
-} {
-  const { centerX, centerY } = geometry;
-
-  // Coordinates of the four corners
-  const corners = [
-    { x: 0, y: 0 }, // Top-left
-    { x: 100, y: 0 }, // Top-right
-    { x: 0, y: 100 }, // Bottom-left
-    { x: 100, y: 100 }, // Bottom-right
-  ];
-
-  // Calculate distances and find the nearest corner
-  let minDistance = Infinity;
-  let nearestCorner = corners[0];
-
-  for (const corner of corners) {
-    const distance = Math.sqrt(Math.pow(corner.x - centerX, 2) + Math.pow(corner.y - centerY, 2));
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearestCorner = corner;
-    }
-  }
-
-  return nearestCorner;
-}

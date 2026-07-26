@@ -10,19 +10,3 @@ export interface Participant {
   isOnline: boolean;
   isSpeaking?: boolean;
 }
-
-export interface MessageAction {
-  id: string;
-  label: string;
-  icon?: string;
-  onClick: () => void;
-}
-
-export interface Message {
-  id: string;
-  senderId: string;
-  senderRole: ParticipantRole;
-  content: string;
-  timestamp: number;
-  actions?: MessageAction[];
-}

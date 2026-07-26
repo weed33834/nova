@@ -183,7 +183,9 @@ async function directorNode(
     );
 
     const content = result.generations[0]?.text || '';
-    log.info(`[Director] Raw decision: ${content}`);
+    // The director response can be multi-KB JSON and may echo user-derived
+    // content; log at debug level and truncate to avoid bloating logs.
+    log.debug(`[Director] Raw decision: ${content.slice(0, 200)}`);
 
     const decision = parseDirectorDecision(content);
 

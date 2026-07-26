@@ -12,6 +12,10 @@ import { normalizeWebSearchQuery } from './utils';
 
 const log = createLogger('SearXNG');
 
+function truncateErrorText(text: string, max = 300): string {
+  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
+}
+
 const SEARXNG_HEADERS: Record<string, string> = {
   Accept: 'application/json',
   'User-Agent': 'Mozilla/5.0 (compatible; Nova/1.0; +https://novastudy.ai)',
@@ -69,7 +73,7 @@ export async function searchWithSearxng(params: {
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => '');
-    throw new Error(`SearXNG error (${res.status}): ${errorText || res.statusText}`);
+    throw new Error(`SearXNG error (${res.status}): ${truncateErrorText(errorText || '') || res.statusText}`);
   }
 
   const rawText = await res.text();
