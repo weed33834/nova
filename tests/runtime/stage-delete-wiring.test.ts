@@ -7,6 +7,9 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('@/lib/runtime/store', () => ({
   deleteStageRuntimeSafely: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock('@/lib/pbl/v2/runtime/drain', () => ({
+  clearStageDrainWatermarks: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('@/lib/utils/database', () => ({
   db: {
     stages: { delete: vi.fn().mockResolvedValue(undefined) },
@@ -16,6 +19,22 @@ vi.mock('@/lib/utils/database', () => ({
           toArray: vi.fn().mockResolvedValue([{ id: 'scene-1' }]),
           delete: vi.fn().mockResolvedValue(1),
         }),
+      }),
+    },
+    stageOutlines: { delete: vi.fn().mockResolvedValue(undefined) },
+    mediaFiles: {
+      where: () => ({
+        equals: () => ({ delete: vi.fn().mockResolvedValue(undefined) }),
+      }),
+    },
+    generatedAgents: {
+      where: () => ({
+        equals: () => ({ delete: vi.fn().mockResolvedValue(undefined) }),
+      }),
+    },
+    agentEditSessions: {
+      where: () => ({
+        equals: () => ({ delete: vi.fn().mockResolvedValue(undefined) }),
       }),
     },
   },

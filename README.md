@@ -117,7 +117,7 @@ Data flow: user enters a topic → the prompt engine assembles the prompt → LL
 ### Installation
 
 ```bash
-git clone https://github.com/weed33834/nova.git
+git clone https://gitcode.com/badhope/nova.git
 cd nova
 pnpm install
 ```

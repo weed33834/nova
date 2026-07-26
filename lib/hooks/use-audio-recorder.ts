@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { ASR_PROVIDERS } from '@/lib/audio/constants';
 import { normalizeASRUploadAudio } from '@/lib/audio/wav-utils';
 import { createLogger } from '@/lib/logger';
@@ -328,6 +328,50 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
       audioChunksRef.current = [];
     }
   }, [isRecording]);
+
+  // Release all recording resources on unmount: timer, MediaRecorder + its
+  // MediaStream, and SpeechRecognition. Without this, navigating away mid-
+  // recording leaves the microphone indicator on (MediaStream tracks not
+  // stopped) and the interval fires setState on an unmounted component.
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.onresult = null;
+          speechRecognitionRef.current.onerror = null;
+          speechRecognitionRef.current.onend = null;
+          speechRecognitionRef.current.onstart = null;
+          speechRecognitionRef.current.abort();
+        } catch {
+          /* noop */
+        }
+        speechRecognitionRef.current = null;
+      }
+      const recorder = mediaRecorderRef.current;
+      if (recorder) {
+        try {
+          if (recorder.state !== 'inactive') {
+            recorder.ondataavailable = null;
+            recorder.onstop = null;
+            recorder.stop();
+          }
+        } catch {
+          /* noop */
+        }
+        const stream = recorder.stream;
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
+        mediaRecorderRef.current = null;
+      }
+      audioChunksRef.current = [];
+      busyRef.current = false;
+    };
+  }, []);
 
   return {
     isRecording,

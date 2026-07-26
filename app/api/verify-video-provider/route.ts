@@ -28,6 +28,10 @@ import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 
 const log = createLogger('VerifyVideoProvider');
 
+// Connectivity probe can stall on an unresponsive endpoint; cap the route so
+// Vercel doesn't kill it mid-probe. Matches verify-image-provider's ceiling.
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   try {
     const providerId = (request.headers.get('x-video-provider') || 'seedance') as VideoProviderId;

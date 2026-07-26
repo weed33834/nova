@@ -38,9 +38,18 @@ export function normalizeUsage(usage: LanguageModelUsage | undefined | null): No
     };
   }
 
-  const cacheRead = num(usage.inputTokenDetails?.cacheReadTokens) || num(usage.cachedInputTokens);
+  // Prefer the nested v6 detail fields; fall back to the deprecated flat
+  // fields ONLY when the detail field is absent. Using `||` after `num()`
+  // would treat a legitimate 0 as "missing" and wrongly use the fallback.
+  const cacheRead =
+    usage.inputTokenDetails?.cacheReadTokens != null
+      ? num(usage.inputTokenDetails.cacheReadTokens)
+      : num(usage.cachedInputTokens);
   const cacheCreation = num(usage.inputTokenDetails?.cacheWriteTokens);
-  const reasoning = num(usage.outputTokenDetails?.reasoningTokens) || num(usage.reasoningTokens);
+  const reasoning =
+    usage.outputTokenDetails?.reasoningTokens != null
+      ? num(usage.outputTokenDetails.reasoningTokens)
+      : num(usage.reasoningTokens);
 
   return {
     inputTokens: num(usage.inputTokens),

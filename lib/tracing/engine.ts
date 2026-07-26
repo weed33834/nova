@@ -21,6 +21,8 @@ export const DEFAULT_TRACING_CONFIG: TracingConfig = {
 export class KnowledgeTracer {
   private traces: Map<string, KnowledgeTrace> = new Map();
   private config: TracingConfig;
+  private static readonly MAX_HISTORY_PER_TRACE = 100;
+  private static readonly MAX_TRACES = 5000;
 
   constructor(config: Partial<TracingConfig> = {}) {
     this.config = { ...DEFAULT_TRACING_CONFIG, ...config };
@@ -31,6 +33,18 @@ export class KnowledgeTracer {
     let trace = this.traces.get(key);
 
     if (!trace) {
+      // 上限保护：超过容量时丢弃最久未练习的 trace，避免长期运行内存膨胀
+      if (this.traces.size >= KnowledgeTracer.MAX_TRACES) {
+        let oldestKey: string | null = null;
+        let oldestTs = Infinity;
+        for (const [k, t] of this.traces) {
+          if (t.lastPracticed < oldestTs) {
+            oldestTs = t.lastPracticed;
+            oldestKey = k;
+          }
+        }
+        if (oldestKey) this.traces.delete(oldestKey);
+      }
       trace = {
         studentId,
         conceptId,
@@ -44,6 +58,10 @@ export class KnowledgeTracer {
     }
 
     trace.history.push(entry);
+    // 限制单 trace 历史长度，丢弃最旧条目
+    if (trace.history.length > KnowledgeTracer.MAX_HISTORY_PER_TRACE) {
+      trace.history.splice(0, trace.history.length - KnowledgeTracer.MAX_HISTORY_PER_TRACE);
+    }
     trace.lastPracticed = entry.timestamp;
 
     if (entry.type === 'quiz' || entry.type === 'practice') {

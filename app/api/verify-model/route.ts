@@ -6,6 +6,11 @@ import { resolveModel } from '@/lib/server/resolve-model';
 import { callLLM } from '@/lib/ai/llm';
 const log = createLogger('VerifyModel');
 
+// Sends a real (minimal) LLM round-trip — a slow or stalled provider can run
+// well past the platform default. Cap explicitly so Vercel doesn't kill it
+// mid-probe (callLLM has its own retries, this is the outer boundary).
+export const maxDuration = 30;
+
 /**
  * Extract upstream HTTP status from an AI SDK error.
  * Handles APICallError, RetryError, and generic errors with statusCode/status.

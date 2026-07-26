@@ -78,6 +78,18 @@ function ensureSweeperStarted(): void {
 
 // ─── 路由处理 ────────────────────────────────────────────────────────────────
 
+// 判断 POST 请求是否是 JSON-RPC initialize 调用。
+// 必须 clone 后再读，否则 SDK 内部 req.json() 会因 body 已被消耗而失败。
+async function isInitializeRequest(req: NextRequest): Promise<boolean> {
+  try {
+    const cloned = req.clone();
+    const body = (await cloned.json()) as { method?: unknown };
+    return body?.method === 'initialize';
+  } catch {
+    return false;
+  }
+}
+
 async function handleMcpRequest(req: NextRequest): Promise<Response> {
   // 1. 部署门控：Vercel 上直接 404，避免暴露不可用的端点。
   if (!isMCPExposureEnabled()) {
@@ -101,12 +113,21 @@ async function handleMcpRequest(req: NextRequest): Promise<Response> {
     state = sessions.get(sessionId)!;
     touchSession(sessionId);
   } else {
-    // 新会话：构造 stateful transport（sessionIdGenerator 让 server 分配 id）。
+    // 兜底创建新 transport + server。
+    // 注意：onsessioninitialized 只在 initialize 请求时触发回填 sessions Map。
+    // 对其他无 sessionId 的 GET/POST/DELETE 请求，新建的 transport 不会被
+    // 正式 sessionId 引用——若不主动注册到 sessions Map，会变成孤儿对象
+    // 被 SDK 内部定时器/监听器持有，无法被 sweeper 清理，造成内存泄漏。
+    // 解决：用临时 key 注册到 sessions Map，sweeper 会按 lastActivity 清理。
+    const tempKey = `pending-${Date.now()}-${crypto.randomUUID()}`;
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: () => crypto.randomUUID(),
       onsessioninitialized: (newId) => {
         sessions.set(newId, { transport });
         touchSession(newId);
+        // initialize 成功后删除临时 entry，避免重复持有。
+        sessions.delete(tempKey);
+        lastActivity.delete(tempKey);
         log.info(`MCP session initialized: ${newId}`);
       },
       onsessionclosed: (closedId) => {
@@ -114,18 +135,11 @@ async function handleMcpRequest(req: NextRequest): Promise<Response> {
         log.info(`MCP session closed: ${closedId}`);
       },
     });
-    // 创建 Nova MCP server 并挂到 transport —— 工具/资源/提示词注册在工厂里完成。
     const mcpServer = createNovaMcpServer();
     await mcpServer.connect(transport);
-    // onsessioninitialized 会把 state 写进 sessions；但 transport 自身已绑定
-    // 到 server，handleRequest 时 transport.sessionId 才是 server 分配的值。
     state = { transport };
-    // 若 initialize 之前就来了请求（如 GET 探活），临时挂到匿名 state 让
-    // handleRequest 能跑；initialize 完成后会被 onsessioninitialized 覆盖。
-    if (!sessionId) {
-      // 标记为“待初始化”——用 transport 对象自身做 key 暂存，由
-      // onsessioninitialized 回填正式 sessionId。
-    }
+    sessions.set(tempKey, state);
+    touchSession(tempKey);
   }
 
   // 4. 把 NextRequest 透传给 transport —— SDK 的 WebStandard 变体原生吃

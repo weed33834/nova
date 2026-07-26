@@ -117,7 +117,7 @@ Nova はマルチエージェント型のインテリジェント教学プラッ
 ### インストール
 
 ```bash
-git clone https://github.com/weed33834/nova.git
+git clone https://gitcode.com/badhope/nova.git
 cd nova
 pnpm install
 ```

@@ -27,6 +27,10 @@ import { resolveWebSearchRouteBaseUrl } from '@/lib/server/web-search-config';
 
 const log = createLogger('WebSearch');
 
+// Query rewrite (LLM) + the search call itself can together run past the
+// platform default. Cap explicitly so Vercel doesn't kill it mid-search.
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   let query: string | undefined;
   try {

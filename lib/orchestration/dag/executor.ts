@@ -56,6 +56,9 @@ export class DAGExecutor {
     const results = new Map<string, unknown>();
 
     for (let i = 0; i < this.state.plan.stages.length; i++) {
+      // Abort check at stage boundary: a long-running prior stage may have
+      // completed after the user cancelled, so re-check before kicking off the
+      // next stage to avoid wasted work and respect the signal promptly.
       if (this.options.signal?.aborted) {
         this.state.status = 'failed';
         break;
@@ -69,6 +72,14 @@ export class DAGExecutor {
         ? await this.executeParallelStage(stage, results)
         : [await this.executeSequentialStage(stage, results)];
 
+      // A node may have aborted mid-stage; stop the loop instead of pushing
+      // partial results and continuing into dependent stages that would
+      // dereference undefined inputs (the deadlock/hang path).
+      if (this.options.signal?.aborted) {
+        this.state.status = 'failed';
+        break;
+      }
+
       for (const [nodeId, result] of stageResults) {
         results.set(nodeId, result);
       }
@@ -76,7 +87,9 @@ export class DAGExecutor {
       this.options.onStageComplete?.(stage);
     }
 
-    this.state.status = 'completed';
+    if (this.state.status !== 'failed') {
+      this.state.status = 'completed';
+    }
     return results;
   }
 
@@ -84,9 +97,18 @@ export class DAGExecutor {
     stage: TaskStage,
     results: Map<string, unknown>,
   ): Promise<Array<[string, unknown]>> {
+    // Build the per-node promises once. We then attach a no-op `.catch` to
+    // each individual promise BEFORE `Promise.all` so that when `Promise.all`
+    // short-circuits on the first rejection, the remaining in-flight nodes'
+    // eventual rejections are not reported as unhandled rejection events.
+    // `Promise.all` (not `allSettled`) preserves the original fail-fast
+    // semantics for the outer loop.
     const promises = stage.nodes.map((node) =>
-      this.executeNodeWithTracking(node, results).then((r) => [node.id, r] as [string, unknown]),
+      this.executeNodeWithTracking(node, results).then(
+        (r) => [node.id, r] as [string, unknown],
+      ),
     );
+    for (const p of promises) p.catch(() => {});
     return Promise.all(promises);
   }
 
@@ -121,7 +143,37 @@ export class DAGExecutor {
     }
 
     try {
-      const result = await this.options.executeNode(node, depMap);
+      // Honor `node.timeout` (ms) — without it a misbehaving executeNode can
+      // hang the whole DAG forever (one stalled node blocks its stage, which
+      // blocks every dependent stage). Clear the timer on settle so a fast
+      // node doesn't leave a dangling setTimeout keeping the loop alive.
+      const execPromise = this.options.executeNode(node, depMap);
+      let result: unknown;
+      if (typeof node.timeout === 'number' && node.timeout > 0) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          result = await Promise.race([
+            execPromise,
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(
+                () => reject(new Error(`Node ${node.id} timed out after ${node.timeout}ms`)),
+                node.timeout as number,
+              );
+            }),
+          ]);
+        } finally {
+          if (timer !== undefined) clearTimeout(timer);
+        }
+      } else {
+        result = await execPromise;
+      }
+
+      // If the user aborted while the node was running, don't pretend success —
+      // surface as a failure so the outer loop stops.
+      if (this.options.signal?.aborted) {
+        throw new Error(`Aborted before node ${node.id} could complete`);
+      }
+
       nodeState.status = 'completed';
       nodeState.completedAt = Date.now();
       nodeState.result = result;

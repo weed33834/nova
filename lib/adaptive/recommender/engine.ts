@@ -36,7 +36,7 @@ export class RecommenderEngine {
     knowledgeState: KnowledgeState,
   ): RecommendationResult {
     const allRecommendations = this.generateCandidates(graph, profile, knowledgeState);
-    const scored = this.scoreRecommendations(allRecommendations, profile, knowledgeState);
+    const scored = this.scoreRecommendations(graph, allRecommendations, profile, knowledgeState);
     const top = this.diversify(scored).slice(0, this.config.maxRecommendations);
 
     log.info(`[Recommender] Generated ${top.length} recommendations for profile ${profile.id}`);
@@ -141,6 +141,7 @@ export class RecommenderEngine {
   }
 
   private scoreRecommendations(
+    graph: KnowledgeGraph,
     candidates: Recommendation[],
     profile: StudentProfile,
     state: KnowledgeState,
@@ -148,14 +149,17 @@ export class RecommenderEngine {
     return candidates.map((rec) => {
       let score = 0;
 
-      const missingPrereqs = getPrerequisites(
-        { id: '', name: '', subject: '', nodes: [rec.concept], edges: [] },
-        rec.concept.id,
-      );
+      // Compute the real prerequisite ratio against the actual graph. The
+      // previous synthetic-graph call (`{ nodes: [rec.concept], edges: [] }`)
+      // always returned `[]`, so prereqRatio was unconditionally 1 and every
+      // candidate received the full 0.3 — defeating the prerequisite-aware
+      // scoring intent and letting students be pushed into concepts whose
+      // prerequisites they hadn't met.
+      const prereqs = getPrerequisites(graph, rec.concept.id);
       const prereqRatio =
-        missingPrereqs.length > 0
-          ? missingPrereqs.filter((p) => (state.masteryLevels.get(p.id) ?? 0) >= 0.5).length /
-            missingPrereqs.length
+        prereqs.length > 0
+          ? prereqs.filter((p) => (state.masteryLevels.get(p.id) ?? 0) >= 0.5).length /
+            prereqs.length
           : 1;
       score += prereqRatio * 0.3;
 

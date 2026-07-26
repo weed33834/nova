@@ -61,6 +61,11 @@ export function AgentRevealModal({ agents, open, onClose, onAllRevealed }: Agent
     }
 
     let i = 0;
+    // Hoisted so the outer effect cleanup can clear it — the interval is
+    // created inside the setTimeout below, whose return value is ignored, so a
+    // cleanup returned from there would never run. Without this, unmounting
+    // after the timeout fires leaks the interval and keeps calling setState.
+    let interval: ReturnType<typeof setInterval> | null = null;
     const startTimeout = setTimeout(() => {
       i = 1;
       setRevealedCount(1);
@@ -75,11 +80,11 @@ export function AgentRevealModal({ agents, open, onClose, onAllRevealed }: Agent
         return;
       }
 
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         i++;
         setRevealedCount(i);
         if (i >= agents.length) {
-          clearInterval(interval);
+          if (interval) clearInterval(interval);
           setTimeout(() => {
             if (!allRevealedFiredRef.current) {
               allRevealedFiredRef.current = true;
@@ -88,11 +93,12 @@ export function AgentRevealModal({ agents, open, onClose, onAllRevealed }: Agent
           }, 600);
         }
       }, 500);
-
-      return () => clearInterval(interval);
     }, 400);
 
-    return () => clearTimeout(startTimeout);
+    return () => {
+      clearTimeout(startTimeout);
+      if (interval) clearInterval(interval);
+    };
   }, [open, agents.length]);
 
   // Switch from preserve-3d to flat after all flip animations complete to enable scrolling

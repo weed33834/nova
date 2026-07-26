@@ -53,17 +53,27 @@ export function getDependencyLevels(nodes: TaskNode[], edges: TaskEdge[]): Map<s
     reverseAdj.get(edge.to)?.push(edge.from);
   }
 
+  // Track nodes whose getLevel() call is currently on the stack so a cyclic
+  // graph (which bypasses buildExecutionPlan's topologicalSort guard when this
+  // exported helper is called directly) terminates instead of blowing the
+  // stack. A cycle member is treated as level 0 — callers that need cycle
+  // rejection should use topologicalSort first.
+  const visiting = new Set<string>();
   const getLevel = (nodeId: string): number => {
     const cached = levels.get(nodeId);
     if (cached !== undefined && cached > 0) return cached;
+    if (visiting.has(nodeId)) return 0;
+    visiting.add(nodeId);
     const deps = reverseAdj.get(nodeId) || [];
     if (deps.length === 0) {
       levels.set(nodeId, 0);
+      visiting.delete(nodeId);
       return 0;
     }
     const maxDepLevel = Math.max(...deps.map(getLevel));
     const level = maxDepLevel + 1;
     levels.set(nodeId, level);
+    visiting.delete(nodeId);
     return level;
   };
 

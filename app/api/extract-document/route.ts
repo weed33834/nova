@@ -24,6 +24,11 @@ import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 const log = createLogger('Extract Document');
 const MAX_EXTRACT_DOCUMENT_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
+// Extraction (esp. AliDocMind/MinerU round-trips) can take well past the
+// default Vercel timeout; pin an explicit ceiling so the function isn't killed
+// mid-extraction on managed platforms.
+export const maxDuration = 120;
+
 function isPdfProviderId(providerId: string): providerId is PDFProviderId {
   return providerId in PDF_PROVIDERS;
 }

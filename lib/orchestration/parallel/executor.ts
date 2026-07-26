@@ -49,14 +49,44 @@ export class ParallelExecutor {
         }
       }
     } else if (config.execution === 'race') {
-      const racePromises = config.agentIds.map((agentId) =>
-        this.executeSingle(agentId, config.timeout, input).then((r) => ({ agentId, result: r })),
+      // Each agent promise must reject-or-resolve on its own so the losers
+      // never become an unhandled rejection after `Promise.race` returns.
+      // `.catch(() => undefined)` swallows the loser rejection while still
+      // letting the winner surface through `Promise.race` below.
+      const racePromises = config.agentIds.map(
+        (agentId) =>
+          this.executeSingle(agentId, config.timeout, input)
+            .then((r) => ({ agentId, result: r }))
+            .catch((error) => ({
+              agentId,
+              error: error instanceof Error ? error.message : String(error),
+            })),
       );
       try {
         const winner = await Promise.race(racePromises);
-        results.push(winner.result);
-        log.info(`[ParallelExecutor] Race won by "${winner.agentId}"`);
+        // If every agent rejected, `winner` carries an `error` field instead of
+        // a `result` — surface a single error result instead of mistaking a
+        // rejection for a success.
+        if ('result' in winner && winner.result) {
+          results.push(winner.result);
+          log.info(`[ParallelExecutor] Race won by "${winner.agentId}"`);
+        } else {
+          results.push({
+            agentId: winner.agentId,
+            status: 'error',
+            content: '',
+            actions: [],
+            duration: 0,
+            error: (winner as { error?: string }).error ?? 'all agents failed in race',
+          });
+        }
+        // Keep awaiting the remaining losers so their rejections are tracked
+        // (now harmless because each has a `.catch` attached) — this avoids
+        // orphaned in-flight agent calls and finishes the race deterministically.
+        await Promise.allSettled(racePromises);
       } catch (error) {
+        // Defensive: only reachable if Promise.race itself rejects (shouldn't,
+        // since each branch has `.catch`). Keep the original behavior.
         results.push({
           agentId: config.agentIds[0],
           status: 'error',
@@ -139,14 +169,25 @@ export class ParallelExecutor {
     const startTime = Date.now();
 
     const execPromise = this.executor(agentId, input);
-    const result = timeout
-      ? await Promise.race([
+    let result: { content: string; actions: Array<{ actionName: string; params: Record<string, unknown> }> };
+    if (timeout) {
+      // Race the executor against a timer; clear the timer on settle so a
+      // resolved/errored call doesn't leave a dangling `setTimeout` that keeps
+      // the event loop alive for `timeout` ms after this function returns.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        result = await Promise.race([
           execPromise,
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout after ${timeout}ms`)), timeout),
-          ),
-        ])
-      : await execPromise;
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error(`Timeout after ${timeout}ms`)), timeout);
+          }),
+        ]);
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
+      }
+    } else {
+      result = await execPromise;
+    }
 
     return {
       agentId,

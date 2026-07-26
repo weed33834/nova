@@ -3,8 +3,10 @@
 // AgentBar overlap fix and check for any other visual duplication.
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT_DIR = '/workspace/nova/screenshots/mobile-check';
+const OUT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'screenshots', 'mobile-check');
 mkdirSync(OUT_DIR, { recursive: true });
 
 const TARGETS = [

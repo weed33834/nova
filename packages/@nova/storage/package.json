@@ -48,8 +48,8 @@
     "@nova/dsl": "workspace:*"
   },
   "devDependencies": {
-    "fake-indexeddb": "^6.0.0",
-    "typescript": "^5",
-    "vitest": "^4.1.8"
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

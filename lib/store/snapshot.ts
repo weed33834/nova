@@ -125,6 +125,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
     const newSnapshotCursor = snapshotCursor - 1;
     const snapshots: Snapshot[] = await db.snapshots.orderBy('id').toArray();
     const snapshot = snapshots[newSnapshotCursor];
+    if (!snapshot) return;
     const { index, slides } = snapshot;
 
     const sceneIndex = index > slides.length - 1 ? slides.length - 1 : index;
@@ -150,6 +151,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
     const newSnapshotCursor = snapshotCursor + 1;
     const snapshots: Snapshot[] = await db.snapshots.orderBy('id').toArray();
     const snapshot = snapshots[newSnapshotCursor];
+    if (!snapshot) return;
     const { index, slides } = snapshot;
 
     const sceneIndex = index > slides.length - 1 ? slides.length - 1 : index;

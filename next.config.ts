@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'lucide-react',
       'motion',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-tooltip',
       '@radix-ui/react-popover',
       'embla-carousel-react',
       'sonner',

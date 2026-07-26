@@ -141,9 +141,12 @@ async function generateSingleMedia(
 
     if (abortSignal?.aborted) return;
 
-    // Fetch blob from URL
-    const blob = await fetchAsBlob(resultUrl);
-    const posterBlob = posterUrl ? await fetchAsBlob(posterUrl).catch(() => undefined) : undefined;
+    // Fetch blob from URL — pass abortSignal so a mid-download cancel actually
+    // tears down the request instead of letting the fetch run to completion.
+    const blob = await fetchAsBlob(resultUrl, abortSignal);
+    const posterBlob = posterUrl
+      ? await fetchAsBlob(posterUrl, abortSignal).catch(() => undefined)
+      : undefined;
 
     // Store in IndexedDB
     await db.mediaFiles.put({
@@ -274,10 +277,10 @@ async function callVideoApi(
   return { url, poster: data.result?.poster };
 }
 
-async function fetchAsBlob(url: string): Promise<Blob> {
+async function fetchAsBlob(url: string, abortSignal?: AbortSignal): Promise<Blob> {
   // For data URLs, convert directly
   if (url.startsWith('data:')) {
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: abortSignal });
     return res.blob();
   }
   // For remote URLs, proxy through our server to bypass CORS restrictions
@@ -286,6 +289,7 @@ async function fetchAsBlob(url: string): Promise<Blob> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
+      signal: abortSignal,
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -294,7 +298,7 @@ async function fetchAsBlob(url: string): Promise<Blob> {
     return res.blob();
   }
   // Relative URLs (shouldn't happen, but handle gracefully)
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: abortSignal });
   if (!res.ok) throw new Error(`Failed to fetch blob: ${res.status}`);
   return res.blob();
 }

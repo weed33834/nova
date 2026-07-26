@@ -68,12 +68,9 @@ test.describe('Home → Generation', () => {
     const home = new HomePage(page);
     await home.goto();
 
-    // The DemoSeedButton component hardcodes Chinese text (not i18n),
-    // so the button label is 秒开缓存演示课程 even in en-US locale.
+    // DemoSeedButton 点击后直接 router.push 到 classroom，不在 home 显示中间卡片
     await page.getByRole('button', { name: '秒开缓存演示课程' }).click();
-    await expect(page.getByText('人工智能导论', { exact: true }).last()).toBeVisible();
-    await page.getByText('人工智能导论', { exact: true }).last().click();
-    await page.waitForURL(/\/classroom\/demo-ai-course/);
+    await page.waitForURL(/\/classroom\/demo-ai-intro/);
   });
 
   test('keeps body spacing stable when the settings dialog opens', async ({ page }) => {

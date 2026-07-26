@@ -12,6 +12,17 @@ import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 const log = createLogger('Parse PDF');
 
+// Mirror extract-document's per-file cap: arrayBuffer() loads the whole upload
+// into memory as a Buffer, so an unbounded upload would let a single request
+// OOM the process. 50MB matches the sibling route and is well above any real
+// course material.
+const MAX_PDF_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+
+// PDF extraction (esp. AliDocMind/MinerU round-trips) can take well past the
+// default Vercel timeout; pin an explicit ceiling so the function isn't killed
+// mid-parse on managed platforms.
+export const maxDuration = 120;
+
 export async function POST(req: NextRequest) {
   let pdfFileName: string | undefined;
   let resolvedProviderId: string | undefined;
@@ -40,6 +51,18 @@ export async function POST(req: NextRequest) {
     const effectiveProviderId = providerId || ('unpdf' as PDFProviderId);
     pdfFileName = pdfFile?.name;
     resolvedProviderId = effectiveProviderId;
+
+    // Reject oversized uploads before arrayBuffer() materializes the full file
+    // into a heap Buffer (OOM protection — same boundary extract-document enforces).
+    if (pdfFile.size > MAX_PDF_FILE_SIZE_BYTES) {
+      return apiError(
+        'INVALID_REQUEST',
+        413,
+        `PDF file is too large. Maximum size is ${Math.floor(
+          MAX_PDF_FILE_SIZE_BYTES / 1024 / 1024,
+        )}MB.`,
+      );
+    }
 
     // Managed providers are admin-owned: ignore any client-sent key/baseUrl.
     const managed = isServerConfiguredProvider('pdf', effectiveProviderId);

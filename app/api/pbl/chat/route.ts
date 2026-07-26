@@ -13,6 +13,10 @@ import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 const log = createLogger('PBL Chat');
 
+// Single LLM turn — match chat's 60s ceiling so a slow model isn't killed by
+// the platform default on Vercel.
+export const maxDuration = 60;
+
 interface PBLChatRequest {
   message: string;
   agent: PBLAgent;

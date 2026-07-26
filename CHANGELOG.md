@@ -99,6 +99,81 @@ All notable changes to this project will be documented in this file.
   (which performs a real DNS lookup that fails in the test environment). SSRF guard has its
   own dedicated test suite; the route test now focuses on route logic only.
 
+### Security
+
+- **iframe sandbox hardening** — `components/ai-elements/web-preview.tsx` removed
+  `allow-same-origin` from the sandbox token list (it coexisted with `allow-scripts`, which
+  lets sandboxed content reach parent cookies/storage and escape the sandbox).
+- **Upload size limits** — `app/api/parse-pdf/route.ts` (50 MiB) and
+  `app/api/transcription/route.ts` (25 MiB) now reject oversized uploads before reading the
+  body into memory, preventing OOM from malicious or accidental large files.
+- **Proxy-media upstream cancellation** — `app/api/proxy-media/route.ts` now calls
+  `reader.cancel()` when the streamed body exceeds `MAX_PROXY_BYTES` and propagates
+  downstream `cancel` to the upstream fetch, so client disconnects don't leave the upstream
+  connection hanging.
+
+### Performance & Reliability
+
+- **Stream backpressure & OOM** — `lib/export/inline-assets.ts` `createAssetFetcher` now
+  streams the upstream asset through `getReader()` with a running byte counter instead of
+  buffering the whole body via `arrayBuffer()` before the size check. Adds a 30 s
+  `AbortController` timeout so a stalled asset server can no longer hang the export.
+- **DAG executor** — `lib/orchestration/dag/executor.ts` nodes now honor `node.timeout`
+  (was unbounded → single stuck node deadlocked the whole stage and dependents); parallel
+  stages attach a no-op `.catch()` to every in-flight node promise so `Promise.all` no
+  longer turns sibling rejections into unhandled rejections; stage boundaries check
+  `signal?.aborted` so user cancel actually stops the pipeline.
+- **Parallel executor** — `lib/orchestration/parallel/executor.ts` race mode now uses
+  `Promise.allSettled` for loser promises (was unhandled rejection) and clears the timeout
+  timer in a `finally` block (was leaking timers).
+- **DAG scheduler cycle guard** — `lib/orchestration/dag/scheduler.ts`
+  `getDependencyLevels` now tracks a `visiting` set so a cyclic graph degrades gracefully
+  instead of blowing the stack.
+- **`maxDuration` on long routes** — added to `parse-pdf` (120 s), `extract-document`
+  (120 s), `pbl/chat` (60 s), `quiz-grade` (60 s), `provider/probe-models` (30 s),
+  `verify-model` (30 s), `verify-video-provider` (30 s), `web-search` (60 s),
+  `mcp/test` (30 s) so Vercel doesn't kill them at the default 10 s limit.
+- **media-orchestrator cancellation** — `lib/media/media-orchestrator.ts` `fetchAsBlob`
+  now threads the caller's `abortSignal` into the blob download fetches (was ignored, so
+  user cancel kept burning bandwidth/quota).
+
+### Memory Leaks (P0)
+
+- **`lib/utils/cache.ts`** — module-level `Map` had no size cap; now bounded to
+  `MAX_CACHE_ENTRIES = 500` with FIFO eviction.
+- **`lib/utils/stage-storage.ts`** — `deleteStageData` now cascades to `stageOutlines`,
+  `mediaFiles`, `generatedAgents`, `agentEditSessions` (was leaving orphan blobs in
+  IndexedDB, diverging from `database.ts` `deleteStageWithRelatedData`).
+- **`lib/hooks/use-audio-recorder.ts`** — unmount now stops `MediaRecorder`,
+  `MediaStream` tracks, `SpeechRecognition`, and clears the timer interval (was leaving
+  the mic indicator on and calling `setState` after unmount).
+- **`components/agent/agent-reveal-modal.tsx`** — `setInterval` cleanup was returned from
+  a `setTimeout` callback (ignored by `setTimeout`), so the interval kept running after
+  unmount; cleanup is now attached to the effect's real return.
+
+### Correctness
+
+- **`lib/usage/normalize.ts`** — `num(x) || num(y)` treated a legitimate `0` as missing
+  and fell back to deprecated flat fields; now checks `!= null` first.
+- **`lib/profile/extractor.ts`** — `confidence || 0.5` turned a legitimate `0` confidence
+  into `0.5`; now uses `?? 0.5` (two sites).
+- **`lib/adaptive/recommender/engine.ts`** — `scoreRecommendations` was computing
+  prerequisites on a synthetic single-node graph (always `[]`), so every candidate scored
+  full 0.3 for prerequisites and students got pushed to advanced concepts they lacked the
+  prerequisites for; now uses the real `graph` argument.
+- **`tests/runtime/stage-delete-wiring.test.ts`** — mock now covers the four cascade
+  tables added to `deleteStageData` (was reporting `Cannot read properties of undefined`).
+
+### Dependencies
+
+- Conservative `pnpm update -r` — patch/minor bumps across ~40 packages
+  (`next` 16.2.10 → 16.2.12, `react`/`react-dom` 19.2.3 → 19.2.8,
+  `@modelcontextprotocol/sdk` 1.27.1 → 1.29.0, `vitest` 4.1.8 → 4.1.10,
+  `@radix-ui/*`, `@fontsource/*`, `i18next`, `lodash`, `motion`, etc.).
+  `react`/`react-dom` pinned to `19.2.8` in both root and `packages/docs` to satisfy
+  `motion@12.42.2`'s peer dep and avoid a hooks-version-mismatch crash in
+  `renderToStaticMarkup` during renderer tests.
+
 ## [0.1.0] - Initial Release
 
 - Initial release of Nova - AI-powered interactive classroom platform

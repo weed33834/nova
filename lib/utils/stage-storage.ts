@@ -143,6 +143,14 @@ export async function deleteStageData(stageId: string): Promise<void> {
     await deleteChatSessions(stageId);
     await clearPlaybackState(stageId);
 
+    // Cascade-delete stage-owned rows so orphaned blobs/records don't
+    // accumulate. Must mirror deleteStageWithRelatedData in database.ts —
+    // missing any table here leaks data (mediaFiles blobs are the worst).
+    await db.stageOutlines.delete(stageId);
+    await db.mediaFiles.where('stageId').equals(stageId).delete();
+    await db.generatedAgents.where('stageId').equals(stageId).delete();
+    await db.agentEditSessions.where('stageId').equals(stageId).delete();
+
     // Sweep quiz persistence keys for each deleted scene.
     for (const sceneId of sceneIds) {
       clearAllForScene(sceneId);

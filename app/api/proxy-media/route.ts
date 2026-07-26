@@ -69,16 +69,63 @@ export async function POST(request: NextRequest) {
     if (Number.isFinite(contentLength) && contentLength > MAX_PROXY_BYTES) {
       return apiError('UPSTREAM_ERROR', 502, `Upstream asset too large (${contentLength} bytes)`);
     }
-    const blob = await response!.blob();
-    if (blob.size > MAX_PROXY_BYTES) {
-      return apiError('UPSTREAM_ERROR', 502, `Upstream asset too large (${blob.size} bytes)`);
-    }
     const contentType = response!.headers.get('content-type') || 'application/octet-stream';
+    const upstream = response!.body;
+    if (!upstream) {
+      return apiError('UPSTREAM_ERROR', 502, 'Upstream returned no body');
+    }
 
-    return new NextResponse(blob, {
+    // 直接 stream-pipe 上游响应体到下游，避免整文件载入内存造成 OOM。
+    // content-length 前置校验作为主守卫；stream-time 计数作为兜底，应对
+    // content-length 缺失/撒谎的场景——超限即 error 流并 abort 上游。
+    let received = 0;
+    // 共享 reader 引用：start 中获取，cancel 中复用，避免在已锁定的流上
+    // 再次 getReader() 抛错。下游 cancel（客户端断连）时复用它取消上游。
+    let activeReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+    const limited = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const reader = upstream.getReader();
+        activeReader = reader;
+        try {
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            received += value.byteLength;
+            if (received > MAX_PROXY_BYTES) {
+              controller.error(
+                new Error(`Upstream asset too large (>${MAX_PROXY_BYTES} bytes)`),
+              );
+              // 取消上游 reader 以释放底层 fetch 连接；仅 releaseLock 不会
+              // 中断上游，会继续占用带宽直到远端写完。
+              await reader.cancel().catch(() => {});
+              return;
+            }
+            controller.enqueue(value);
+          }
+          controller.close();
+        } catch (e) {
+          controller.error(e);
+        } finally {
+          reader.releaseLock();
+          activeReader = null;
+        }
+      },
+      async cancel(reason) {
+        // 下游 cancel（如客户端断连）时，把取消信号传给上游，避免上游
+        // fetch 连接悬挂至远端写完。
+        const reader = activeReader;
+        if (reader) {
+          await reader.cancel(reason).catch(() => {});
+        } else {
+          await upstream.cancel(reason).catch(() => {});
+        }
+      },
+    });
+
+    return new NextResponse(limited, {
       headers: {
         'Content-Type': contentType,
-        'Content-Length': String(blob.size),
+        ...(Number.isFinite(contentLength) ? { 'Content-Length': String(contentLength) } : {}),
         'Cache-Control': 'private, max-age=3600',
       },
     });

@@ -33,8 +33,12 @@ const MODALITY_EFFECTIVENESS: Record<
 
 export class MultimodalTutor {
   private sessions: Map<string, TutoringSession> = new Map();
+  private lastActivity: Map<string, number> = new Map();
+  private static readonly MAX_SESSIONS = 200;
+  private static readonly STALE_MS = 30 * 60 * 1000;
 
   createSession(conceptId: string, preferredModalities: Modality[]): TutoringSession {
+    this.pruneStaleSessions();
     const session: TutoringSession = {
       sessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       startedAt: Date.now(),
@@ -45,8 +49,38 @@ export class MultimodalTutor {
       understanding: 0,
     };
     this.sessions.set(session.sessionId, session);
+    this.lastActivity.set(session.sessionId, Date.now());
     log.info(`[MultimodalTutor] Created session ${session.sessionId} for concept ${conceptId}`);
     return session;
+  }
+
+  private pruneStaleSessions(): void {
+    const now = Date.now();
+    for (const [id, ts] of this.lastActivity) {
+      if (now - ts > MultimodalTutor.STALE_MS) {
+        this.sessions.delete(id);
+        this.lastActivity.delete(id);
+      }
+    }
+    if (this.sessions.size > MultimodalTutor.MAX_SESSIONS) {
+      const sorted = [...this.lastActivity.entries()].sort((a, b) => a[1] - b[1]);
+      const toEvict = sorted.slice(0, sorted.length - MultimodalTutor.MAX_SESSIONS);
+      for (const [id] of toEvict) {
+        this.sessions.delete(id);
+        this.lastActivity.delete(id);
+      }
+    }
+  }
+
+  removeSession(sessionId: string): boolean {
+    const had = this.sessions.delete(sessionId);
+    this.lastActivity.delete(sessionId);
+    return had;
+  }
+
+  clearSessions(): void {
+    this.sessions.clear();
+    this.lastActivity.clear();
   }
 
   selectOptimalModalities(request: MultimodalRequest, subject?: string): Modality[] {
@@ -111,6 +145,7 @@ export class MultimodalTutor {
   getNextTutorResponse(sessionId: string, userUnderstanding?: number): TutorResponse | null {
     const session = this.sessions.get(sessionId);
     if (!session) return null;
+    this.lastActivity.set(sessionId, Date.now());
 
     if (userUnderstanding !== undefined) {
       session.understanding = Math.min(1, Math.max(0, userUnderstanding));

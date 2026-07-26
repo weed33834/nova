@@ -59,6 +59,8 @@ export function collectAssetRefs(html: string): AssetRef[] {
 }
 
 const DEFAULT_MAX_ASSET_BYTES = 8 * 1024 * 1024;
+/** Bound fetch duration so a hanging asset server can't stall the export. */
+const ASSET_FETCH_TIMEOUT_MS = 30_000;
 
 export function createAssetFetcher(options?: InlineOptions): FetchAsset {
   const fetchImpl = options?.fetchImpl ?? fetch;
@@ -72,21 +74,64 @@ export function createAssetFetcher(options?: InlineOptions): FetchAsset {
       const MAX_ATTEMPTS = 3;
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         try {
-          const res = await fetchImpl(url);
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), ASSET_FETCH_TIMEOUT_MS);
+          let res: Response;
+          try {
+            res = await fetchImpl(url, { signal: controller.signal });
+          } finally {
+            clearTimeout(timeout);
+          }
           if (!res.ok) {
             // permanent client errors (e.g. 404, 403): don't retry
             if (res.status !== 429 && res.status < 500) return null;
             // transient server/rate-limit error: fall through to retry
             if (attempt === MAX_ATTEMPTS) return null;
           } else {
-            const buf = new Uint8Array(await res.arrayBuffer());
-            if (buf.byteLength > maxBytes) return null;
+            // Reject early on a declared oversized length…
+            const declared = Number(res.headers.get('content-length') || 0);
+            if (declared > maxBytes) return null;
+            // …but a missing/false Content-Length can't be trusted, so stream and
+            // abort the moment the cumulative byte count exceeds the cap — the
+            // whole body is never buffered past the limit (OOM protection).
+            const body = res.body;
+            let buf: Uint8Array;
+            if (body) {
+              const chunks: Uint8Array[] = [];
+              let total = 0;
+              const reader = body.getReader();
+              try {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  if (value) {
+                    total += value.byteLength;
+                    if (total > maxBytes) {
+                      await reader.cancel().catch(() => {});
+                      return null;
+                    }
+                    chunks.push(value);
+                  }
+                }
+              } finally {
+                reader.releaseLock();
+              }
+              buf = new Uint8Array(total);
+              let offset = 0;
+              for (const c of chunks) {
+                buf.set(c, offset);
+                offset += c.byteLength;
+              }
+            } else {
+              buf = new Uint8Array(await res.arrayBuffer());
+              if (buf.byteLength > maxBytes) return null;
+            }
             const contentType =
               res.headers.get('content-type')?.split(';')[0]?.trim() || guessMime(url);
             return { bytes: buf, contentType };
           }
         } catch {
-          // network error (connection reset, ECONNRESET, etc.)
+          // network error (connection reset, ECONNRESET, timeout, etc.)
           if (attempt === MAX_ATTEMPTS) return null;
         }
         // backoff before next attempt (150ms, 300ms)

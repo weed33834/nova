@@ -117,7 +117,7 @@ Nova 是一个基于多智能体的智能教学平台。输入任意学习主题
 ### 安装
 
 ```bash
-git clone https://github.com/weed33834/nova.git
+git clone https://gitcode.com/badhope/nova.git
 cd nova
 pnpm install
 ```

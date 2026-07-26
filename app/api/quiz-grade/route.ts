@@ -13,6 +13,10 @@ import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 const log = createLogger('Quiz Grade');
 
+// Single LLM grading turn — pin an explicit ceiling so a slow model isn't
+// killed by the platform default on Vercel.
+export const maxDuration = 60;
+
 interface GradeRequest {
   question: string;
   userAnswer: string;

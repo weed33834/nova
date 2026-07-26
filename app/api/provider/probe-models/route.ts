@@ -9,6 +9,11 @@ const log = createLogger('ProbeModels');
 /** Model ids that are not chat models — filtered out of probe results. */
 const NON_CHAT_PATTERN = /(tts|asr|whisper|embedding|rerank|mineru|image|video|voxcpm|moderation)/i;
 
+// Probing an unresponsive /models endpoint can stall; cap the route so the
+// function isn't killed by the platform default on Vercel. Underlying fetches
+// also enforce their own AbortSignal, this is the outer boundary.
+export const maxDuration = 30;
+
 /**
  * POST /api/provider/probe-models
  *

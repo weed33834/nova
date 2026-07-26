@@ -23,6 +23,11 @@ import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 
 const log = createLogger('MCPTest');
 
+// MCPClientManager.connectAll has no internal timeout — an unreachable HTTP
+// server (or a stdio server that hangs on initialize) could stall this route
+// indefinitely. Cap explicitly so Vercel doesn't kill it mid-connect.
+export const maxDuration = 30;
+
 interface TestBody {
   server: MCPServerConfig;
 }

@@ -123,7 +123,7 @@ export async function extractProfileFromConversation(
     return {
       profile: mergedProfile,
       extractedFields,
-      confidence: parsed.confidence || 0.5,
+      confidence: parsed.confidence ?? 0.5,
       reasoning: parsed.reasoning || '自动提取',
     };
   } catch (error) {
@@ -482,7 +482,7 @@ export async function* streamProfileExtraction(
         extractedFields: Object.keys(parsed).filter(
           (k) => k !== 'confidence' && k !== 'reasoning',
         ) as (keyof StudentProfile)[],
-        confidence: parsed.confidence || 0.5,
+        confidence: parsed.confidence ?? 0.5,
         reasoning: parsed.reasoning || '流式提取中...',
       };
     } catch {

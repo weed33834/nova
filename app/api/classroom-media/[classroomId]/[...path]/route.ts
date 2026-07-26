@@ -1,4 +1,5 @@
 import { promises as fs, createReadStream } from 'fs';
+import { Readable } from 'stream';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { CLASSROOMS_DIR, isValidClassroomId } from '@/lib/server/classroom-storage';
@@ -86,18 +87,11 @@ export async function GET(
     const ext = path.extname(realPath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    // Stream the file to avoid loading large videos into memory
+    // Stream the file to avoid loading large videos into memory.
+    // 用 Readable.toWeb 转换：自动处理下游 desiredSize 背压（pause/resume），
+    // 错误正确传播到 webStream，cancel 时自动 destroy 原 Node stream。
     const stream = createReadStream(realPath);
-    const webStream = new ReadableStream({
-      start(controller) {
-        stream.on('data', (chunk: Buffer | string) => controller.enqueue(chunk));
-        stream.on('end', () => controller.close());
-        stream.on('error', (err) => controller.error(err));
-      },
-      cancel() {
-        stream.destroy();
-      },
-    });
+    const webStream = Readable.toWeb(stream) as ReadableStream<Uint8Array>;
 
     return new NextResponse(webStream, {
       status: 200,
