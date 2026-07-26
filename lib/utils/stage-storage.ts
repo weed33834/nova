@@ -194,6 +194,7 @@ export async function listStages(): Promise<StageListItem[]> {
           updatedAt: stage.updatedAt,
           interactiveMode: stage.interactiveMode,
           taskEngineMode: stage.taskEngineMode,
+          courseFormat: stage.courseFormat,
         };
       }),
     );

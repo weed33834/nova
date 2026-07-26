@@ -206,6 +206,9 @@ export function useVoxCPMVoiceProfiles() {
   }, []);
 
   useEffect(() => {
+    // Initial load + subscribe to voice-profile changes. Suppressed —
+    // refresh() is the data loader, the setState is inside it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
     window.addEventListener(VOXCPM_VOICE_PROFILES_CHANGED, refresh);
     return () => window.removeEventListener(VOXCPM_VOICE_PROFILES_CHANGED, refresh);

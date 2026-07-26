@@ -30,8 +30,11 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import type { Permission, RoleDefinition } from '@/lib/orchestration/roles/types';
-import { ROLE_DEFINITIONS } from '@/lib/orchestration/roles/types';
-import { useRoleStore, getEffectiveRoles, type RoleOverride } from '@/lib/orchestration/roles/role-store';
+import {
+  useRoleStore,
+  getEffectiveRoles,
+  type RoleOverride,
+} from '@/lib/orchestration/roles/role-store';
 
 const ROLE_ICONS: Record<string, React.ReactNode> = {
   teacher: <Brain className="h-4 w-4" />,
@@ -67,18 +70,21 @@ export function AgentRoleManager() {
   const [editingRole, setEditingRole] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RoleOverride>>({});
 
-  const handleEdit = useCallback((roleId: string) => {
-    const role = roles.find((r) => r.role === roleId);
-    if (!role) return;
-    setEditingRole(roleId);
-    setEditForm({
-      displayName: role.displayName,
-      description: role.description,
-      permissions: [...role.permissions],
-      interactionPattern: role.interactionPattern,
-      priority: role.priority,
-    });
-  }, [roles]);
+  const handleEdit = useCallback(
+    (roleId: string) => {
+      const role = roles.find((r) => r.role === roleId);
+      if (!role) return;
+      setEditingRole(roleId);
+      setEditForm({
+        displayName: role.displayName,
+        description: role.description,
+        permissions: [...role.permissions],
+        interactionPattern: role.interactionPattern,
+        priority: role.priority,
+      });
+    },
+    [roles],
+  );
 
   const handleSave = useCallback(() => {
     if (!editingRole) return;

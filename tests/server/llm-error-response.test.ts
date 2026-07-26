@@ -21,10 +21,7 @@ import {
  * Build a real `APICallError` instance carrying sensitive-looking fields
  * (URL, response body, request body) so we can verify they never leak.
  */
-function makeApiCallError(
-  statusCode: number,
-  message = `upstream ${statusCode}`,
-): APICallError {
+function makeApiCallError(statusCode: number, message = `upstream ${statusCode}`): APICallError {
   return new APICallError({
     message,
     url: 'https://api.example.com/v1/chat/completions',
@@ -170,14 +167,10 @@ describe('sanitizedErrorDetails', () => {
   test('returns the generic 5xx message for 500+ errors', () => {
     const error = makeApiCallError(503);
     const details = sanitizedErrorDetails(error);
-    expect(details).toBe(
-      'Upstream model provider is temporarily unavailable. Please try again.',
-    );
+    expect(details).toBe('Upstream model provider is temporarily unavailable. Please try again.');
   });
 
   test('surfaces a plain Error message (no upstream status) as-is', () => {
-    expect(sanitizedErrorDetails(new Error('local config error'))).toBe(
-      'local config error',
-    );
+    expect(sanitizedErrorDetails(new Error('local config error'))).toBe('local config error');
   });
 });

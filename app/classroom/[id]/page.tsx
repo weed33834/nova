@@ -199,9 +199,11 @@ export default function ClassroomDetailPage() {
       // generating its media would waste API calls on a slide that is gone.
       const materializedOrders = new Set(scenes.map((s) => s.order));
       const materializedOutlines = outlines.filter((o) => materializedOrders.has(o.order));
-      generateMediaForOutlines(materializedOutlines, stage.id, undefined, stage.courseFormat).catch((err) => {
-        log.warn('[Classroom] Media generation resume error:', err);
-      });
+      generateMediaForOutlines(materializedOutlines, stage.id, undefined, stage.courseFormat).catch(
+        (err) => {
+          log.warn('[Classroom] Media generation resume error:', err);
+        },
+      );
     }
   }, [loading, error, generateRemaining]);
 
@@ -227,10 +229,7 @@ export default function ClassroomDetailPage() {
               role="alert"
             >
               <div className="text-center flex flex-col items-center gap-3 max-w-md px-6">
-                <AlertTriangle
-                  className="size-8 text-destructive/80"
-                  aria-hidden="true"
-                />
+                <AlertTriangle className="size-8 text-destructive/80" aria-hidden="true" />
                 <p className="text-sm font-medium text-destructive mb-2">
                   {t('classroom.errorTitle')}
                 </p>

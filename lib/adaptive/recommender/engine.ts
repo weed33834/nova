@@ -10,8 +10,7 @@ import type {
   KnowledgeState,
 } from '@/lib/adaptive/knowledge-graph/types';
 import type { StudentProfile } from '@/lib/profile/schema';
-import { getPrerequisites, getDependents } from '@/lib/adaptive/knowledge-graph/types';
-import { getLearningPath } from '@/lib/adaptive/knowledge-graph/graph';
+import { getPrerequisites } from '@/lib/adaptive/knowledge-graph/types';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('Recommender');

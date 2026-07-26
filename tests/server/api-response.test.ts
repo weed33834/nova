@@ -10,12 +10,7 @@ vi.mock('@/lib/logger', () => ({
   }),
 }));
 
-import {
-  apiError,
-  apiSuccess,
-  apiErrorLogged,
-  API_ERROR_CODES,
-} from '@/lib/server/api-response';
+import { apiError, apiSuccess, apiErrorLogged, API_ERROR_CODES } from '@/lib/server/api-response';
 
 describe('API_ERROR_CODES', () => {
   test('every value is a string', () => {
@@ -120,7 +115,13 @@ describe('apiErrorLogged', () => {
       details: 'detail-string',
       context: 'context-string',
     });
-    const plain = apiError('UPSTREAM_ERROR', 502, 'Upstream failed', 'detail-string', 'context-string');
+    const plain = apiError(
+      'UPSTREAM_ERROR',
+      502,
+      'Upstream failed',
+      'detail-string',
+      'context-string',
+    );
 
     expect(logged.status).toBe(plain.status);
 

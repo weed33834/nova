@@ -10,7 +10,7 @@
  * registration via plugins.
  */
 import { apiSuccess, apiError } from '@/lib/server/api-response';
-import { SKILL_CATALOG, V0_ALLOWLIST, getSkillCatalogEntry } from '@/lib/agent/tools/registry';
+import { SKILL_CATALOG, V0_ALLOWLIST } from '@/lib/agent/tools/registry';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('SkillsAPI');

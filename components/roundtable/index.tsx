@@ -312,6 +312,9 @@ export function Roundtable({
   // End flash effect (Issue 3)
   useEffect(() => {
     if (showEndFlash) {
+      // Trigger the 1.8s end-flash animation: flip on, schedule flip-off.
+      // Suppressed — this IS the animation driver, not a derived state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEndFlashVisible(true);
       const timer = setTimeout(() => setEndFlashVisible(false), 1800);
       return () => clearTimeout(timer);
@@ -323,6 +326,10 @@ export function Roundtable({
   // Clear send cooldown when agent bubble appears
   useEffect(() => {
     if (isSendCooldown && speakingAgentId) {
+      // Cross-state coordination: when an agent starts speaking, lift the
+      // send cooldown. Suppressed — the cooldown is a ref-overlaid state
+      // and this is the only legal place to clear it.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSendCooldown(false);
       isSendCooldownRef.current = false;
     }
@@ -383,7 +390,7 @@ export function Roundtable({
     setIsInputOpen(false);
   };
 
-  const handleToggleInput = () => {
+  const handleToggleInput = useCallback(() => {
     if (isSendCooldown) return;
     if (!isInputOpen) {
       onInputActivate?.();
@@ -394,9 +401,9 @@ export function Roundtable({
       cancelRecording();
       setIsVoiceOpen(false);
     }
-  };
+  }, [isSendCooldown, isInputOpen, isVoiceOpen, isProcessing, onInputActivate, cancelRecording]);
 
-  const handleToggleVoice = () => {
+  const handleToggleVoice = useCallback(() => {
     if (isVoiceOpen) {
       if (isRecording) {
         stopRecording();
@@ -409,7 +416,15 @@ export function Roundtable({
       setIsInputOpen(false);
       startRecording();
     }
-  };
+  }, [
+    isVoiceOpen,
+    isRecording,
+    isSendCooldown,
+    isProcessing,
+    onInputActivate,
+    stopRecording,
+    startRecording,
+  ]);
 
   // Keyboard shortcuts for roundtable interaction (#255)
   // T = toggle text input, V = toggle voice input, Escape = dismiss panels,
@@ -479,6 +494,9 @@ export function Roundtable({
     isVoiceOpen,
     isRecording,
     isProcessing,
+    cancelRecording,
+    handleToggleInput,
+    handleToggleVoice,
   ]);
 
   const isPresentationInteractionActive = isInputOpen || isVoiceOpen || isRecording || isProcessing;
@@ -1042,6 +1060,13 @@ export function Roundtable({
                       action={discussionRequest}
                       mode={engineMode === 'paused' ? 'paused' : 'playback'}
                       anchorRef={presentationAgentAvatarRef}
+                      // portalContainer receives a DOM node resolved from an
+                      // externally-owned RefObject. We must read .current here
+                      // so the child portal mounts into the fullscreen layer
+                      // on the same render that flips into fullscreen — delaying
+                      // to an effect would leave the portal parented to the
+                      // document body for one frame, causing a visible flash.
+                      // eslint-disable-next-line react-hooks/refs
                       portalContainer={fullscreenContainerRef?.current}
                       align="left"
                       agentName={
@@ -1459,7 +1484,9 @@ export function Roundtable({
                     {/* Action circle — voice (ASR on) or text input (ASR off) */}
                     <motion.button
                       type="button"
-                      aria-label={asrEnabled ? t('roundtable.voiceInput') : t('roundtable.textInput')}
+                      aria-label={
+                        asrEnabled ? t('roundtable.voiceInput') : t('roundtable.textInput')
+                      }
                       title={asrEnabled ? t('roundtable.voiceInput') : t('roundtable.textInput')}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1735,7 +1762,10 @@ export function Roundtable({
                                 title={t('roundtable.playLabel')}
                                 className="absolute right-2.5 bottom-2.5 p-1.5 rounded-full bg-gray-50/80 dark:bg-gray-700/80 hover:bg-pink-100 dark:hover:bg-pink-900/50 group-hover/bubble:bg-pink-100 dark:group-hover/bubble:bg-pink-900/50 transition-all duration-300 cursor-pointer"
                               >
-                                <Play className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 hover:text-pink-600 dark:hover:text-pink-400 group-hover/bubble:text-pink-600 dark:group-hover/bubble:text-pink-400 ml-0.5" aria-hidden="true" />
+                                <Play
+                                  className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 hover:text-pink-600 dark:hover:text-pink-400 group-hover/bubble:text-pink-600 dark:group-hover/bubble:text-pink-400 ml-0.5"
+                                  aria-hidden="true"
+                                />
                               </div>
                             );
                           }
@@ -1749,7 +1779,10 @@ export function Roundtable({
                                 title={t('roundtable.restartLabel')}
                                 className="absolute right-2.5 bottom-2.5 p-1.5 rounded-full bg-gray-50/80 dark:bg-gray-700/80 hover:bg-pink-100 dark:hover:bg-pink-900/50 group-hover/bubble:bg-pink-100 dark:group-hover/bubble:bg-pink-900/50 transition-all duration-300 cursor-pointer"
                               >
-                                <Repeat className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 hover:text-pink-600 dark:hover:text-pink-400 group-hover/bubble:text-pink-600 dark:group-hover/bubble:text-pink-400" aria-hidden="true" />
+                                <Repeat
+                                  className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 hover:text-pink-600 dark:hover:text-pink-400 group-hover/bubble:text-pink-600 dark:group-hover/bubble:text-pink-400"
+                                  aria-hidden="true"
+                                />
                               </div>
                             );
                           }
@@ -1759,13 +1792,24 @@ export function Roundtable({
                             <div
                               role="button"
                               tabIndex={0}
-                              aria-label={isDiscussionPaused ? t('roundtable.playLabel') : t('roundtable.pauseLabel')}
-                              title={isDiscussionPaused ? t('roundtable.playLabel') : t('roundtable.pauseLabel')}
+                              aria-label={
+                                isDiscussionPaused
+                                  ? t('roundtable.playLabel')
+                                  : t('roundtable.pauseLabel')
+                              }
+                              title={
+                                isDiscussionPaused
+                                  ? t('roundtable.playLabel')
+                                  : t('roundtable.pauseLabel')
+                              }
                               className="absolute right-2.5 bottom-2.5 p-1.5 rounded-full bg-gray-50/80 dark:bg-gray-700/80 group-hover/bubble:bg-pink-100 dark:group-hover/bubble:bg-pink-900/50 transition-all duration-300"
                             >
                               {isDiscussionPaused ? (
                                 /* Paused: static Play icon */
-                                <Play className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 group-hover/bubble:text-pink-600 dark:group-hover/bubble:text-pink-400 ml-0.5" aria-hidden="true" />
+                                <Play
+                                  className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 group-hover/bubble:text-pink-600 dark:group-hover/bubble:text-pink-400 ml-0.5"
+                                  aria-hidden="true"
+                                />
                               ) : (
                                 <>
                                   {/* Breathing bars — visible by default, hidden on hover */}

@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Locale, defaultLocale, supportedLocales } from '@/lib/i18n';
 import '@/lib/i18n/config';
@@ -67,10 +60,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   // Memoize context value so consumers don't re-render on every I18nProvider
   // render. `t` is stable from react-i18next when `i18n.language` is stable;
   // `locale` changes only on actual language switch.
-  const value = useMemo<I18nContextType>(
-    () => ({ locale, setLocale, t }),
-    [locale, setLocale, t],
-  );
+  const value = useMemo<I18nContextType>(() => ({ locale, setLocale, t }), [locale, setLocale, t]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

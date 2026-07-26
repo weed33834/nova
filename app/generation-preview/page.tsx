@@ -247,6 +247,10 @@ function GenerationPreviewContent() {
           outlineReviewIntentRef.current = true;
         }
         parsed.taskEngineMode = parsed.taskEngineMode === true;
+        // Restoring a saved generation session from localStorage on mount —
+        // classic external-state sync into React state. Suppressed because
+        // this is the canonical "hydrate once on mount" pattern.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSession(parsed);
       } catch (e) {
         log.error('Failed to parse generation session:', e);
@@ -310,6 +314,10 @@ function GenerationPreviewContent() {
       (phase === 'review' && needsOutlines);
     if (shouldAutoStart) {
       hasStartedRef.current = true;
+      // startGeneration is declared below this effect, but the effect callback
+      // only runs after the component body has fully evaluated (so the const is
+      // already bound by then). The rule can't see that, so we suppress here.
+      // eslint-disable-next-line react-hooks/immutability
       startGeneration();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -565,13 +573,23 @@ function GenerationPreviewContent() {
 
       // Create stage client-side
       const stageId = nanoid(10);
+      // Date.now() runs inside the async startGeneration() body (an event
+      // handler), never during render — the purity rule can't see that, so we
+      // suppress it here. Reading once keeps createdAt/updatedAt identical.
+      // eslint-disable-next-line react-hooks/purity
+      const now = Date.now();
       const stage: Stage = {
         id: stageId,
         name: extractTopicFromRequirement(currentSession.requirements.requirement),
         description: '',
         style: 'professional',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        // Date.now() is a side-effecting call, but this runs inside the async
+        // startGeneration() body (an event handler), not during render — the
+        // eslint purity rule flags any call site that looks reachable from
+        // render, so we read once into `now` and reuse it to keep both
+        // timestamps identical and to make the impure read explicit.
+        createdAt: now,
+        updatedAt: now,
         interactiveMode: !!currentSession.requirements.interactiveMode,
         taskEngineMode: currentSession.taskEngineMode === true,
         courseFormat: currentSession.requirements.courseFormat,
@@ -1094,6 +1112,8 @@ function GenerationPreviewContent() {
   };
 
   const extractTopicFromRequirement = (requirement: string): string => {
+    // String.prototype.trim() is pure (returns a new string). This fn is only
+    // called from startGeneration (an async event handler), never during render.
     const trimmed = requirement.trim();
     if (trimmed.length <= 500) {
       return trimmed;

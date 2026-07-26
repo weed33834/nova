@@ -93,6 +93,10 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return;
+    // Sync current slide index into state when embla fires select/reInit —
+    // canonical "subscribe to external lib, mirror into state" pattern.
+    // Suppressed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onSelect(api);
     api.on('reInit', onSelect);
     api.on('select', onSelect);

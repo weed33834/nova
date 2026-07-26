@@ -90,12 +90,10 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
   await server.connect(transport);
-  // eslint-disable-next-line no-console
   console.error('[nova-mcp] stdio server ready on stdin/stdout');
 }
 
 main().catch((error) => {
-  // eslint-disable-next-line no-console
   console.error('[nova-mcp] fatal:', error);
   process.exit(1);
 });

@@ -1050,8 +1050,9 @@ function SubmissionModal({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         if (ac.signal.aborted) return;
-        const parsed: string =
-          json?.data?.markdown ?? json?.data?.text ?? json?.markdown ?? json?.text ?? '';
+        // 后端 /api/parse-pdf 返回 apiSuccess({ data: ParsedPdfContent })，
+        // ParsedPdfContent 只有 text 字段，无 markdown。
+        const parsed: string = json?.data?.text ?? json?.text ?? '';
         if (!parsed.trim()) {
           setError(t('pbl.v2.submission.pdfNoText'));
           return;

@@ -92,9 +92,7 @@ export async function POST(request: NextRequest) {
             if (done) break;
             received += value.byteLength;
             if (received > MAX_PROXY_BYTES) {
-              controller.error(
-                new Error(`Upstream asset too large (>${MAX_PROXY_BYTES} bytes)`),
-              );
+              controller.error(new Error(`Upstream asset too large (>${MAX_PROXY_BYTES} bytes)`));
               // 取消上游 reader 以释放底层 fetch 连接；仅 releaseLock 不会
               // 中断上游，会继续占用带宽直到远端写完。
               await reader.cancel().catch(() => {});

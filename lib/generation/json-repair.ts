@@ -164,17 +164,52 @@ function parseJsonResponseCandidate<T>(response: string): T | null {
  * Try to parse JSON with various fixes for common AI response issues
  */
 export function tryParseJson<T>(jsonStr: string): T | null {
-  // Attempt 1: Try parsing as-is
+  // Attempt 0: Try parsing as-is
   try {
     return JSON.parse(jsonStr) as T;
   } catch (error) {
-    logJsonParseError('Attempt 1', jsonStr, error);
+    logJsonParseError('Attempt 0', jsonStr, error);
+    // Continue to fix attempts
+  }
+
+  // Attempt 0.5: Repair unescaped double quotes inside HTML string values.
+  // The slide-content LLM often emits content like:
+  //   "content":"<p style=\"font-size:20px;\">光合作用"光反应"阶段</p>"
+  // where the unescaped " around 光反应 prematurely terminates the JSON string.
+  // We walk the input with a tolerant scanner: when inside a string value,
+  // a `"` is only treated as the string terminator if it is followed (after
+  // optional whitespace) by `,`, `}`, `]`, or `:`. Any other `"` is re-escaped
+  // as `\"`. This is conservative — it only triggers when strict parsing fails.
+  const htmlQuoteRepaired = repairUnescapedQuotesInHtmlStrings(jsonStr);
+  if (htmlQuoteRepaired !== jsonStr) {
+    try {
+      const result = JSON.parse(htmlQuoteRepaired) as T;
+      log.warn('Repaired unescaped double quotes inside HTML string values');
+      return result;
+    } catch (error) {
+      logJsonParseError('Attempt 0.5', htmlQuoteRepaired, error);
+      // Continue to the original fix attempts below, using the repaired text
+      // as input (it may still need LaTeX / truncation fixes).
+    }
+  }
+
+  // Use the HTML-quote-repaired text as the base for subsequent attempts —
+  // those attempts do their own string-level fixes that are orthogonal to
+  // unescaped quote repair, and starting from the repaired text gives them
+  // a cleaner input.
+  const workingStr = htmlQuoteRepaired !== jsonStr ? htmlQuoteRepaired : jsonStr;
+
+  // Attempt 1: Try parsing the (possibly repaired) input as-is
+  try {
+    return JSON.parse(workingStr) as T;
+  } catch (error) {
+    logJsonParseError('Attempt 1', workingStr, error);
     // Continue to fix attempts
   }
 
   // Attempt 2: Fix common JSON issues from AI responses
   try {
-    let fixed = jsonStr;
+    let fixed = workingStr;
 
     // Fix 0: Recover malformed property fragments that were accidentally
     // emitted as standalone strings inside an object, such as:
@@ -227,22 +262,22 @@ export function tryParseJson<T>(jsonStr: string): T | null {
 
     return JSON.parse(fixed) as T;
   } catch (error) {
-    logJsonParseError('Attempt 2', jsonStr, error);
+    logJsonParseError('Attempt 2', workingStr, error);
     // Continue to next attempt
   }
 
   // Attempt 3: Use jsonrepair to fix malformed JSON (e.g. unescaped quotes in Chinese text)
   try {
-    const repaired = jsonrepair(jsonStr);
+    const repaired = jsonrepair(workingStr);
     return JSON.parse(repaired) as T;
   } catch (error) {
-    logJsonParseError('Attempt 3', jsonStr, error);
+    logJsonParseError('Attempt 3', workingStr, error);
     // Continue to next attempt
   }
 
   // Attempt 4: More aggressive fixing - remove control characters
   try {
-    let fixed = jsonStr;
+    let fixed = workingStr;
 
     // Remove or escape control characters
     fixed = fixed.replace(/[\x00-\x1F\x7F]/g, (char) => {
@@ -260,7 +295,132 @@ export function tryParseJson<T>(jsonStr: string): T | null {
 
     return JSON.parse(fixed) as T;
   } catch (error) {
-    logJsonParseError('Attempt 4', jsonStr, error);
+    logJsonParseError('Attempt 4', workingStr, error);
     return null;
   }
+}
+
+/**
+ * Repair unescaped double quotes inside JSON string values that contain HTML.
+ *
+ * The slide-content LLM occasionally emits JSON like:
+ *   "content":"<p style=\"font-size:20px;\">光合作用"光反应"阶段</p>"
+ * where the unescaped " around 光反应 prematurely terminates the JSON string.
+ *
+ * Strategy: walk the input with a tolerant scanner. When inside a string value
+ * (after seeing `:` `"`), a `"` is only treated as the string terminator if
+ * the next non-whitespace character is a JSON structural delimiter (`,`, `}`,
+ * `]`, or `:`). Any other `"` is re-escaped as `\"`.
+ *
+ * This is conservative — it only changes the input when a `"` inside a string
+ * is followed by something that is clearly not a JSON delimiter, which is the
+ * signature of an unescaped quote in the content. Valid JSON is passed through
+ * unchanged because in valid JSON a string-terminating `"` is always followed
+ * by a delimiter.
+ */
+function repairUnescapedQuotesInHtmlStrings(input: string): string {
+  let out = '';
+  let i = 0;
+  let inString = false;
+  let modified = false;
+  // Track whether the current string value looks like HTML (starts with `<`
+  // after the opening quote). Only repair quotes inside HTML-ish strings to
+  // avoid misinterpreting punctuation in plain-text values.
+  let stringLooksLikeHtml = false;
+  let stringContentStart = -1;
+
+  while (i < input.length) {
+    const ch = input[i];
+
+    if (!inString) {
+      // Detect the start of a string value: a `"` that comes after a `:`
+      // (with optional whitespace between). Property-name strings (before
+      // the `:`) are left untouched — their closing `"` is always followed
+      // by `:`, which is a delimiter, so the tolerant logic below would
+      // never need to re-escape inside them anyway.
+      if (ch === '"') {
+        // Look backwards to see if this string is a value (preceded by `:`)
+        // vs a key (preceded by `{` or `,`).
+        let j = i - 1;
+        while (j >= 0 && /\s/.test(input[j])) j--;
+        const isValue = j >= 0 && input[j] === ':';
+        inString = true;
+        stringLooksLikeHtml = false;
+        stringContentStart = i + 1;
+        out += ch;
+        i++;
+        continue;
+      }
+      out += ch;
+      i++;
+      continue;
+    }
+
+    // Inside a string.
+    if (ch === '\\') {
+      // Preserve escape sequences verbatim — including `\"`, which is a
+      // legitimately escaped quote inside the string.
+      out += ch;
+      if (i + 1 < input.length) {
+        out += input[i + 1];
+        i += 2;
+      } else {
+        i++;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      // Tentative string terminator. Peek ahead: if the next non-whitespace
+      // char is a JSON delimiter, this is a real terminator. Otherwise it's
+      // an unescaped quote inside the content — re-escape it.
+      let k = i + 1;
+      while (k < input.length && /\s/.test(input[k])) k++;
+      const nextCh = k < input.length ? input[k] : '';
+      const isDelimiter =
+        nextCh === ',' || nextCh === '}' || nextCh === ']' || nextCh === ':';
+
+      if (isDelimiter) {
+        // Real terminator — close the string.
+        inString = false;
+        out += ch;
+        i++;
+        continue;
+      }
+
+      // Unescaped quote inside the string. Check if the string so far looks
+      // like HTML (to avoid touching plain-text strings). We only mark it as
+      // HTML if the first non-whitespace content after the opening quote is
+      // `<` (an HTML tag).
+      if (stringContentStart >= 0) {
+        let s = stringContentStart;
+        while (s < i && /\s/.test(input[s])) s++;
+        if (s < i && input[s] === '<') {
+          stringLooksLikeHtml = true;
+        }
+        stringContentStart = -1; // only check once
+      }
+
+      if (stringLooksLikeHtml) {
+        // Re-escape this `"` as `\"` so it doesn't terminate the string.
+        out += '\\"';
+        modified = true;
+        i++;
+        continue;
+      }
+
+      // Not an HTML string — still treat as terminator to avoid false
+      // positives in plain-text values. If this is wrong, later repair
+      // attempts (jsonrepair) will try to fix it.
+      inString = false;
+      out += ch;
+      i++;
+      continue;
+    }
+
+    out += ch;
+    i++;
+  }
+
+  return modified ? out : input;
 }

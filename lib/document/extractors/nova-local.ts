@@ -585,7 +585,7 @@ export const novaLocalExtractorProvider: DocumentExtractorProvider = {
     async: false,
   },
   async extract(input): Promise<DocumentArtifact> {
-    const { buffer, mimeType, fileName } = input;
+    const { buffer, mimeType, fileName: _fileName } = input;
 
     // EPUB is a zip — needs async decompression
     if (mimeType === DOCUMENT_MIME_TYPES.epub) {

@@ -158,9 +158,7 @@ class AlreadyExistsRaceStore extends MemoryRuntimeStore {
   }
 
   async createSession(): Promise<RuntimeSession> {
-    throw new Error(
-      `@nova/storage: session ${JSON.stringify(this.existing.id)} already exists`,
-    );
+    throw new Error(`@nova/storage: session ${JSON.stringify(this.existing.id)} already exists`);
   }
 }
 

@@ -288,7 +288,7 @@ export async function saveGeneratedAgentsForCurrentLoad(
 
   for (const record of records) {
     const { voiceConfig, ...rest } = record as (typeof records)[number] & {
-      voiceConfig?: { providerId: string; voiceId: string };
+      voiceConfig?: { providerId: TTSProviderId; modelId?: string; voiceId: string };
       voiceDesign?: VoiceDesign;
     };
     registry.addAgent({
@@ -299,14 +299,7 @@ export async function saveGeneratedAgentsForCurrentLoad(
       boundStageId: stageId,
       createdAt: new Date(record.createdAt),
       updatedAt: new Date(record.createdAt),
-      ...(voiceConfig
-        ? {
-            voiceConfig: {
-              providerId: voiceConfig.providerId as TTSProviderId,
-              voiceId: voiceConfig.voiceId,
-            },
-          }
-        : {}),
+      ...(voiceConfig ? { voiceConfig } : {}),
     });
   }
 

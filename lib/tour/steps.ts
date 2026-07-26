@@ -1,7 +1,5 @@
 'use client';
 
-import { useI18n } from '@/lib/hooks/use-i18n';
-import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 
 export interface TourStep {

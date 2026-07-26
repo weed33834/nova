@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = validateBody(RequestSchema, body);
     if (!parsed.ok) return parsed.response;
-    const { content, sourceContent, safetyConfig, hallucinationConfig } = parsed.data as {
+    const { content, sourceContent: _sourceContent, safetyConfig, hallucinationConfig } = parsed.data as {
       content: string;
       sourceContent?: string;
       safetyConfig?: ContentSafetyConfig;

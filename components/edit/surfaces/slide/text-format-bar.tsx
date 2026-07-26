@@ -118,7 +118,12 @@ export function TextFormatBar({ elementId, attrs }: TextFormatBarProps) {
   // (+/- buttons, undo, font-attr resync) — `attrs.fontsize` doesn't change
   // mid-type, so this doesn't clobber the user's partial input.
   const [sizeInput, setSizeInput] = useState(String(fontSize));
+  // Re-sync the local input mirror when the external fontsize changes
+  // (buttons, undo, attr resync). The author notes attrs.fontsize doesn't
+  // change mid-type, so this never clobbers partial input — but the
+  // set-state-in-effect rule can't see that invariant, so we suppress it.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSizeInput(String(fontSize));
   }, [fontSize]);
   const commitSize = useCallback(() => {

@@ -19,8 +19,7 @@ vi.mock('@/lib/hooks/use-i18n', () => ({
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: (props: ComponentProps<'button'>) =>
-    createElement('button', props),
+  Button: (props: ComponentProps<'button'>) => createElement('button', props),
 }));
 
 vi.mock('lucide-react', () => ({
@@ -78,21 +77,13 @@ function Thrower({ error }: { error: Error }): ReactNode {
 
 describe('ErrorBoundary', () => {
   it('renders children when no error occurs', () => {
-    render(
-      createElement(ErrorBoundary, null,
-        createElement('div', null, 'Hello World'),
-      ),
-    );
+    render(createElement(ErrorBoundary, null, createElement('div', null, 'Hello World')));
     expect(container.textContent).toContain('Hello World');
   });
 
   it('renders the default fallback UI when a child throws', () => {
     const error = new Error('Test error message');
-    render(
-      createElement(ErrorBoundary, null,
-        createElement(Thrower, { error }),
-      ),
-    );
+    render(createElement(ErrorBoundary, null, createElement(Thrower, { error })));
     // The fallback uses an alert role so screen readers announce it.
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     // Localized title / description come from the i18n mock.
@@ -104,17 +95,13 @@ describe('ErrorBoundary', () => {
 
   it('renders a "Reload page" button in the fallback UI', () => {
     render(
-      createElement(ErrorBoundary, null,
-        createElement(Thrower, { error: new Error('boom') }),
-      ),
+      createElement(ErrorBoundary, null, createElement(Thrower, { error: new Error('boom') })),
     );
     expect(container.textContent).toContain('errors.reloadPage');
     // Locate the reload button by the icon it renders so the test is robust
     // against button reordering.
     const buttons = Array.from(container.querySelectorAll('button'));
-    const reloadButton = buttons.find((b) =>
-      b.querySelector('[data-testid="icon-refresh-cw"]'),
-    );
+    const reloadButton = buttons.find((b) => b.querySelector('[data-testid="icon-refresh-cw"]'));
     expect(reloadButton).toBeDefined();
     expect(reloadButton!.textContent).toContain('errors.reloadPage');
   });
@@ -122,18 +109,12 @@ describe('ErrorBoundary', () => {
   it('renders a collapsible "Copy error info" button with the error stack', () => {
     const error = new Error('boom!');
     error.stack = 'Error: boom!\n    at thrower (test.ts:1:1)';
-    render(
-      createElement(ErrorBoundary, null,
-        createElement(Thrower, { error }),
-      ),
-    );
+    render(createElement(ErrorBoundary, null, createElement(Thrower, { error })));
 
     // The copy button is rendered.
     expect(container.textContent).toContain('errors.copyError');
     const buttons = Array.from(container.querySelectorAll('button'));
-    const copyButton = buttons.find((b) =>
-      b.querySelector('[data-testid="icon-copy"]'),
-    );
+    const copyButton = buttons.find((b) => b.querySelector('[data-testid="icon-copy"]'));
     expect(copyButton).toBeDefined();
     expect(copyButton!.textContent).toContain('errors.copyError');
 
@@ -154,7 +135,9 @@ describe('ErrorBoundary', () => {
       'Custom fallback UI',
     );
     render(
-      createElement(ErrorBoundary, { fallback: customFallback },
+      createElement(
+        ErrorBoundary,
+        { fallback: customFallback },
         createElement(Thrower, { error: new Error('ignored') }),
       ),
     );

@@ -141,12 +141,18 @@ export function TTSSettings({ selectedProviderId }: TTSSettingsProps) {
 
   // Keep the sample text in sync with locale changes.
   useEffect(() => {
+    // Re-seed the sample test text when the locale changes — canonical
+    // "external value → input mirror" pattern. Suppressed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTestText(t('settings.ttsTestTextDefault'));
   }, [t]);
 
   // Reset transient UI state when switching providers.
   useEffect(() => {
     stopPreview();
+    // Reset transient UI state on provider switch — canonical "reset on
+    // change" pattern. Suppressed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowApiKey(false);
     setTestStatus('idle');
     setTestMessage('');
@@ -800,6 +806,9 @@ function VoxCPMVoiceManager() {
   }, []);
 
   useEffect(() => {
+    // Clear the previewing voice id when previewing ends — canonical
+    // "clear transient selection when parent flag flips" pattern. Suppressed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!previewing) setPreviewingVoiceId(null);
   }, [previewing]);
 

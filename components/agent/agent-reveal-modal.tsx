@@ -48,12 +48,18 @@ export function AgentRevealModal({ agents, open, onClose, onAllRevealed }: Agent
   const [flipsComplete, setFlipsComplete] = useState(false);
   const allRevealedFiredRef = useRef(false);
   const onAllRevealedRef = useRef(onAllRevealed);
-  onAllRevealedRef.current = onAllRevealed;
+  useEffect(() => {
+    onAllRevealedRef.current = onAllRevealed;
+  }, [onAllRevealed]);
 
   const allRevealed = revealedCount >= agents.length && agents.length > 0;
 
   useEffect(() => {
     if (!open) {
+      // Reset reveal state when the modal closes — canonical "reset on close"
+      // pattern. Suppressed because the alternative (key={open} remount)
+      // would lose the open animation.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRevealedCount(0);
       setFlipsComplete(false);
       allRevealedFiredRef.current = false;

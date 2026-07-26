@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useStageStore } from '@/lib/store/stage';
 import { isSceneEditLocked } from '@/lib/edit/regen-lock';
 import { getCurrentModelConfig } from '@/lib/utils/model-config';
@@ -587,12 +587,9 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
               break;
             }
             const errorMsg = contentResult.error || 'Content generation failed';
-            store.getState().addFailedOutline(
-              outline,
-              errorMsg,
-              contentResult.errorCode,
-              'content',
-            );
+            store
+              .getState()
+              .addFailedOutline(outline, errorMsg, contentResult.errorCode, 'content');
             options.onSceneFailed?.(outline, errorMsg);
             if (contentPromises) {
               // Parallel: surface the failure but keep going with the other scenes
@@ -654,12 +651,7 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
                   break;
                 }
                 const errorMsg = ttsResult.error || 'TTS generation failed';
-                store.getState().addFailedOutline(
-                  outline,
-                  errorMsg,
-                  undefined,
-                  'tts',
-                );
+                store.getState().addFailedOutline(outline, errorMsg, undefined, 'tts');
                 options.onSceneFailed?.(outline, errorMsg);
                 store.getState().setGenerationStatus('paused');
                 pausedByFailureOrAbort = true;
@@ -683,12 +675,9 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
               break;
             }
             const errorMsg = actionsResult.error || 'Actions generation failed';
-            store.getState().addFailedOutline(
-              outline,
-              errorMsg,
-              actionsResult.errorCode,
-              'actions',
-            );
+            store
+              .getState()
+              .addFailedOutline(outline, errorMsg, actionsResult.errorCode, 'actions');
             options.onSceneFailed?.(outline, errorMsg);
             store.getState().setGenerationStatus('paused');
             pausedByFailureOrAbort = true;
@@ -725,13 +714,17 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
   );
 
   // Keep ref in sync so retrySingleOutline can call it
-  generateRemainingRef.current = generateRemaining;
+  useEffect(() => {
+    generateRemainingRef.current = generateRemaining;
+  }, [generateRemaining]);
 
   // P1-1: Keep onSceneFailed in a ref so retrySingleOutline can call it
   // without adding `options` to its dependency array (which would change
   // the function identity on every render and cause consumer re-renders).
   const onSceneFailedRef = useRef(options.onSceneFailed);
-  onSceneFailedRef.current = options.onSceneFailed;
+  useEffect(() => {
+    onSceneFailedRef.current = options.onSceneFailed;
+  }, [options.onSceneFailed]);
 
   const stop = useCallback(() => {
     abortRef.current = true;
@@ -877,7 +870,8 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
         }
       } catch (err) {
         if (!isAbortError(err)) {
-          const errorMsg = err instanceof Error ? err.message : 'Unexpected error during generation';
+          const errorMsg =
+            err instanceof Error ? err.message : 'Unexpected error during generation';
           store.getState().addFailedOutline(outline, errorMsg, undefined, 'unknown');
           onSceneFailedRef.current?.(outline, errorMsg);
         }

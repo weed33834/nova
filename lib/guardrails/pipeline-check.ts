@@ -53,9 +53,7 @@ export function checkGeneratedContent(
     const failed = report.checks.filter((c) => !c.passed);
     log.warn(
       `Guardrail check flagged scene "${sceneTitle}": ${failed.length} issue(s) — ` +
-        failed
-          .map((c) => `${c.type}(${c.severity}): ${c.message}`)
-          .join('; '),
+        failed.map((c) => `${c.type}(${c.severity}): ${c.message}`).join('; '),
     );
   } else {
     log.debug(`Guardrail check passed for scene "${sceneTitle}"`);

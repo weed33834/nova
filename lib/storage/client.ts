@@ -25,7 +25,9 @@ export async function uploadBlobToStorage(
     const res = await fetch('/api/storage/upload', { method: 'POST', body: formData, signal });
     if (!res.ok) return null;
     const { url } = await res.json();
-    return typeof url === 'string' ? url : null;
+    // 后端 NoopStorageProvider 在未配置外部存储时返回空串；视为"未配置"
+    // 让调用方走本地 IndexedDB 回退，而不是返回一个空 URL 字符串。
+    return typeof url === 'string' && url.length > 0 ? url : null;
   } catch {
     return null;
   }

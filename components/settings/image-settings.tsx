@@ -84,6 +84,9 @@ export function ImageSettings({ selectedProviderId }: ImageSettingsProps) {
 
   useEffect(() => {
     if (isComfyUI) {
+      // Lazy-load ComfyUI workflow list when the user picks ComfyUI as the
+      // image provider. Suppressed — fetchWorkflows is the data loader.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchWorkflows();
     }
   }, [isComfyUI, fetchWorkflows]);

@@ -13,7 +13,6 @@ import {
   Minimize2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { TourStep } from '@/lib/tour/steps';
@@ -26,13 +25,6 @@ interface SpotlightProps {
   onPrev: () => void;
   currentStep: number;
   totalSteps: number;
-}
-
-function getTargetRect(selector: string): DOMRect | null {
-  if (typeof window === 'undefined') return null;
-  const el = document.querySelector(selector);
-  if (!el) return null;
-  return el.getBoundingClientRect();
 }
 
 function getTooltipPosition(
@@ -266,9 +258,7 @@ export function TourSpotlight({
                     size="sm"
                     className="gap-1"
                     onClick={onNext}
-                    aria-label={
-                      isLastStep ? t('tour.finish') : t('tour.next')
-                    }
+                    aria-label={isLastStep ? t('tour.finish') : t('tour.next')}
                   >
                     {isLastStep ? (
                       <>
@@ -373,9 +363,7 @@ export function TourControls({
             <Sparkles className="size-4" />
             <span>{t('tour.startTour')}</span>
           </Button>
-          <p className="text-xs text-slate-500 dark:text-slate-400 px-2">
-            {t('tour.helpDesc')}
-          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 px-2">{t('tour.helpDesc')}</p>
         </div>
       </TooltipContent>
     </Tooltip>

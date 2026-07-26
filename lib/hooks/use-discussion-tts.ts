@@ -54,7 +54,6 @@ export function useDiscussionTTS({ enabled, agents, onAudioStateChange }: Discus
   const abortControllerRef = useRef<AbortController | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const onAudioStateChangeRef = useRef(onAudioStateChange);
-  onAudioStateChangeRef.current = onAudioStateChange;
   const processQueueRef = useRef<() => void>(() => {});
 
   const {
@@ -75,13 +74,19 @@ export function useDiscussionTTS({ enabled, agents, onAudioStateChange }: Discus
     },
   });
   const browserCancelRef = useRef(browserCancel);
-  browserCancelRef.current = browserCancel;
   const browserSpeakRef = useRef(browserSpeak);
-  browserSpeakRef.current = browserSpeak;
   const browserPauseRef = useRef(browserPause);
-  browserPauseRef.current = browserPause;
   const browserResumeRef = useRef(browserResume);
-  browserResumeRef.current = browserResume;
+  // Sync callback/handler refs in an effect (not during render) so closures
+  // used by long-lived audio callbacks always see the latest values without
+  // breaking the rules-of-hooks purity contract.
+  useEffect(() => {
+    onAudioStateChangeRef.current = onAudioStateChange;
+    browserCancelRef.current = browserCancel;
+    browserSpeakRef.current = browserSpeak;
+    browserPauseRef.current = browserPause;
+    browserResumeRef.current = browserResume;
+  });
 
   // Build agent index map for deterministic voice resolution
   const agentIndexMap = useRef<Map<string, number>>(new Map());
@@ -260,7 +265,12 @@ export function useDiscussionTTS({ enabled, agents, onAudioStateChange }: Discus
     }
   }, [agents, enabled, locale, ttsMuted, ttsVolume, ttsProvidersConfig, ttsSpeed, playbackSpeed]);
 
-  processQueueRef.current = processQueue;
+  // Keep processQueueRef in sync in an effect (not during render) so the
+  // browser-TTS onEnd callback and resume() can dispatch into the latest
+  // processQueue without re-running it during render.
+  useEffect(() => {
+    processQueueRef.current = processQueue;
+  }, [processQueue]);
 
   const handleSegmentSealed = useCallback(
     (messageId: string, partId: string, fullText: string, agentId: string | null) => {

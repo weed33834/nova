@@ -9,31 +9,20 @@ import {
   Palette,
   Clock,
   AlertTriangle,
-  Zap,
   ChevronRight,
   ChevronLeft,
-  Edit,
   Save,
   X,
   Check,
   Trash2,
   Plus,
   BarChart3,
-  Eye,
-  EyeOff,
-  Download,
-  Upload,
-  RotateCcw,
   GraduationCap,
   Lightbulb,
   Video,
   Music,
   Code2,
   MousePointer2,
-  Share2,
-  Settings,
-  HelpCircle,
-  AlertCircle,
   Users,
   Trophy,
 } from 'lucide-react';
@@ -41,29 +30,12 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
 import { useProfileStore, useProfileActions } from '@/lib/store/profile';
 import type {
   StudentProfile,
-  KnowledgeFoundation,
-  LearningGoal,
-  ErrorPattern,
-  PROFILE_DIMENSIONS,
 } from '@/lib/profile/schema';
 
 const DIMENSION_CONFIG = [
@@ -84,17 +56,6 @@ const COLOR_MAP: Record<string, string> = {
   red: 'bg-red-500',
 };
 
-const COGNITIVE_STYLES = [
-  { value: 'visual', label: '视觉型', desc: '偏好图表、图像、空间理解' },
-  { value: 'auditory', label: '听觉型', desc: '偏好语音、讲解、讨论' },
-  { value: 'reading_writing', label: '读写型', desc: '偏好文本、笔记、阅读' },
-  { value: 'kinesthetic', label: '动觉型', desc: '偏好实操、动手、体验' },
-  { value: 'sequential', label: '序列型', desc: '偏好循序渐进、逻辑链条' },
-  { value: 'global', label: '整体型', desc: '偏好宏观框架、整体把握' },
-  { value: 'active', label: '主动型', desc: '偏好尝试、讨论、即时应用' },
-  { value: 'reflective', label: '反思型', desc: '偏好思考、消化、内化理解' },
-];
-
 const LEARNING_GOAL_TYPES = [
   { value: 'exam_prep', label: '考试备考', icon: GraduationCap },
   { value: 'skill_acquisition', label: '技能习得', icon: Lightbulb },
@@ -114,36 +75,6 @@ const MODALITY_TYPES = [
   { value: 'code', label: '代码实操', icon: Code2 },
   { value: 'diagram', label: '图表图解', icon: BarChart3 },
 ];
-
-const TIME_BUDGET_OPTIONS = [
-  { value: 'micro', label: '微学习 (≤15min)', desc: '碎片时间' },
-  { value: 'short', label: '短时段 (15-30min)', desc: '通勤/休息' },
-  { value: 'medium', label: '中时段 (30-60min)', desc: '专注学习' },
-  { value: 'long', label: '长时段 (1-2h)', desc: '深度钻研' },
-  { value: 'unlimited', label: '不限时长', desc: '全天候' },
-];
-
-const PRIOR_KNOWLEDGE_LEVELS = [
-  { value: 'novice', label: '零基础', desc: '完全不懂' },
-  { value: 'beginner', label: '入门', desc: '了解基本概念' },
-  { value: 'intermediate', label: '进阶', desc: '能独立完成基础任务' },
-  { value: 'advanced', label: '高级', desc: '能解决复杂问题' },
-  { value: 'expert', label: '专家', desc: '可教学他人、创新' },
-];
-
-const SPECIAL_NEEDS = [
-  { value: 'none', label: '无特殊需求' },
-  { value: 'dyslexia', label: '阅读障碍' },
-  { value: 'adhd', label: '注意力缺陷' },
-  { value: 'visual_impairment', label: '视力障碍' },
-  { value: 'hearing_impairment', label: '听力障碍' },
-  { value: 'motor_impairment', label: '运动障碍' },
-  { value: 'language_barrier', label: '语言障碍' },
-  { value: 'anxiety', label: '学习焦虑' },
-] as const satisfies ReadonlyArray<{
-  value: StudentProfile['specialNeeds'][number];
-  label: string;
-}>;
 
 import { FileText, Briefcase } from 'lucide-react';
 
@@ -171,17 +102,17 @@ export function ProfileVisualizer({
 
   const [localProfile, setLocalProfile] = useState<StudentProfile>(profile);
   const [activeTab, setActiveTab] = useState<string>(DIMENSION_CONFIG[0].key);
-  const [editingDimension, setEditingDimension] = useState<string | null>(null);
-  const [showExport, setShowExport] = useState(false);
+  const [_editingDimension, setEditingDimension] = useState<string | null>(null);
+  const [_showExport, _setShowExport] = useState(false);
 
   const completeness = calculateCompleteness(localProfile);
   const dimensionScores = calculateDimensionScores(localProfile);
 
   function calculateCompleteness(p: StudentProfile): number {
     let score = 0,
-      totalWeight = 0;
+      _totalWeight = 0;
     for (const dim of DIMENSION_CONFIG) {
-      totalWeight += dim.weight;
+      _totalWeight += dim.weight;
       let dimScore = 0;
       switch (dim.key) {
         case 'knowledgeFoundation':
@@ -248,18 +179,6 @@ export function ProfileVisualizer({
     setLocalProfile(profile);
     setEditingDimension(null);
     onCancel?.();
-  }
-
-  function handleDimensionChange(
-    key: keyof StudentProfile,
-    value: StudentProfile[keyof StudentProfile],
-  ) {
-    setLocalProfile((prev) => ({
-      ...prev,
-      [key]: value,
-      updatedAt: Date.now(),
-      version: prev.version + 1,
-    }));
   }
 
   function handleAddKnowledgeFoundation() {
@@ -634,32 +553,6 @@ export function ProfileVisualizer({
     );
   }
 
-  function renderSpecialNeeds() {
-    return (
-      <div className="space-y-4">
-        <h3 className="font-medium">{t('profile.specialNeeds')}</h3>
-        <div className="flex flex-wrap gap-2">
-          {SPECIAL_NEEDS.map((sn) => (
-            <Badge
-              key={sn.value}
-              variant={localProfile.specialNeeds.includes(sn.value) ? 'default' : 'outline'}
-              className="cursor-pointer"
-              onClick={() => {
-                if (mode !== 'edit') return;
-                const updated = localProfile.specialNeeds.includes(sn.value)
-                  ? localProfile.specialNeeds.filter((s) => s !== sn.value)
-                  : [...localProfile.specialNeeds, sn.value];
-                setLocalProfile((prev) => ({ ...prev, specialNeeds: updated }));
-              }}
-            >
-              {sn.label}
-            </Badge>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   const renderDimension = (dimKey: string) => {
     switch (dimKey) {
       case 'knowledgeFoundation':
@@ -793,7 +686,7 @@ export function ProfileVisualizer({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-1 mb-4">
-          {DIMENSION_CONFIG.map((dim, idx) => (
+          {DIMENSION_CONFIG.map((dim, _idx) => (
             <TabsTrigger
               key={dim.key}
               value={dim.key}
@@ -843,17 +736,4 @@ export function ProfileVisualizer({
       )}
     </div>
   );
-}
-
-function ProfileDimensionEditor({
-  dimension,
-  profile,
-  onChange,
-}: {
-  dimension: (typeof DIMENSION_CONFIG)[0];
-  profile: StudentProfile;
-  onChange: (updates: Partial<StudentProfile>) => void;
-}) {
-  // 具体的编辑器实现...
-  return <div className="p-4">编辑器开发中...</div>;
 }

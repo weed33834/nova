@@ -102,7 +102,7 @@ export class MultimodalTutor {
 
   generateAdaptiveContent(
     request: MultimodalRequest,
-    session?: TutoringSession,
+    _session?: TutoringSession,
   ): MultimodalContent {
     const modalities = this.selectOptimalModalities(request);
     const primary = modalities[0] ?? 'text';
@@ -152,7 +152,7 @@ export class MultimodalTutor {
     }
 
     const currentModality = session.modalitySequence[session.currentStep];
-    const progress = session.currentStep / session.modalitySequence.length;
+    const _progress = session.currentStep / session.modalitySequence.length;
 
     let type: TutorResponseType;
     let content: string;

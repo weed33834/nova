@@ -208,11 +208,11 @@ export function createEmptyProfile(id?: string): StudentProfile {
 
 export function calculateProfileCompleteness(profile: StudentProfile): number {
   let score = 0;
-  let totalWeight = 0;
+  let _totalWeight = 0;
 
   for (const dim of PROFILE_DIMENSIONS) {
     const weight = dim.weight;
-    totalWeight += weight;
+    _totalWeight += weight;
 
     let dimScore = 0;
     switch (dim.key) {

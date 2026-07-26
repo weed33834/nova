@@ -81,7 +81,13 @@ export async function GET(
 
     const stat = await fs.stat(realPath);
     if (!stat.isFile()) {
-      return apiError('INVALID_REQUEST', 404, 'File not found.', undefined, 'Loading classroom media');
+      return apiError(
+        'INVALID_REQUEST',
+        404,
+        'File not found.',
+        undefined,
+        'Loading classroom media',
+      );
     }
 
     const ext = path.extname(realPath).toLowerCase();

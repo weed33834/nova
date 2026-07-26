@@ -978,11 +978,10 @@ function KeyPointInput({
   placeholder: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
-  const [width, setWidth] = useState(120);
-
-  useEffect(() => {
-    setWidth(Math.max(100, Math.min(280, value.length * 8 + 40)));
-  }, [value]);
+  // Width is a pure function of value length — derive it directly instead of
+  // mirroring into state. Avoids the set-state-in-effect anti-pattern and
+  // keeps the input width always in sync with the text content.
+  const width = Math.max(100, Math.min(280, value.length * 8 + 40));
 
   // Note: intentionally no onBlur commit. Committing on blur surprises users
   // who type a partial value then click away — that text becomes a chip they

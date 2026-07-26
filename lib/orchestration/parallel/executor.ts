@@ -2,7 +2,6 @@ import type {
   ParallelAgentConfig,
   ParallelExecutionResult,
   ParallelAggregation,
-  ParallelExecutionGroup,
   ParallelExecutionPlan,
 } from './types';
 import { createLogger } from '@/lib/logger';
@@ -53,14 +52,13 @@ export class ParallelExecutor {
       // never become an unhandled rejection after `Promise.race` returns.
       // `.catch(() => undefined)` swallows the loser rejection while still
       // letting the winner surface through `Promise.race` below.
-      const racePromises = config.agentIds.map(
-        (agentId) =>
-          this.executeSingle(agentId, config.timeout, input)
-            .then((r) => ({ agentId, result: r }))
-            .catch((error) => ({
-              agentId,
-              error: error instanceof Error ? error.message : String(error),
-            })),
+      const racePromises = config.agentIds.map((agentId) =>
+        this.executeSingle(agentId, config.timeout, input)
+          .then((r) => ({ agentId, result: r }))
+          .catch((error) => ({
+            agentId,
+            error: error instanceof Error ? error.message : String(error),
+          })),
       );
       try {
         const winner = await Promise.race(racePromises);
@@ -169,7 +167,10 @@ export class ParallelExecutor {
     const startTime = Date.now();
 
     const execPromise = this.executor(agentId, input);
-    let result: { content: string; actions: Array<{ actionName: string; params: Record<string, unknown> }> };
+    let result: {
+      content: string;
+      actions: Array<{ actionName: string; params: Record<string, unknown> }>;
+    };
     if (timeout) {
       // Race the executor against a timer; clear the timer on settle so a
       // resolved/errored call doesn't leave a dangling `setTimeout` that keeps

@@ -78,6 +78,9 @@ export function UsageDashboard() {
   }, []);
 
   useEffect(() => {
+    // Initial usage data load on mount / when `load` changes. Suppressed —
+    // this IS the data-loading effect, not a derived-state sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 

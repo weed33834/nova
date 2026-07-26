@@ -372,6 +372,9 @@ importers:
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@1.8.0)(canvas@3.2.3)
+      playwright:
+        specifier: ^1.62.0
+        version: 1.62.0
       prettier:
         specifier: 3.8.1
         version: 3.8.1

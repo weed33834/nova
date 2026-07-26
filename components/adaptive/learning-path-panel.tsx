@@ -18,7 +18,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { AdaptiveScheduler } from '@/lib/adaptive/scheduler/engine';
-import type { LearningSchedule, ScheduledItem } from '@/lib/adaptive/scheduler/types';
+import type { LearningSchedule } from '@/lib/adaptive/scheduler/types';
 import { createKnowledgeGraph } from '@/lib/adaptive/knowledge-graph/graph';
 import { createEmptyKnowledgeState } from '@/lib/adaptive/knowledge-graph/types';
 
@@ -83,7 +83,7 @@ const DEMO_GRAPH = createKnowledgeGraph(
 );
 
 export function LearningPathPanel() {
-  const { t } = useI18n();
+  const { t: _t } = useI18n();
   const profile = useProfileStore((s) => s.profile);
   const [expanded, setExpanded] = useState(false);
 

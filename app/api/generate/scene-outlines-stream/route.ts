@@ -646,7 +646,11 @@ export async function POST(req: NextRequest) {
 
     return new Response(stream, {
       headers: {
-        'Content-Type': 'text/event-stream',
+        // charset=utf-8 is mandatory: per RFC 9110 the default charset for
+        // text/* is ISO-8859-1, so without an explicit charset, clients
+        // (incl. Playwright's `response.text()`) decode UTF-8 bytes as
+        // Latin-1 and produce mojibake — observed in the real-API E2E.
+        'Content-Type': 'text/event-stream; charset=utf-8',
         'Cache-Control': 'no-cache, no-transform',
         Connection: 'keep-alive',
         'X-Accel-Buffering': 'no',

@@ -8,7 +8,7 @@ import type {
 } from './types';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger('KnowledgeTracer');
+const _log = createLogger('KnowledgeTracer');
 
 export const DEFAULT_TRACING_CONFIG: TracingConfig = {
   forgettingRate: 0.1,

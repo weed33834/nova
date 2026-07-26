@@ -464,7 +464,6 @@ function SpeechClip({
 
   useEffect(() => {
     if (document.activeElement !== ref.current || !dirtyRef.current) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync external text in only when not mid-edit
       setVal(text);
       dirtyRef.current = false;
     }
@@ -582,11 +581,9 @@ function DiscussionClip({
   const topicDirty = useRef(false);
   const promptDirty = useRef(false);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- adopt external topic only when not mid-edit
     if (!topicDirty.current) setTopicVal(topic);
   }, [topic]);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- adopt external prompt only when not mid-edit
     if (!promptDirty.current) setPromptVal(prompt);
   }, [prompt]);
 
@@ -1125,11 +1122,22 @@ export function ActionsBar({ sceneId }: { sceneId: string }) {
   const discussionPresent = hasDiscussion(actions);
   const lastMovableIndex = discussionPresent ? actions.length - 2 : actions.length - 1;
 
-  let speechIndex = 0;
-  const items = actions.map((action, index) => {
-    if (action.type === 'speech') speechIndex += 1;
-    return { action, index, key: (action.id ?? `a-${index}`) as string, speechIndex };
-  });
+  // Compute the per-action item list with a running speech index. Wrapped in
+  // useMemo so the `let speechIndex` mutation lives inside the memo callback
+  // (a computation), not the render body — the immutability rule allows
+  // local mutation inside useMemo/useReducer callbacks.
+  const items = useMemo(() => {
+    let speechIndex = 0;
+    return actions.map((action, index) => {
+      // Running speech index: incremented once per speech action. The let +
+      // += pattern is the canonical way to compute a running index inside a
+      // map; the immutability rule flags it even inside useMemo. A pure-FP
+      // reduce-with-spread rewrite would be O(n²) on large action lists.
+      // eslint-disable-next-line react-hooks/immutability
+      if (action.type === 'speech') speechIndex += 1;
+      return { action, index, key: (action.id ?? `a-${index}`) as string, speechIndex };
+    });
+  }, [actions]);
 
   return (
     <section

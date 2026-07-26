@@ -260,13 +260,13 @@ function buildDiagramGroup(
   let minY = Infinity;
   let maxRight = -Infinity;
   let maxBottom = -Infinity;
-  let hasCircularPreset = false;
+  let _hasCircularPreset = false;
 
   for (const child of spTree.allChildren()) {
     if (CHILD_TAGS.has(child.localName)) {
       children.push(child);
       const prst = child.child('spPr').child('prstGeom').attr('prst');
-      if (prst && CIRCULAR_PRESETS.has(prst)) hasCircularPreset = true;
+      if (prst && CIRCULAR_PRESETS.has(prst)) _hasCircularPreset = true;
       const b = readShapeBounds(child);
       if (b) {
         minX = Math.min(minX, b.x);
@@ -286,7 +286,7 @@ function buildDiagramGroup(
   const bboxSpansNegative = hasBounds && (minX < 0 || minY < 0);
   const bboxMuchLargerThanFrame =
     hasBounds && (maxRight - minX > base.size.w * 2 || maxBottom - minY > base.size.h * 2);
-  const useFrameCoords = bboxSpansNegative || bboxMuchLargerThanFrame;
+  const _useFrameCoords = bboxSpansNegative || bboxMuchLargerThanFrame;
 
   // Use the graphicFrame's own dimensions as the child coordinate space.
   // Diagram shapes are positioned in the frame's coordinate space (EMU converted to px).

@@ -80,7 +80,5 @@ export function getEffectiveRole(role: string): RoleDefinition | undefined {
  * Get all effective role definitions (base + overrides), as an array.
  */
 export function getEffectiveRoles(): RoleDefinition[] {
-  return Object.keys(ROLE_DEFINITIONS).map((role) =>
-    getEffectiveRole(role)!,
-  );
+  return Object.keys(ROLE_DEFINITIONS).map((role) => getEffectiveRole(role)!);
 }

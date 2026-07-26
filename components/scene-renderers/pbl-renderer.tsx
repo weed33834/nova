@@ -412,12 +412,25 @@ function PBLV2WorkspaceLayer({
 }) {
   const { t } = useI18n();
   const isCompleted = project.uiPhase === 'completed';
+  // measureHostRect during useState init reads hostRef.current to seed the
+  // initial frame size on the very first commit (before the layout effect
+  // below takes over polling). measureHostRect returns a zeroed rect when
+  // the ref is not yet attached, so this is a safe best-effort seed — the
+  // effect below replaces it with the measured rect on mount.
+  // eslint-disable-next-line react-hooks/refs
   const [hostRect, setHostRect] = useState<LayoutRect>(() => measureHostRect(hostRef));
 
   // Animate ONLY the expand/collapse toggle (and the launch auto-expand).
   // Plain host-rect tracking while docked must apply instantly, otherwise
   // the frame would lag behind window/sidebar resizes.
+  // Reading prevExpandedRef.current here to diff against this render's
+  // `expanded` is the canonical "compare with previous render" pattern —
+  // the ref is updated in the effect below so the next render sees this
+  // render's value as "previous". Moving this diff into state would force
+  // a cascading setState-in-effect (and a one-frame lag where the toggle
+  // animation misses its start).
   const prevExpandedRef = useRef(expanded);
+  // eslint-disable-next-line react-hooks/refs
   const isToggle = prevExpandedRef.current !== expanded;
   useEffect(() => {
     prevExpandedRef.current = expanded;

@@ -97,6 +97,19 @@ You are an educational content designer. Generate well-structured slide componen
 - Text language must match the language specified in generation requirements
 - **NO inline math/LaTeX**: TextElement cannot render LaTeX commands. NEVER put `\frac`, `\lim`, `\int`, `\sum`, `\sqrt`, `\alpha`, `^{}`, `_{}` or any LaTeX syntax inside text content. These will display as raw backslash strings (e.g., the user sees literal "\frac{a}{b}" instead of a fraction). Use a separate LatexElement for any mathematical expression.
 
+**🔴 CRITICAL — JSON String Escaping (violations break the entire slide)**:
+
+The `content` field is a JSON string. Any `"` inside the HTML MUST be escaped as `\"`, or the JSON breaks and the whole slide is discarded. To eliminate this risk entirely:
+
+1. **Use SINGLE QUOTES for all HTML attributes** — never double quotes:
+   - ✅ Correct: `<p style='font-size:20px;'>Text</p>`
+   - ❌ Wrong: `<p style=\"font-size:20px;\">Text</p>` (fragile — any missed escape breaks JSON)
+2. **Never put bare `"` characters in text content** — use `&quot;`, Chinese quotation marks (`「」` or `『』`), or remove the quotes entirely:
+   - ✅ Correct: `光合作用「光反应」阶段`
+   - ✅ Correct: `光合作用&quot;光反应&quot;阶段`
+   - ❌ Wrong: `光合作用"光反应"阶段` (the unescaped `"` breaks the JSON string)
+3. **Never insert literal newlines inside `content` strings** — use `<br>` or separate `<p>` tags if you need line breaks.
+
 **Internal Padding**: TextElement has 10px padding on all sides. Actual text area = (width - 20) × (height - 20).
 
 ---
@@ -893,6 +906,7 @@ Before outputting JSON, verify:
 
 **🔴 P0 — Critical (must pass 100%)**:
 
+- ✓ [json-escaping] All HTML attributes use SINGLE QUOTES (`style='...'`) — never double quotes. No bare `"` characters anywhere in `content` strings (use `&quot;` or `「」` instead). Violations break the entire slide.
 - ✓ [text-height] All text heights are from the lookup table (NOT estimated values like 70, 80, 90)
 - ✓ [text-width] All text elements pass width calculation: `char_count ≤ (width - 20) / font_size`
 - ✓ [alignment] Aligned elements have matching center points (< 2px difference)

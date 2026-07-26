@@ -85,7 +85,7 @@ export function getDependencyLevels(nodes: TaskNode[], edges: TaskEdge[]): Map<s
 }
 
 export function buildExecutionPlan(dag: TaskDAG): TaskExecutionPlan {
-  const { sorted, cycle } = topologicalSort(dag.nodes, dag.edges);
+  const { sorted: _sorted, cycle } = topologicalSort(dag.nodes, dag.edges);
 
   if (cycle) {
     throw new Error(`DAG ${dag.id} contains a cycle`);
@@ -105,7 +105,7 @@ export function buildExecutionPlan(dag: TaskDAG): TaskExecutionPlan {
         if (edge.to === node.id) {
           const depNode = dag.nodes.find((n) => n.id === edge.from);
           if (depNode) {
-            const depLevel = levels.get(depNode.id) ?? 0;
+            const _depLevel = levels.get(depNode.id) ?? 0;
             const depStage = stages.findIndex((s) => s.nodes.some((n) => n.id === depNode.id));
             if (depStage >= 0 && !deps.includes(depStage)) {
               deps.push(depStage);

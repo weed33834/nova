@@ -24,7 +24,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPromptRegistry, type PromptRegistryEntry } from '@/lib/prompts/registry';
-import { SKILL_CATALOG, type SkillCatalogEntry } from '@/lib/agent/tools/registry';
+import { SKILL_CATALOG } from '@/lib/agent/tools/registry';
 import { DOCUMENT_MIME_TYPES, NOVA_LOCAL_MIMES } from '@/lib/document/mime';
 import { novaLocalExtractorProvider } from '@/lib/document/extractors/nova-local';
 import { normalizeDocumentMimeType } from '@/lib/document/mime';

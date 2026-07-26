@@ -67,7 +67,10 @@ describe('knowledge-graph widget content routing', () => {
 </html>`;
     };
 
-    const outline = createKnowledgeGraphOutline({ graphSubject: 'WWII', title: 'WWII Knowledge Map' });
+    const outline = createKnowledgeGraphOutline({
+      graphSubject: 'WWII',
+      title: 'WWII Knowledge Map',
+    });
 
     const content = (await generateSceneContent(outline, aiCall, {
       languageDirective: DIRECTIVE,
@@ -129,7 +132,8 @@ function createKnowledgeGraphOutline(
     id: 'scene-knowledge-graph',
     type: 'interactive',
     title: overrides.title || 'Photosynthesis Knowledge Graph',
-    description: 'Interactive concept map showing the relationships between photosynthesis concepts.',
+    description:
+      'Interactive concept map showing the relationships between photosynthesis concepts.',
     keyPoints: [
       'Light reaction and dark reaction relationship',
       'Chloroplast structure basics',

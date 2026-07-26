@@ -17,6 +17,7 @@ import type {
 } from '@/lib/types/chat';
 import type { SceneOutline } from '@/lib/types/generation';
 import type { VoiceDesign } from '@/lib/audio/voice-design';
+import type { TTSProviderId } from '@/lib/audio/types';
 import type { UIMessage } from 'ai';
 import type { AgentEditSessionRecord } from '@/lib/agent/client/agent-edit-session-types';
 import { createLogger } from '@/lib/logger';
@@ -77,6 +78,12 @@ export interface SceneRecord {
   content: SceneContent; // Stored as JSON
   actions?: Action[]; // Stored as JSON
   whiteboard?: Whiteboard[]; // Stored as JSON
+  // 多 Agent 配置：与 @nova/dsl 的 MultiAgentConfig 对齐（agentIds: string[]）
+  multiAgent?: {
+    enabled: boolean;
+    agentIds: string[];
+    directorPrompt?: string;
+  };
   createdAt: number;
   updatedAt: number;
 }
@@ -134,6 +141,8 @@ export interface PlaybackStateRecord {
   sceneIndex: number;
   actionIndex: number;
   consumedDiscussions: string[];
+  // 该快照所属场景；场景不匹配时丢弃，避免恢复到错误场景
+  sceneId?: string;
   updatedAt: number;
 }
 
@@ -184,6 +193,8 @@ export interface GeneratedAgentRecord {
   color: string;
   priority: number;
   voiceDesign?: VoiceDesign; // 3-layer vocal descriptor for auto voice
+  // 实际写入与读取的字段：与 AgentConfig.voiceConfig 类型对齐
+  voiceConfig?: { providerId: TTSProviderId; modelId?: string; voiceId: string };
   createdAt: number;
 }
 
@@ -480,38 +491,93 @@ export async function clearDatabase(): Promise<void> {
 
 /**
  * Export database contents (for backup)
+ *
+ * 覆盖全部 13 张表：旧版本只导 4 张（stages/scenes/chatSessions/playbackState），
+ * 导致备份恢复后丢失全部音频、媒体、agent、声纹和会话历史。这里补齐。
  */
 export async function exportDatabase(): Promise<{
   stages: StageRecord[];
   scenes: SceneRecord[];
+  audioFiles: AudioFileRecord[];
+  imageFiles: ImageFileRecord[];
+  snapshots: Snapshot[];
   chatSessions: ChatSessionRecord[];
   playbackState: PlaybackStateRecord[];
+  stageOutlines: StageOutlinesRecord[];
+  mediaFiles: MediaFileRecord[];
+  generatedAgents: GeneratedAgentRecord[];
+  voiceProfiles: VoiceProfileRecord[];
+  autoVoiceCache: AutoVoiceCacheRecord[];
+  agentEditSessions: AgentEditSessionRecord[];
 }> {
   return {
     stages: await db.stages.toArray(),
     scenes: await db.scenes.toArray(),
+    audioFiles: await db.audioFiles.toArray(),
+    imageFiles: await db.imageFiles.toArray(),
+    snapshots: await db.snapshots.toArray(),
     chatSessions: await db.chatSessions.toArray(),
     playbackState: await db.playbackState.toArray(),
+    stageOutlines: await db.stageOutlines.toArray(),
+    mediaFiles: await db.mediaFiles.toArray(),
+    generatedAgents: await db.generatedAgents.toArray(),
+    voiceProfiles: await db.voiceProfiles.toArray(),
+    autoVoiceCache: await db.autoVoiceCache.toArray(),
+    agentEditSessions: await db.agentEditSessions.toArray(),
   };
 }
 
 /**
  * Import database contents (for restoring backups)
+ *
+ * 与 exportDatabase 对称覆盖全部 13 张表，单事务保证原子性。
  */
 export async function importDatabase(data: {
   stages?: StageRecord[];
   scenes?: SceneRecord[];
+  audioFiles?: AudioFileRecord[];
+  imageFiles?: ImageFileRecord[];
+  snapshots?: Snapshot[];
   chatSessions?: ChatSessionRecord[];
   playbackState?: PlaybackStateRecord[];
+  stageOutlines?: StageOutlinesRecord[];
+  mediaFiles?: MediaFileRecord[];
+  generatedAgents?: GeneratedAgentRecord[];
+  voiceProfiles?: VoiceProfileRecord[];
+  autoVoiceCache?: AutoVoiceCacheRecord[];
+  agentEditSessions?: AgentEditSessionRecord[];
 }): Promise<void> {
   await db.transaction(
     'rw',
-    [db.stages, db.scenes, db.chatSessions, db.playbackState],
+    [
+      db.stages,
+      db.scenes,
+      db.audioFiles,
+      db.imageFiles,
+      db.snapshots,
+      db.chatSessions,
+      db.playbackState,
+      db.stageOutlines,
+      db.mediaFiles,
+      db.generatedAgents,
+      db.voiceProfiles,
+      db.autoVoiceCache,
+      db.agentEditSessions,
+    ],
     async () => {
       if (data.stages) await db.stages.bulkPut(data.stages);
       if (data.scenes) await db.scenes.bulkPut(data.scenes);
+      if (data.audioFiles) await db.audioFiles.bulkPut(data.audioFiles);
+      if (data.imageFiles) await db.imageFiles.bulkPut(data.imageFiles);
+      if (data.snapshots) await db.snapshots.bulkPut(data.snapshots);
       if (data.chatSessions) await db.chatSessions.bulkPut(data.chatSessions);
       if (data.playbackState) await db.playbackState.bulkPut(data.playbackState);
+      if (data.stageOutlines) await db.stageOutlines.bulkPut(data.stageOutlines);
+      if (data.mediaFiles) await db.mediaFiles.bulkPut(data.mediaFiles);
+      if (data.generatedAgents) await db.generatedAgents.bulkPut(data.generatedAgents);
+      if (data.voiceProfiles) await db.voiceProfiles.bulkPut(data.voiceProfiles);
+      if (data.autoVoiceCache) await db.autoVoiceCache.bulkPut(data.autoVoiceCache);
+      if (data.agentEditSessions) await db.agentEditSessions.bulkPut(data.agentEditSessions);
     },
   );
   log.info('Database imported successfully');
@@ -583,5 +649,8 @@ export async function getDatabaseStats() {
     stageOutlines: await db.stageOutlines.count(),
     mediaFiles: await db.mediaFiles.count(),
     generatedAgents: await db.generatedAgents.count(),
+    voiceProfiles: await db.voiceProfiles.count(),
+    autoVoiceCache: await db.autoVoiceCache.count(),
+    agentEditSessions: await db.agentEditSessions.count(),
   };
 }

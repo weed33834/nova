@@ -1,7 +1,7 @@
-import type { KnowledgeGraph, ConceptNode, KnowledgeState } from './types';
+import type { KnowledgeGraph } from './types';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger('KGExtractor');
+const _log = createLogger('KGExtractor');
 
 export interface ExtractionResult {
   concepts: Array<{

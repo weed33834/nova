@@ -7,14 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { ChevronDownIcon } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 export type WebPreviewContextValue = {
   url: string;
@@ -128,8 +121,13 @@ export const WebPreviewUrl = ({ value, onChange, onKeyDown, ...props }: WebPrevi
   const { url, setUrl } = useWebPreview();
   const [inputValue, setInputValue] = useState(url);
 
-  // Sync input value with context URL when it changes externally
+  // Sync input value with context URL when it changes externally (e.g. user
+  // navigates from elsewhere). This is the canonical "mirror external value
+  // into a local editable input" pattern; the set-state-in-effect rule
+  // flags it, but the alternative (key={url} remount) loses input focus and
+  // the user's caret position. Suppressed with rationale.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInputValue(url);
   }, [url]);
 

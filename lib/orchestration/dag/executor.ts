@@ -2,14 +2,13 @@ import type {
   TaskDAG,
   TaskNode,
   TaskEdge,
-  TaskNodeState,
   DAGExecutionState,
   TaskStage,
 } from './types';
 import { buildExecutionPlan, getDependencies } from './scheduler';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger('DAGExecutor');
+const _log = createLogger('DAGExecutor');
 
 export interface DAGExecutorOptions {
   onNodeStart?: (node: TaskNode) => void;
@@ -104,9 +103,7 @@ export class DAGExecutor {
     // `Promise.all` (not `allSettled`) preserves the original fail-fast
     // semantics for the outer loop.
     const promises = stage.nodes.map((node) =>
-      this.executeNodeWithTracking(node, results).then(
-        (r) => [node.id, r] as [string, unknown],
-      ),
+      this.executeNodeWithTracking(node, results).then((r) => [node.id, r] as [string, unknown]),
     );
     for (const p of promises) p.catch(() => {});
     return Promise.all(promises);

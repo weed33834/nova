@@ -137,9 +137,9 @@ function HomePage() {
   const profile = useProfileStore((state) => state.profile);
   const profileCompleteness = useMemo(() => {
     let score = 0,
-      totalWeight = 0;
+      _totalWeight = 0;
     for (const dim of PROFILE_DIMENSIONS) {
-      totalWeight += dim.weight;
+      _totalWeight += dim.weight;
       let dimScore = 0;
       switch (dim.key) {
         case 'knowledgeFoundation':
@@ -198,6 +198,9 @@ function HomePage() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(RECENT_OPEN_STORAGE_KEY);
+      // localStorage → React state sync on mount is the canonical
+      // external-state hydration pattern. Suppressed.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved !== null) setRecentOpen(saved !== 'false');
     } catch {
       /* localStorage unavailable */
@@ -225,6 +228,9 @@ function HomePage() {
     if (draftRestoredRef.current) return;
     if (!cachedRequirement) return;
     draftRestoredRef.current = true;
+    // One-shot draft restore from external cache into form state. Suppressed
+    // — guarded by draftRestoredRef so it only fires once per mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setForm((prev) => (prev.requirement ? prev : { ...prev, requirement: cachedRequirement }));
   }, [cachedRequirement]);
 
@@ -296,6 +302,9 @@ function HomePage() {
     useMediaGenerationStore.getState().revokeObjectUrls();
     useMediaGenerationStore.setState({ tasks: {} });
 
+    // Initial data load on mount — setState in the .finally is the canonical
+    // "loading → done" transition. Suppressed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadClassrooms().finally(() => setClassroomsLoading(false));
 
     // Background warm: touch cached data so it's ready when needed
@@ -311,7 +320,7 @@ function HomePage() {
       revokeThumbnailSlideMediaUrls(thumbnailsRef.current);
       thumbnailsRef.current = {};
     };
-  }, []);
+  }, [loadClassrooms]);
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();

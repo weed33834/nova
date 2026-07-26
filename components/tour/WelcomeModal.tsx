@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, ArrowRight, Zap, Palette, BookOpen, Users, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, ArrowRight, Zap, Palette, BookOpen, Users } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ const FEATURES = [
 
 export function WelcomeModal({ isOpen, onClose, onStartTour }: WelcomeModalProps) {
   const { t } = useI18n();
-  const hasSeenWelcome = useOnboardingStore((s) => s.hasSeenWelcome);
+  const _hasSeenWelcome = useOnboardingStore((s) => s.hasSeenWelcome);
   const setHasSeenWelcome = useOnboardingStore((s) => s.setHasSeenWelcome);
 
   const handleClose = () => {

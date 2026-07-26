@@ -58,10 +58,7 @@ export function getMaxTurns(role: string): number | undefined {
  *   current discussion (count of prior `AgentTurnSummary` entries for this agent)
  * @returns `true` if the constraint exists AND has been reached or exceeded
  */
-export function hasExceededMaxTurns(
-  role: string,
-  turnsTaken: number,
-): boolean {
+export function hasExceededMaxTurns(role: string, turnsTaken: number): boolean {
   const max = getMaxTurns(role);
   return max !== undefined && turnsTaken >= max;
 }

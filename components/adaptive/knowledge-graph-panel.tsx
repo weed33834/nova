@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import {
@@ -23,7 +22,6 @@ import {
 import type {
   KnowledgeGraph,
   ConceptNode,
-  ConceptEdge,
   ConceptCategory,
 } from '@/lib/adaptive/knowledge-graph/types';
 import { createKnowledgeGraph, addNode, addEdge } from '@/lib/adaptive/knowledge-graph/graph';
@@ -49,7 +47,7 @@ const CATEGORY_COLORS: Record<ConceptCategory, string> = {
 };
 
 export function KnowledgeGraphPanel() {
-  const { t } = useI18n();
+  const { t: _t } = useI18n();
   const [graph, setGraph] = useState<KnowledgeGraph>(() =>
     createKnowledgeGraph(
       'default-kg',

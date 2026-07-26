@@ -27,9 +27,24 @@ interface FormatOption {
 }
 
 const FORMAT_OPTIONS: FormatOption[] = [
-  { value: 'video', labelKey: 'toolbar.courseFormatVideo', descKey: 'toolbar.courseFormatVideoDesc', icon: Video },
-  { value: 'ppt-audio', labelKey: 'toolbar.courseFormatPptAudio', descKey: 'toolbar.courseFormatPptAudioDesc', icon: Presentation },
-  { value: 'text-only', labelKey: 'toolbar.courseFormatTextOnly', descKey: 'toolbar.courseFormatTextOnlyDesc', icon: FileText },
+  {
+    value: 'video',
+    labelKey: 'toolbar.courseFormatVideo',
+    descKey: 'toolbar.courseFormatVideoDesc',
+    icon: Video,
+  },
+  {
+    value: 'ppt-audio',
+    labelKey: 'toolbar.courseFormatPptAudio',
+    descKey: 'toolbar.courseFormatPptAudioDesc',
+    icon: Presentation,
+  },
+  {
+    value: 'text-only',
+    labelKey: 'toolbar.courseFormatTextOnly',
+    descKey: 'toolbar.courseFormatTextOnlyDesc',
+    icon: FileText,
+  },
 ];
 
 export function CourseFormatSelector({
@@ -145,7 +160,10 @@ export function CourseFormatSelector({
                   </div>
                 </div>
                 {isSelected && (
-                  <Check aria-hidden="true" className="mt-0.5 size-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
+                  <Check
+                    aria-hidden="true"
+                    className="mt-0.5 size-3.5 text-violet-600 dark:text-violet-400 shrink-0"
+                  />
                 )}
               </button>
             );

@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -42,7 +41,7 @@ const NODE_TYPE_COLORS: Record<string, string> = {
 };
 
 export function DAGWorkflowBuilder() {
-  const { t } = useI18n();
+  const { t: _t } = useI18n();
   const [nodes, setNodes] = useState<TaskNode[]>([
     { id: 'node-1', type: 'agent_response', label: '教师讲解', agentId: 'default-1' },
     { id: 'node-2', type: 'agent_response', label: '助教补充', agentId: 'default-2' },
@@ -89,13 +88,13 @@ export function DAGWorkflowBuilder() {
       const executionPlan = buildExecutionPlan(dag);
       setPlan(executionPlan.stages);
       setShowPlan(true);
-    } catch (e) {
+    } catch (_e) {
       setPlan(null);
       setShowPlan(true);
     }
   };
 
-  const dag: TaskDAG = { id: 'preview', nodes, edges };
+  const _dag: TaskDAG = { id: 'preview', nodes, edges };
   const topoResult = topologicalSort(nodes, edges);
 
   return (
@@ -103,8 +102,8 @@ export function DAGWorkflowBuilder() {
       <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
         <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
         <span>
-          此 DAG 编辑器目前为设计预览模式，尚未接入运行时编排引擎（运行时使用 LangGraph StateGraph）。
-          编辑结果不会持久化，仅用于可视化演示。后续版本将接入实际调度。
+          此 DAG 编辑器目前为设计预览模式，尚未接入运行时编排引擎（运行时使用 LangGraph
+          StateGraph）。 编辑结果不会持久化，仅用于可视化演示。后续版本将接入实际调度。
         </span>
       </div>
       <div className="flex items-center justify-between">

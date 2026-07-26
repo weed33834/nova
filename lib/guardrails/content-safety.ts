@@ -4,12 +4,11 @@ import type {
   HallucinationConfig,
   GuardrailReport,
   Severity,
-  ModerationResult,
   ModerationCategory,
 } from './types';
 import { createLogger } from '@/lib/logger';
 
-const log = createLogger('ContentSafety');
+const _log = createLogger('ContentSafety');
 
 export const DEFAULT_CONTENT_SAFETY_CONFIG: ContentSafetyConfig = {
   blockedCategories: ['violence', 'hate_speech', 'sexual_content', 'self_harm'],
@@ -31,7 +30,7 @@ function severityToScore(s: Severity): number {
   return SEVERITY_ORDER.indexOf(s);
 }
 
-function severityGte(a: Severity, b: Severity): boolean {
+function _severityGte(a: Severity, b: Severity): boolean {
   return severityToScore(a) >= severityToScore(b);
 }
 

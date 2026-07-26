@@ -8,7 +8,6 @@
  *
  * For the rendered content of a specific prompt, use GET /api/prompts/[id].
  */
-import { NextResponse } from 'next/server';
 import { getPromptRegistry } from '@/lib/prompts';
 import { apiSuccess, apiError } from '@/lib/server/api-response';
 import { createLogger } from '@/lib/logger';

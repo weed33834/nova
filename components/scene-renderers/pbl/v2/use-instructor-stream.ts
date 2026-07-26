@@ -41,7 +41,7 @@
  *   stars are vibes, not measurements.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { PBLProjectV2 } from '@/lib/pbl/v2/types';
 import type { PBLSSEEvent } from '@/lib/pbl/v2/api/sse';
@@ -114,7 +114,9 @@ export function useInstructorStream(
   const [error, setError] = useState<string | null>(null);
   const [simPhase, setSimPhase] = useState<SimPhase>(null);
   const projectRef = useRef<PBLProjectV2>(project);
-  projectRef.current = project;
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
   // Synchronous re-entrancy lock. `streaming` is React state and only updates
   // on the NEXT render, so two callers in the SAME effect-flush (e.g. the
   // empty-thread auto-greeting and the scenario stage-opener firing together

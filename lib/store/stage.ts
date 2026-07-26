@@ -417,8 +417,7 @@ const useStageStoreBase = create<StageState>()((set, get) => ({
     });
   },
 
-  clearFailedOutlines: () =>
-    set({ failedOutlines: [], failedOutlineReasons: {} }),
+  clearFailedOutlines: () => set({ failedOutlines: [], failedOutlineReasons: {} }),
 
   retryFailedOutline: (outlineId) => {
     const { [outlineId]: _removed, ...remainingReasons } = get().failedOutlineReasons;

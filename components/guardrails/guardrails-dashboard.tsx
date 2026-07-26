@@ -6,14 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, Scan, FileWarning } from 'lucide-react';
 import {
   checkContentSafety,
   checkHallucinationRisk,
-  runAllGuardrails,
 } from '@/lib/guardrails/content-safety';
 import type { GuardrailResult } from '@/lib/guardrails/types';
 

@@ -78,11 +78,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [theme, handleSetTheme, resolvedTheme],
   );
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

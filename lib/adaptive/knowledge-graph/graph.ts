@@ -1,4 +1,4 @@
-import type { KnowledgeGraph, ConceptNode, ConceptEdge, RelationType } from './types';
+import type { KnowledgeGraph, ConceptNode, ConceptEdge } from './types';
 
 export function createKnowledgeGraph(
   id: string,

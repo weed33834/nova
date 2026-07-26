@@ -1,13 +1,11 @@
 import { createLogger } from '@/lib/logger';
 import {
   type StudentProfile,
-  type KnowledgeFoundation,
   type CognitiveStyle,
   type LearningGoal,
   type ModalityPreference,
   type TimeBudget,
   type ErrorPattern,
-  type LearningHistoryEntry,
   createEmptyProfile,
 } from './schema';
 

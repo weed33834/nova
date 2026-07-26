@@ -122,6 +122,10 @@ export function ElementPickLayer() {
   // On entering pick mode: outline every selectable element, dock panel top-right.
   useEffect(() => {
     if (!pickTarget) return;
+    // measureOutlines() and the setPanel/setCollapsed calls below seed the
+    // pick-layer position when entering pick mode — canonical "sync DOM
+    // measurement into state on activation" pattern. Suppressed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     measureOutlines();
     const cr = rootRef.current?.getBoundingClientRect();
     if (cr) setPanel({ x: Math.max(8, cr.width - PANEL_W - 16), y: 16 });

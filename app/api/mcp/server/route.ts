@@ -78,18 +78,6 @@ function ensureSweeperStarted(): void {
 
 // ─── 路由处理 ────────────────────────────────────────────────────────────────
 
-// 判断 POST 请求是否是 JSON-RPC initialize 调用。
-// 必须 clone 后再读，否则 SDK 内部 req.json() 会因 body 已被消耗而失败。
-async function isInitializeRequest(req: NextRequest): Promise<boolean> {
-  try {
-    const cloned = req.clone();
-    const body = (await cloned.json()) as { method?: unknown };
-    return body?.method === 'initialize';
-  } catch {
-    return false;
-  }
-}
-
 async function handleMcpRequest(req: NextRequest): Promise<Response> {
   // 1. 部署门控：Vercel 上直接 404，避免暴露不可用的端点。
   if (!isMCPExposureEnabled()) {

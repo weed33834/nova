@@ -383,7 +383,7 @@ export async function saveGeneratedAgents(
     avatar: string;
     color: string;
     priority: number;
-    voiceConfig?: { providerId: string; voiceId: string };
+    voiceConfig?: { providerId: TTSProviderId; modelId?: string; voiceId: string };
     voiceDesign?: VoiceDesign;
   }>,
 ): Promise<string[]> {

@@ -44,7 +44,7 @@ const MASTERY_COLORS: Record<string, string> = {
 };
 
 export function TracingDashboard() {
-  const { t } = useI18n();
+  const { t: _t } = useI18n();
   const [studentId] = useState(() => `student-${Date.now()}`);
   const [snapshot, setSnapshot] = useState(() => tracer.getSnapshot(studentId, DEMO_CONCEPTS));
   const [selectedConcept, setSelectedConcept] = useState<string | null>(null);

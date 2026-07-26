@@ -14,7 +14,7 @@ interface TourProviderProps {
 
 export function TourProvider({ children }: TourProviderProps) {
   const pathname = usePathname();
-  const router = useRouter();
+  const _router = useRouter();
 
   const {
     hasSeenWelcome,
@@ -26,7 +26,7 @@ export function TourProvider({ children }: TourProviderProps) {
     nextTourStep,
     prevTourStep,
     setHasSeenWelcome,
-    setHasCompletedTour,
+    setHasCompletedTour: _setHasCompletedTour,
   } = useOnboardingStore();
 
   const steps = getTourStepsForPage(pathname);

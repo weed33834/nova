@@ -471,6 +471,9 @@ export function ImageClipHandler({
 
   // Initialize on mount
   useEffect(() => {
+    // One-shot mount-time clip position initialization. Suppressed —
+    // initClipPosition measures the image and seeds the clip rect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     initClipPosition();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

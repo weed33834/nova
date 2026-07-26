@@ -1,10 +1,8 @@
 import type {
-  KnowledgeGraph,
   ConceptNode,
   KnowledgeState,
   ConceptPath,
 } from '@/lib/adaptive/knowledge-graph/types';
-import type { StudentProfile } from '@/lib/profile/schema';
 
 export interface ScheduledItem {
   conceptId: string;

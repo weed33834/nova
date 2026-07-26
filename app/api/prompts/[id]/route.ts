@@ -14,10 +14,7 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('PromptDetailAPI');
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const prompt = loadPrompt(id as PromptId);

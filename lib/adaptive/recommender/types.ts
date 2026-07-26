@@ -1,5 +1,4 @@
 import type {
-  KnowledgeGraph,
   ConceptNode,
   KnowledgeState,
 } from '@/lib/adaptive/knowledge-graph/types';

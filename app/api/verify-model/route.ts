@@ -34,7 +34,8 @@ function extractUpstreamStatus(error: unknown, seen = new Set<unknown>()): numbe
   }
 
   if (typeof error === 'object' && error !== null) {
-    const raw = (error as Record<string, unknown>)['statusCode'] ??
+    const raw =
+      (error as Record<string, unknown>)['statusCode'] ??
       (error as Record<string, unknown>)['status'] ??
       (error as Record<string, unknown>)['status_code'];
     const parsed = typeof raw === 'number' ? raw : Number.parseInt(String(raw), 10);
@@ -64,9 +65,11 @@ function detectNetworkError(error: unknown): ApiErrorCode | null {
 /**
  * Map an upstream HTTP status to (errorCode, httpStatus, userMessage).
  */
-function statusToError(
-  status: number,
-): { code: ApiErrorCode; httpStatus: number; message: string } {
+function statusToError(status: number): {
+  code: ApiErrorCode;
+  httpStatus: number;
+  message: string;
+} {
   if (status === 401) {
     return {
       code: 'INVALID_CREDENTIALS',
@@ -197,7 +200,13 @@ export async function POST(req: NextRequest) {
         networkCode === 'CONNECTION_TIMEOUT'
           ? 'Connection timed out. Please check your network or try a different Base URL.'
           : 'Cannot connect to the API server. Please check the Base URL and your network.';
-      return apiError(networkCode, httpStatus, message, undefined, `Model verification: ${modelLabel}`);
+      return apiError(
+        networkCode,
+        httpStatus,
+        message,
+        undefined,
+        `Model verification: ${modelLabel}`,
+      );
     }
 
     // 3. Fallback: unknown error — log full detail server-side, send generic message
