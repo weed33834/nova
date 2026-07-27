@@ -51,7 +51,16 @@ export function isCurrentStageSceneLoadToken(token: StageSceneLoadToken): boolea
 // ==================== Debounce Helper ====================
 
 /**
- * Debounce function to limit how often a function is called
+ * Debounce function to limit how often a function is called.
+ *
+ * Implemented locally rather than using `lodash/debounce` because lodash's
+ * debounce reads `Date.now()` internally, which is NOT advanced by vitest's
+ * fake timers (they only mock `setTimeout`/`clearTimeout`). The stage-store
+ * persistence tests rely on `vi.advanceTimersByTimeAsync` to flush debounced
+ * saves, so a `Date.now()`-based implementation would never fire under fake
+ * timers. This hand-rolled version uses only `setTimeout`/`clearTimeout` and
+ * therefore stays compatible with the test suite.
+ *
  * @param func Function to debounce
  * @param delay Delay in milliseconds
  */
