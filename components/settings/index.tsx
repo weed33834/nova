@@ -31,7 +31,6 @@ import {
   CreditCard,
   Plug,
   Users,
-  Workflow,
   Network,
   ShieldCheck,
   Brain,
@@ -67,7 +66,6 @@ import { McpSettings } from './mcp-settings';
 import { GeneralSettings } from './general-settings';
 import { TokenPlanSettings } from './token-plan-settings';
 import { AgentRoleManager } from '@/components/orchestration/agent-role-manager';
-import { DAGWorkflowBuilder } from '@/components/orchestration/dag-builder';
 import { KnowledgeGraphPanel } from '@/components/adaptive/knowledge-graph-panel';
 import { GuardrailsDashboard } from '@/components/guardrails/guardrails-dashboard';
 import { TracingDashboard } from '@/components/tracing/tracing-dashboard';
@@ -947,19 +945,6 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             </button>
 
             <button
-              onClick={() => setActiveSection('dag')}
-              className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
-                activeSection === 'dag'
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'hover:bg-muted',
-              )}
-            >
-              <Workflow className="h-4 w-4 shrink-0" />
-              <span className="truncate">工作流编排</span>
-            </button>
-
-            <button
               onClick={() => setActiveSection('guardrails')}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
@@ -1248,7 +1233,6 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                   {activeSection === 'mcp' && <McpSettings />}
                   {activeSection === 'agents' && <AgentRoleManager />}
                   {activeSection === 'knowledge-graph' && <KnowledgeGraphPanel />}
-                  {activeSection === 'dag' && <DAGWorkflowBuilder />}
                   {activeSection === 'guardrails' && <GuardrailsDashboard />}
                   {activeSection === 'tracing' && <TracingDashboard />}
                 </motion.div>

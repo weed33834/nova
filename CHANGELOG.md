@@ -102,6 +102,25 @@ All notable changes to this project will be documented in this file.
   `components/slide-renderer/components/element/ChartElement/chartOption.ts`.
 - **Dead local variable** — `isValue` in `lib/generation/json-repair.ts` (assigned but
   never read).
+- **DAG Workflow Builder subsystem** — the entire `lib/orchestration/dag/` directory
+  (`executor.ts`, `scheduler.ts`, `types.ts`, `index.ts`), `lib/orchestration/parallel/`
+  (`executor.ts`, `types.ts`), `app/api/orchestrate/dag/route.ts`, and
+  `components/orchestration/dag-builder.tsx` were dead code: `DAGExecutor` /
+  `ParallelExecutor` had zero external references, the `/api/orchestrate/dag` endpoint had
+  zero client callers, and `dag-builder.tsx` shipped with a deprecation banner stating it
+  was a design preview never wired into the runtime (the runtime uses
+  `director-graph.ts`'s LangGraph StateGraph). The previous round's timeout / catch / abort
+  hardening on `dag/executor.ts` was applied to dead code and is removed with it. The
+  `Workflow` nav entry and `DAGWorkflowBuilder` render branch in `settings/index.tsx` were
+  cleaned up alongside. `@xyflow/react` is unaffected — it is used by the PBL chat panel,
+  not by the DAG builder.
+- **5 one-off debug scripts** in `scripts/`: `nova-mobile-dup-audit.mjs`,
+  `nova-mobile-screenshot.mjs`, `nova-visual-audit.mjs` (all written for a one-off
+  AgentBar-overlap fix, no CI / no tests / no docs), `probe-mineru-cloud.mjs` (one-off
+  format probe whose results already live in `lib/pdf/mineru-cloud.ts`), and
+  `sync-i18n-keys.py` (superseded by the Node `check-i18n-keys.mjs` invoked via
+  `pnpm check:i18n-keys`; Python can't be invoked by pnpm anyway). Corresponding
+  `/screenshots/` + `audit-report.json` entries removed from `.gitignore`.
 
 ### Added
 
@@ -272,6 +291,9 @@ All notable changes to this project will be documented in this file.
   `react`/`react-dom` pinned to `19.2.8` in both root and `packages/docs` to satisfy
   `motion@12.42.2`'s peer dep and avoid a hooks-version-mismatch crash in
   `renderToStaticMarkup` during renderer tests.
+- **Removed `puppeteer` devDependency** — `puppeteer@^25.3.0` had zero imports across the
+  repo (the one-off debug scripts that used it were deleted in this same pass). Dropped
+  from `package.json` and `pnpm-lock.yaml` (-11 packages including transitive deps).
 
 ## [0.1.0] - Initial Release
 

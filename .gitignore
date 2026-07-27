@@ -90,10 +90,6 @@ eval/orchestration/results-answer-content/
 # e2e screenshot artifacts
 e2e/screenshots/
 
-# Nova visual audit output (regenerated locally by scripts/nova-visual-audit.mjs)
-/screenshots/
-audit-report.json
-
 # local-only sandbox/demo pages (do not ship)
 /app/slide-renderer-demo
 
