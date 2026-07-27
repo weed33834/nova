@@ -196,21 +196,30 @@ export class IssueboardMCP {
   }
 
   reorderIssues(issueIds: string[]): PBLToolResult {
+    const issues = this.config.issueboard.issues;
+    // Build an id→issue index once so every lookup below is O(1),
+    // turning the previous O(n*m) triple-loop into O(n+m).
+    const idToIssue = new Map(issues.map((i) => [i.id, i] as const));
+
+    // Validate all requested ids exist before mutating anything.
     for (const id of issueIds) {
-      if (!this.config.issueboard.issues.find((i) => i.id === id)) {
+      if (!idToIssue.has(id)) {
         return { success: false, error: `Issue "${id}" not found.` };
       }
     }
 
+    const reorderedIds = new Set(issueIds);
     const reordered: PBLIssue[] = [];
-    for (let i = 0; i < issueIds.length; i++) {
-      const issue = this.config.issueboard.issues.find((iss) => iss.id === issueIds[i])!;
+
+    // Place requested ids first, assigning their new sequential index.
+    issueIds.forEach((id, i) => {
+      const issue = idToIssue.get(id)!;
       issue.index = i;
       reordered.push(issue);
-    }
-    // Append any issues not in the reorder list
-    for (const issue of this.config.issueboard.issues) {
-      if (!issueIds.includes(issue.id)) {
+    });
+    // Append any issues not in the reorder list, preserving their relative order.
+    for (const issue of issues) {
+      if (!reorderedIds.has(issue.id)) {
         reordered.push(issue);
       }
     }
