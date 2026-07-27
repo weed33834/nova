@@ -4,6 +4,105 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **PPTX export crash** — `lib/export/use-export-pptx.ts` clip block had a broken brace
+  structure (missing `}` for the `else` and `if (el.clip)` scopes) that produced malformed
+  JS; rewrote the block with proper nesting. Gradient background `colors[0]`/`colors[length-1]`
+  accessed `.color` without a length check (crashed on empty/single-color arrays); added
+  `length >= 2` guard. Table cell `fontsize` parsed via `parseInt` without NaN guard (CSS
+  keywords like `"large"` produced NaN that flowed into the PPTX as the cell font size).
+- **Canvas `addElement` referenced before declaration** — `components/slide-renderer/Editor/
+  Canvas/index.tsx` called `addElement` in `handleTextDrop` / `handleDblClick` but
+  `useCanvasOperations()` was destructured after those callbacks; moved the destructure
+  above the callbacks and removed the duplicate later declaration.
+- **ImageClipHandler NaN propagation** — `parseInt(topImgPositionStyle.left/top/width/height)`
+  returned NaN when the CSS value was `"auto"`, corrupting `currentRange` to
+  `[[NaN,NaN],[NaN,NaN]]` and producing Infinity/NaN clip dimensions downstream. Added
+  radix-10 parse with NaN→0 fallback and a `width/height <= 0` early return to avoid
+  divide-by-zero.
+- **Disk JSON shape validation** — `lib/server/classroom-storage.ts` and
+  `lib/server/classroom-job-store.ts` cast `JSON.parse(content) as PersistedClassroomData`
+  / `as ClassroomGenerationJob` with no runtime validation; a partially-written or
+  hand-edited file would crash downstream code on `classroom.scenes` / `job.status`
+  access. Added `isValidClassroomData` / `isValidJob` type guards; invalid files return
+  `null` (same semantics as "not found", which callers already map to 404).
+- **Unhandled promise rejections** — `lib/store/stage.ts` had two fire-and-forget IndexedDB
+  persistence chains (`setOutlines`, `setGenerationComplete`) with no `.catch()`; a quota-
+  exceeded or storage-blocked write produced an unhandled rejection and silently lost the
+  `generationComplete` flag. `lib/agent/client/use-agent-runtime.ts` `saveSession` chain
+  had the same issue. Both now attach `.catch()` with warn-level logging.
+- **parseInt NaN in user-input fields** — `components/settings/model-edit-dialog.tsx`
+  `contextWindow` / `outputWindow` inputs used `parseInt(e.target.value)` without radix or
+  NaN guard; pasted non-numeric text propagated NaN into the model config and out to LLM
+  API requests. Added radix 10 + `Number.isFinite` check, falling back to `undefined`.
+- **prosemirror textIndent NaN** — `lib/prosemirror/schema/nodes.ts` parsed DOM `textIndent`
+  style with `parseInt` (no radix, no NaN guard); non-numeric values polluted the paragraph
+  node's `textIndent` attribute. Extracted a `parseIndent` helper with NaN→0 fallback.
+- **Copy/cut/paste, shape/line creation, dblclick-to-create-text** — these editor
+  interactions were TODO placeholders (`toast.warning("暂未实现")` or empty handlers);
+  implemented via the Clipboard API (with a textarea fallback for non-HTTPS environments)
+  and real `PPTShapeElement` / `PPTLineElement` / `PPTTextElement` construction.
+- **Scene-generator retry abort** — `lib/hooks/use-scene-generator.ts` created an
+  `AbortController` per retry but never stored it on the shared `fetchAbortRef`, so `stop()`
+  could not interrupt in-flight retry fetches. The controller is now assigned to
+  `fetchAbortRef.current` so `stop()` reaches every retry attempt.
+- **LLM JSON parse robustness** — `lib/server/classroom-generation.ts` and related call
+  sites used `JSON.parse` directly on LLM output with no error handling; switched to
+  `parseJsonResponse` (which uses `jsonrepair` for non-standard JSON) and added field
+  validation with descriptive error messages.
+- **URL parse crashes** — `lib/ai/azure.ts`, `lib/mcp/client-manager.ts`,
+  `lib/audio/asr-providers.ts` called `new URL(value)` on user input that could be a bare
+  hostname or typo, throwing `TypeError` and crashing the model-creation flow. Added
+  try/catch with a `https://` prefix retry for bare hostnames.
+- **Upstream error text truncation** — 14 `throw new Error(\`... ${errorText}\`)` sites
+  across TTS / ASR / web-search / ComfyUI / agent-loop providers interpolated the raw
+  upstream response body (frequently a multi-KB HTML error page on gateway 5xx) into
+  `Error.message`. Added a `truncateErrorText` helper (300-char cap) to each affected
+  file and wrapped every throw.
+- **proxy-media timeout** — `app/api/proxy-media/route.ts` had no per-hop timeout on the
+  upstream `fetch`, so a slow CDN host could hold the request open up to the 60 s
+  `maxDuration`. Added a 15 s `AbortSignal.timeout` per hop; `TimeoutError` is mapped to
+  504 `CONNECTION_TIMEOUT` (vs the previous 500) so callers can distinguish a slow upstream
+  from a server failure.
+
+### Changed
+
+- **Deep-clone hot path** — `lib/store/snapshot.ts` (2 sites) and
+  `lib/store/whiteboard-history.ts` (1 site) used the `JSON.parse(JSON.stringify(...))`
+  anti-pattern for undo/redo snapshots; switched to `structuredClone` (faster, preserves
+  `Date` / `Map` / `Set`).
+- **Log level downgrades** — `lib/orchestration/director-graph.ts` logged the full director
+  LLM response at `info` level (could be multi-KB and echo user content); downgraded to
+  `debug` + truncated to 200 chars. `lib/generation/json-repair.ts` logged 1000 chars of
+  raw LLM output at `error` level on every parse failure; downgraded to `warn` + 200 chars.
+- **`mapWithConcurrency` deduplication** — the helper was copy-pasted in
+  `lib/pdf/pdf-providers.ts` and `lib/export/inline-assets.ts`; both now import the single
+  canonical version from `lib/utils/concurrency.ts`.
+
+### Removed
+
+- **26 unused exports** across 10 files: `getRectRotatedOffset`, `getLineElementLength`,
+  `createSlideIdMap`, `isElementInViewport` (`lib/utils/element.ts`); `findNearestCorner`
+  (`lib/utils/geometry.ts`); `cacheDelete`, `cacheClear` (`lib/utils/cache.ts`);
+  `preloadComponent`, `onIdle`, `flushIdle` (`lib/utils/preloader.ts`); `translate`,
+  `getClientTranslation` (`lib/i18n/index.ts`); `CHROME_TRANSITION`
+  (`lib/edit/transitions.ts`); `DialogForExportTypes` (`lib/types/export.ts` — file deleted
+  as it became empty); `ParsePdfRequest`, `ParsePdfResponse` (`lib/types/pdf.ts`);
+  `Message`, `MessageAction` (`lib/types/roundtable.ts`); `SessionEvent`,
+  `CreateSessionRequest`, `SendMessageRequest`, `ToolResultsRequest`, `toSessionListItem`,
+  `ParsedToolCall` (`lib/types/chat.ts`); `parseSvgPath`, `SvgPath`
+  (`lib/export/svg-path-parser.ts`); `selectProfileCompleteness`
+  (`lib/store/profile.ts`); the `export` keyword on 4 internal-only functions in
+  `lib/edit/html-edit.ts` (`detectLineEnding`, `normalizeToLF`, `normalizeForFuzzyMatch`,
+  `fuzzyFindText`); the `export` keyword on `sanitizeProceduralSkillOutline`
+  (`lib/generation/outline-generator.ts`), `DEFAULT_CONTENT_SAFETY_CONFIG` and
+  `DEFAULT_HALLUCINATION_CONFIG` (`lib/guardrails/content-safety.ts`).
+- **Stale commented-out code** — 5-line ECharts workaround block in
+  `components/slide-renderer/components/element/ChartElement/chartOption.ts`.
+- **Dead local variable** — `isValue` in `lib/generation/json-repair.ts` (assigned but
+  never read).
+
 ### Added
 
 - **Multi-mode course design (`CourseFormat`)** — per-course macro override for media

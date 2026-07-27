@@ -13,7 +13,7 @@
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs" alt="Next.js" /></a>
   <a href="#"><img src="https://img.shields.io/badge/React-19-149eca?logo=react" alt="React" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.8-3178c6?logo=typescript" alt="TypeScript" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript" alt="TypeScript" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" /></a>
   <a href="#"><img src="https://img.shields.io/badge/License-MIT-green" alt="License" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Tests-2768%20passed-success" alt="Tests" /></a>
@@ -191,7 +191,7 @@ nova/
 | 层面 | 技术 |
 |------|------|
 | 框架 | Next.js 16（App Router, Turbopack） |
-| 语言 | TypeScript 5.8 |
+| 语言 | TypeScript 5.9 |
 | UI | React 19, Tailwind CSS 4, Radix UI |
 | 状态 | Zustand（持久化） |
 | AI | Vercel AI SDK，多提供商 |
