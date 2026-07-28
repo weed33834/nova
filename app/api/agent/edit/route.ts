@@ -13,6 +13,8 @@ import type { LlmStage } from '@/lib/server/model-routes';
 import { createCallLlmStreamFn } from '@/lib/agent/runtime/stream-fn';
 import { buildAgent, buildSystemPrompt } from '@/lib/agent/runtime/build-agent';
 import { buildToolset, V0_ALLOWLIST } from '@/lib/agent/tools/registry';
+import { buildCustomSkillTool, type CustomSkillCallFn } from '@/lib/agent/tools/custom-skill';
+import { listCustomSkills } from '@/lib/server/skill-storage';
 import { callLLM } from '@/lib/ai/llm';
 import { createLogger } from '@/lib/logger';
 import type { SceneContext } from '@/lib/agent/tools/regenerate-scene-actions';
@@ -187,7 +189,32 @@ export async function POST(req: NextRequest) {
       log.info(`loaded ${mcpTools.length} MCP tool(s) from ${adapted.names.size} server(s)`);
     }
   }
-  const allTools = [...tools, ...mcpTools];
+
+  // ─── Custom skills (user-defined prompt-based tools) ───
+  // Enabled custom skills are loaded from the persistent store and adapted
+  // into AgentTools, then merged into the toolset + allowlist exactly like MCP
+  // tools above. A failing store read is non-fatal: the turn proceeds with
+  // built-in + MCP tools only.
+  let customSkillTools: typeof tools = [];
+  try {
+    const customSkills = await listCustomSkills();
+    const callFn: CustomSkillCallFn = (system, prompt, signal) =>
+      aiCall('nova-agent-custom', system, prompt, signal);
+    customSkillTools = customSkills
+      .filter((s) => s.enabled)
+      .map((s) => buildCustomSkillTool(s, callFn) as (typeof tools)[number]);
+    if (customSkillTools.length > 0) {
+      const customNames = new Set(customSkillTools.map((t) => t.name));
+      combinedAllowlist = new Set([...combinedAllowlist, ...customNames]);
+      log.info(`loaded ${customSkillTools.length} custom skill tool(s)`);
+    }
+  } catch (err) {
+    log.warn(
+      `custom skills load failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  const allTools = [...tools, ...mcpTools, ...customSkillTools];
 
   const abortController = new AbortController();
   const streamFn = createCallLlmStreamFn({

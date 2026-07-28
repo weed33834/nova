@@ -26,9 +26,7 @@ export interface ContentSafetyConfig {
 }
 
 export interface HallucinationConfig {
-  enableFactCheck: boolean;
   enableConsistencyCheck: boolean;
-  knowledgeBaseIds: string[];
   maxHallucinationScore: number;
 }
 
@@ -53,4 +51,33 @@ export interface GuardrailReport {
   passed: boolean;
   timestamp: number;
   metadata?: Record<string, unknown>;
+}
+
+/**
+ * Configuration for guardrails blocking mode.
+ * When enabled, content generation that triggers a failed check at or above
+ * `minBlockSeverity` will be blocked (the scene is skipped).
+ */
+export interface GuardrailsBlockingConfig {
+  enabled: boolean;
+  minBlockSeverity: Severity;
+}
+
+/**
+ * Error thrown when guardrails blocking is active and a generated scene's
+ * content fails a check at or above the configured severity threshold.
+ * Carries the full {@link GuardrailReport} so callers can surface details.
+ */
+export class GuardrailBlockError extends Error {
+  readonly report: GuardrailReport;
+
+  constructor(report: GuardrailReport) {
+    const failedTypes = report.checks
+      .filter((c) => !c.passed)
+      .map((c) => c.type)
+      .join(', ');
+    super(`Content blocked by guardrails: ${failedTypes}`);
+    this.name = 'GuardrailBlockError';
+    this.report = report;
+  }
 }

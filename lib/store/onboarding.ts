@@ -5,11 +5,14 @@ import { createLogger } from '@/lib/logger';
 const log = createLogger('Onboarding');
 
 export interface OnboardingState {
+  /** Whether the user has seen the full-screen intro splash (Logo + intro + prompts). */
+  hasSeenIntro: boolean;
   hasSeenWelcome: boolean;
   hasCompletedTour: boolean;
   currentTourStep: number;
   isTourActive: boolean;
   dismissedHints: Record<string, boolean>;
+  setHasSeenIntro: (v: boolean) => void;
   setHasSeenWelcome: (v: boolean) => void;
   setHasCompletedTour: (v: boolean) => void;
   startTour: () => void;
@@ -22,6 +25,7 @@ export interface OnboardingState {
 }
 
 const INITIAL_STATE = {
+  hasSeenIntro: false,
   hasSeenWelcome: false,
   hasCompletedTour: false,
   currentTourStep: 0,
@@ -33,6 +37,8 @@ export const useOnboardingStore = create<OnboardingState>()(
   persist(
     (set, get) => ({
       ...INITIAL_STATE,
+
+      setHasSeenIntro: (v) => set({ hasSeenIntro: v }),
 
       setHasSeenWelcome: (v) => set({ hasSeenWelcome: v }),
 
@@ -67,7 +73,15 @@ export const useOnboardingStore = create<OnboardingState>()(
     }),
     {
       name: 'nova-onboarding',
-      version: 1,
+      version: 2,
+      migrate: (persistedState: unknown, version: number) => {
+        // v1 → v2: add hasSeenIntro (default false so existing users see the intro once)
+        const s = (persistedState as Record<string, unknown>) ?? {};
+        if (version < 2) {
+          s.hasSeenIntro = false;
+        }
+        return s as unknown as OnboardingState;
+      },
     },
   ),
 );

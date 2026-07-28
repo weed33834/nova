@@ -6,14 +6,24 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, Scan, FileWarning } from 'lucide-react';
+import { useSettingsStore } from '@/lib/store/settings';
+import { Shield, ShieldCheck, ShieldAlert, AlertTriangle, Scan, FileWarning, Ban } from 'lucide-react';
 import {
   checkContentSafety,
   checkHallucinationRisk,
 } from '@/lib/guardrails/content-safety';
-import type { GuardrailResult } from '@/lib/guardrails/types';
+import type { GuardrailResult, Severity } from '@/lib/guardrails/types';
 
 const SEVERITY_COLORS: Record<string, string> = {
   low: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -30,12 +40,21 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   factual_accuracy: <Scan className="h-4 w-4" />,
 };
 
+const SEVERITY_OPTIONS: Severity[] = ['low', 'medium', 'high', 'critical'];
+
 export function GuardrailsDashboard() {
   const { t } = useI18n();
   const [input, setInput] = useState('');
   const [sourceInput, setSourceInput] = useState('');
   const [results, setResults] = useState<GuardrailResult[]>([]);
   const [hasRun, setHasRun] = useState(false);
+
+  // Blocking config — persisted in the settings store so it survives reloads
+  // and is available to the server-side classroom generation pipeline.
+  const blockingEnabled = useSettingsStore((s) => s.guardrailsBlockingEnabled);
+  const minBlockSeverity = useSettingsStore((s) => s.guardrailsMinBlockSeverity);
+  const setBlockingEnabled = useSettingsStore((s) => s.setGuardrailsBlockingEnabled);
+  const setMinBlockSeverity = useSettingsStore((s) => s.setGuardrailsMinBlockSeverity);
 
   const runCheck = () => {
     if (!input.trim()) return;
@@ -59,6 +78,58 @@ export function GuardrailsDashboard() {
           <Scan className="h-4 w-4" /> {t('guardrails.runCheck')}
         </Button>
       </div>
+
+      {/* Blocking mode configuration */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Ban className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <Label className="text-sm font-medium">
+                {t('guardrails.blockingMode', { defaultValue: 'Blocking Mode' })}
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t('guardrails.blockingModeDesc', {
+                  defaultValue:
+                    'When enabled, scenes that fail a guardrail check at or above the selected severity are skipped during classroom generation.',
+                })}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            {blockingEnabled && (
+              <Select
+                value={minBlockSeverity}
+                onValueChange={(v) => setMinBlockSeverity(v as Severity)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEVERITY_OPTIONS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      <span className="capitalize">{s}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Switch
+              checked={blockingEnabled}
+              onCheckedChange={setBlockingEnabled}
+              aria-label={t('guardrails.blockingMode', { defaultValue: 'Blocking Mode' })}
+            />
+          </div>
+        </div>
+        {blockingEnabled && (
+          <p className="text-xs text-muted-foreground mt-2">
+            {t('guardrails.blockingThresholdLabel', { defaultValue: 'Block on severity' })}:{' '}
+            <Badge className={cn('text-[10px]', SEVERITY_COLORS[minBlockSeverity])}>
+              {minBlockSeverity}
+            </Badge>
+          </p>
+        )}
+      </Card>
 
       <div className="grid grid-cols-2 gap-4">
         <Card className="p-4">

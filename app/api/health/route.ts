@@ -8,6 +8,15 @@ import {
 
 const version = process.env.npm_package_version || '0.1.0';
 
+/**
+ * Legacy health endpoint.
+ *
+ * Retained for backward compatibility with existing monitors / load balancers
+ * that hit `/api/health`. It behaves identically to the readiness probe at
+ * `/api/health/ready`. New code should prefer:
+ *   - `/api/health/live`  — cheap liveness (process up)
+ *   - `/api/health/ready` — readiness (capabilities configured)
+ */
 export async function GET() {
   return apiSuccess({
     status: 'ok',

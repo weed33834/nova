@@ -15,7 +15,9 @@ export type SettingsSection =
   | 'image'
   | 'video'
   | 'web-search'
-  | 'mcp';
+  | 'mcp'
+  | 'skills'
+  | 'prompts';
 
 /**
  * Unified provider configuration stored in JSON format

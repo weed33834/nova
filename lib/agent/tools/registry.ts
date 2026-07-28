@@ -65,7 +65,14 @@ export const V0_ALLOWLIST: ReadonlySet<string> = new Set([
 // with `V0_ALLOWLIST` — the parity test in tests/agent/skill-catalog.test.ts
 // enforces it.
 
-export type SkillCategory = 'read' | 'regenerate' | 'edit';
+export type SkillCategory = 'read' | 'regenerate' | 'edit' | 'custom';
+
+/**
+ * IDs of the built-in skills (the v0 allowlist). Custom skills may not reuse
+ * these ids. Exported so the skill management API and the agent route can
+ * distinguish built-in from user-defined skills.
+ */
+export const BUILT_IN_SKILL_IDS: ReadonlySet<string> = V0_ALLOWLIST;
 
 export interface SkillCatalogEntry {
   /** Tool name — must match the `name` field on the `AgentTool` and V0_ALLOWLIST. */

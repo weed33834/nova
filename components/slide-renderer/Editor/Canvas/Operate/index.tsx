@@ -48,7 +48,7 @@ interface OperateProps {
     element: PPTShapeElement,
     index: number,
   ) => void;
-  readonly openLinkDialog: () => void;
+  readonly openLinkDialog: (elementId: string) => void;
 }
 
 export function Operate({

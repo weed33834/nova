@@ -62,8 +62,15 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Whitelist: access-code endpoints, health check
-  if (pathname.startsWith('/api/access-code/') || pathname === '/api/health') {
+  // Whitelist: access-code endpoints, health probes (liveness + readiness +
+  // legacy alias). Health probes must stay unauthenticated so container
+  // orchestrators and load balancers can reach them without an access cookie.
+  if (
+    pathname.startsWith('/api/access-code/') ||
+    pathname === '/api/health' ||
+    pathname === '/api/health/live' ||
+    pathname === '/api/health/ready'
+  ) {
     return NextResponse.next();
   }
 

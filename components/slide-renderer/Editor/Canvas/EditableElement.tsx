@@ -41,7 +41,7 @@ interface EditableElementProps {
     element: PPTElement,
     canMove?: boolean,
   ) => void;
-  readonly openLinkDialog: () => void;
+  readonly openLinkDialog: (elementId: string) => void;
 }
 
 export function EditableElement({
@@ -187,8 +187,7 @@ export function EditableElement({
       { divider: true },
       {
         text: '设置链接',
-        handler: openLinkDialog,
-        disable: true,
+        handler: () => openLinkDialog(elementInfo.id),
       },
       {
         text: elementInfo.groupId ? '取消组合' : '组合',

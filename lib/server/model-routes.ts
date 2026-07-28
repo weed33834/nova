@@ -129,6 +129,7 @@ export const LLM_STAGES = [
   'generate-classroom',
   'web-search-query-rewrite',
   'nova-agent',
+  'nova-agent-custom',
 ] as const;
 
 export type LlmStage = (typeof LLM_STAGES)[number];

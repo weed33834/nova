@@ -39,7 +39,7 @@ describe('Security response headers', () => {
       expect(allRouteGroup).toBeDefined();
       expect(allRouteGroup.headers).toContainEqual({
         key: 'Content-Security-Policy',
-        value: "frame-ancestors 'self'",
+        value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
       });
     });
   });
@@ -53,7 +53,8 @@ describe('Security response headers', () => {
 
       expect(allRouteGroup.headers).toContainEqual({
         key: 'Content-Security-Policy',
-        value: "frame-ancestors 'self' https://partner.example.com",
+        value:
+          "frame-ancestors 'self' https://partner.example.com; base-uri 'self'; object-src 'none'",
       });
     });
 
@@ -75,7 +76,8 @@ describe('Security response headers', () => {
 
       expect(allRouteGroup.headers).toContainEqual({
         key: 'Content-Security-Policy',
-        value: "frame-ancestors 'self' https://a.example.com https://b.example.com",
+        value:
+          "frame-ancestors 'self' https://a.example.com https://b.example.com; base-uri 'self'; object-src 'none'",
       });
     });
   });

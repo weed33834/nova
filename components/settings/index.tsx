@@ -34,6 +34,7 @@ import {
   Network,
   ShieldCheck,
   Brain,
+  Blocks,
 } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useSettingsStore } from '@/lib/store/settings';
@@ -63,6 +64,8 @@ import { WebSearchSettings } from './web-search-settings';
 import { WEB_SEARCH_PROVIDERS, getWebSearchProviderDisplayName } from '@/lib/web-search/constants';
 import type { WebSearchProviderId } from '@/lib/web-search/types';
 import { McpSettings } from './mcp-settings';
+import { SkillSettings } from './skill-settings';
+import { PromptSettings } from './prompt-settings';
 import { GeneralSettings } from './general-settings';
 import { TokenPlanSettings } from './token-plan-settings';
 import { AgentRoleManager } from '@/components/orchestration/agent-role-manager';
@@ -769,6 +772,20 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <h2 className="text-lg font-semibold">{t('settings.mcpSettings')}</h2>
           </>
         );
+      case 'skills':
+        return (
+          <>
+            <Blocks className="h-6 w-6 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">{t('settings.skillSettings')}</h2>
+          </>
+        );
+      case 'prompts':
+        return (
+          <>
+            <FileText className="h-6 w-6 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">{t('settings.promptSettings')}</h2>
+          </>
+        );
       default:
         return null;
     }
@@ -897,6 +914,32 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             >
               <Plug className="h-4 w-4 shrink-0" />
               <span className="truncate">{t('settings.mcpSettingsNav')}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection('skills')}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                activeSection === 'skills'
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'hover:bg-muted',
+              )}
+            >
+              <Blocks className="h-4 w-4 shrink-0" />
+              <span className="truncate">{t('settings.skillSettingsNav')}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection('prompts')}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                activeSection === 'prompts'
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'hover:bg-muted',
+              )}
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              <span className="truncate">{t('settings.promptSettingsNav')}</span>
             </button>
 
             <button
@@ -1231,6 +1274,8 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                   {activeSection === 'tts' && <TTSSettings selectedProviderId={ttsProviderId} />}
                   {activeSection === 'asr' && <ASRSettings selectedProviderId={asrProviderId} />}
                   {activeSection === 'mcp' && <McpSettings />}
+                  {activeSection === 'skills' && <SkillSettings />}
+                  {activeSection === 'prompts' && <PromptSettings />}
                   {activeSection === 'agents' && <AgentRoleManager />}
                   {activeSection === 'knowledge-graph' && <KnowledgeGraphPanel />}
                   {activeSection === 'guardrails' && <GuardrailsDashboard />}

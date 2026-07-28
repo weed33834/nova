@@ -70,6 +70,11 @@ import { SpeechButton } from '@/components/audio/speech-button';
 import { useImportClassroom } from '@/lib/import/use-import-classroom';
 import { shouldShowVocationalTestUi } from '@/lib/config/feature-flags';
 import { useImportPptx } from '@/lib/import/use-import-pptx';
+import { saveStageData } from '@/lib/utils/stage-storage';
+import { uploadBlobToStorage } from '@/lib/storage/client';
+import { CURRENT_SLIDE_CONTENT_SCHEMA_VERSION } from '@/lib/edit/slide-schema';
+import type { SlideContent } from '@/lib/types/stage';
+import { makeScene } from '@/lib/types/stage';
 import { InteractiveModeButton } from '@/components/generation/interactive-mode-button';
 import { CourseFormatSelector } from '@/components/generation/course-format-selector';
 import { ProfileVisualizer } from '@/components/profile/ProfileVisualizer';
@@ -80,6 +85,8 @@ import { SkeletonClassroomGrid } from '@/components/ui/skeleton';
 import { DemoSeedButton } from '@/components/demo-seed-button';
 import { preloadData } from '@/lib/utils/preloader';
 import { cacheFetch } from '@/lib/utils/cache';
+import { useOnboardingStore } from '@/lib/store/onboarding';
+import { IntroScreen } from '@/components/onboarding/intro-screen';
 
 const log = createLogger('Home');
 
@@ -95,12 +102,6 @@ const PROFILE_DIMENSIONS = [
 const WEB_SEARCH_STORAGE_KEY = 'webSearchEnabled';
 const RECENT_OPEN_STORAGE_KEY = 'recentClassroomsOpen';
 const INTERACTIVE_MODE_STORAGE_KEY = 'interactiveModeEnabled';
-
-// PPTX import is still scaffolding: `useImportPptx` has no `onImported` consumer
-// yet, so the flow only logs the parsed slides. Hide the entry point behind a
-// flag until it's wired end-to-end, so the UI doesn't expose a no-op button.
-// Enable with NEXT_PUBLIC_ENABLE_PPTX_IMPORT=true.
-const PPTX_IMPORT_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PPTX_IMPORT === 'true';
 
 interface FormState {
   courseMaterials: SelectedCourseMaterial[];
@@ -129,6 +130,31 @@ function HomePage() {
   const showVocationalTestUi = shouldShowVocationalTestUi();
   const [form, setForm] = useState<FormState>(initialFormState);
   const [showProfileBuilder, setShowProfileBuilder] = useState(false);
+  // Intro splash — shown on first launch until the user completes it.
+  // The store is persisted, so returning users skip straight to the main UI.
+  // The intro state is stored separately (not derived) so the exit animation
+  // can play: the store is marked seen *before* the fade-out completes, and
+  // `showIntro` flips to false only after `onComplete` fires.
+  const hasSeenIntro = useOnboardingStore((s) => s.hasSeenIntro);
+  const [showIntro, setShowIntro] = useState(false);
+
+  // Hydrate intro visibility from the persisted store after mount. This is
+  // the canonical "hydrate once on mount" pattern for zustand-persist stores
+  // whose initial SSR/client value differs from the persisted value.
+  useEffect(() => {
+    if (!hasSeenIntro) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowIntro(true);
+    }
+  }, [hasSeenIntro]);
+
+  const handleIntroComplete = useCallback((selectedPrompt?: string) => {
+    setShowIntro(false);
+    if (selectedPrompt) {
+      // Pre-fill the requirement input with the chosen starter prompt.
+      setForm((prev) => ({ ...prev, requirement: selectedPrompt }));
+    }
+  }, []);
   // P0-1: Prevent duplicate submission. handleGenerate is async (stores docs,
   // writes sessionStorage, navigates). Without this flag, users can click again
   // before navigation completes, duplicating sessionStorage writes and document
@@ -288,12 +314,65 @@ function HomePage() {
     },
   );
 
+  // PPTX import: upload media blobs to object storage (falls back to blob:
+  // URL when storage is unconfigured), then persist the parsed slides as a
+  // new classroom in IndexedDB.
+  const handlePptxUpload = useCallback(
+    async (blob: Blob, _filename: string, _dir?: string): Promise<string> => {
+      const url = await uploadBlobToStorage(blob, 'media');
+      return url ?? URL.createObjectURL(blob);
+    },
+    [],
+  );
+
+  const handlePptxImported = useCallback(
+    async (slides: Slide[]) => {
+      if (slides.length === 0) return;
+      const stageId = nanoid();
+      const now = Date.now();
+      const scenes = slides.map((canvas, index) => {
+        const content: SlideContent = {
+          type: 'slide',
+          schemaVersion: CURRENT_SLIDE_CONTENT_SCHEMA_VERSION,
+          canvas,
+        };
+        return makeScene(
+          {
+            id: nanoid(),
+            stageId,
+            title: `Slide ${index + 1}`,
+            order: index + 1,
+            createdAt: now,
+            updatedAt: now,
+          },
+          content,
+        );
+      });
+      await saveStageData(stageId, {
+        stage: {
+          id: stageId,
+          name: t('import.pptxClassName', { defaultValue: 'Imported PPTX' }),
+          createdAt: now,
+          updatedAt: now,
+        },
+        scenes,
+        currentSceneId: scenes[0]?.id ?? null,
+        chats: [],
+      });
+      loadClassrooms();
+    },
+    [t, loadClassrooms],
+  );
+
   const {
     importing: pptxImporting,
     fileInputRef: pptxFileInputRef,
     triggerFileSelect: triggerPptxFileSelect,
     handleFileChange: handlePptxFileChange,
-  } = useImportPptx();
+  } = useImportPptx({
+    upload: handlePptxUpload,
+    onImported: handlePptxImported,
+  });
 
   useEffect(() => {
     // Clear stale media store to prevent cross-course thumbnail contamination.
@@ -531,6 +610,8 @@ function HomePage() {
 
   return (
     <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden">
+      {/* Intro splash — rendered on top of the main UI until the user completes it */}
+      {showIntro && <IntroScreen onComplete={handleIntroComplete} />}
       <input
         ref={fileInputRef}
         type="file"
@@ -538,15 +619,13 @@ function HomePage() {
         onChange={handleFileChange}
         className="hidden"
       />
-      {PPTX_IMPORT_ENABLED && (
-        <input
-          ref={pptxFileInputRef}
-          type="file"
-          accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-          onChange={handlePptxFileChange}
-          className="hidden"
-        />
-      )}
+      <input
+        ref={pptxFileInputRef}
+        type="file"
+        accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        onChange={handlePptxFileChange}
+        className="hidden"
+      />
       {/* ═══ Top-right pill (unchanged) ═══ */}
       <div
         ref={toolbarRef}
@@ -943,8 +1022,7 @@ function HomePage() {
                 <Upload className="size-3.5" />
                 <span>{t('import.classroom')}</span>
               </button>
-              {PPTX_IMPORT_ENABLED && (
-                <button
+              <button
                   onClick={triggerPptxFileSelect}
                   disabled={pptxImporting}
                   aria-label={t('import.pptx')}
@@ -953,7 +1031,6 @@ function HomePage() {
                   <Presentation className="size-3.5" />
                   <span>{t('import.pptx')}</span>
                 </button>
-              )}
             </div>
             <div className="mt-2 flex items-center justify-center gap-4">
               <DemoSeedButton />
@@ -1082,8 +1159,7 @@ function HomePage() {
                   {t('import.classroom')}
                 </span>
               </button>
-              {PPTX_IMPORT_ENABLED && (
-                <button
+              <button
                   onClick={triggerPptxFileSelect}
                   disabled={pptxImporting}
                   className="group/import-pptx grid grid-cols-[auto_0fr] hover:grid-cols-[auto_1fr] items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] text-muted-foreground/35 hover:text-muted-foreground/70 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
@@ -1093,7 +1169,6 @@ function HomePage() {
                     {t('import.pptx')}
                   </span>
                 </button>
-              )}
             </div>
             <div className="flex-1 h-px bg-border/40 group-hover:bg-border/70 transition-colors" />
           </div>

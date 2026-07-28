@@ -38,6 +38,8 @@ const ERROR_CODE_TO_I18N_KEY: Record<ApiErrorCode, string> = {
   TRANSCRIPTION_FAILED: 'errors.transcriptionFailed',
   PARSE_FAILED: 'errors.parseFailed',
   INTERNAL_ERROR: 'errors.internalError',
+  EMAIL_TAKEN: 'errors.emailTaken',
+  VALIDATION_ERROR: 'errors.validationError',
 };
 
 /**

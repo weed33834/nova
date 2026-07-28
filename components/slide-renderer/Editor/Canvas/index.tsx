@@ -24,6 +24,7 @@ import { ElementCreateSelection } from './ElementCreateSelection';
 import { ShapeCreateCanvas } from './ShapeCreateCanvas';
 import { Ruler } from './Ruler';
 import { GridLines } from './GridLines';
+import { LinkDialog } from './LinkDialog';
 import type { PPTElement, PPTTextElement, PPTShapeElement } from '@nova/dsl';
 import type { AlignmentLineProps } from '@/lib/types/edit';
 import type { ContextmenuItem } from './EditableElement';
@@ -87,7 +88,7 @@ export function Canvas(_props: CanvasProps) {
   const spaceKeyState = useKeyboardStore((state) => state.spaceKeyState);
 
   const [alignmentLines, setAlignmentLines] = useState<AlignmentLineProps[]>([]);
-  const [_linkDialogVisible, setLinkDialogVisible] = useState(false);
+  const [linkDialogElementId, setLinkDialogElementId] = useState<string | null>(null);
 
   // Local element list for drag/scale/rotate operations
   const elementListRef = useRef<PPTElement[]>(elements || []);
@@ -214,8 +215,8 @@ export function Canvas(_props: CanvasProps) {
     addElement(textEl);
   };
 
-  const openLinkDialog = () => {
-    setLinkDialogVisible(true);
+  const openLinkDialog = (elementId: string) => {
+    setLinkDialogElementId(elementId);
   };
 
   const contextmenus = (): ContextmenuItem[] => {
@@ -420,11 +421,10 @@ export function Canvas(_props: CanvasProps) {
           {/* Drag mask when space key is pressed */}
           {spaceKeyState && <div className="drag-mask absolute inset-0 cursor-grab" />}
 
-          {/* LinkDialog modal is not yet implemented; openLinkDialog is
-              wired to EditableElement but currently a no-op until the
-              modal lands. The placeholder div has been removed to avoid
-              rendering a meaningless box; when the modal is added, render
-              it here as a portal-controlled overlay. */}
+          <LinkDialog
+            elementId={linkDialogElementId}
+            onClose={() => setLinkDialogElementId(null)}
+          />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>

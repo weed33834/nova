@@ -17,6 +17,7 @@ export function TourProvider({ children }: TourProviderProps) {
   const _router = useRouter();
 
   const {
+    hasSeenIntro,
     hasSeenWelcome,
     hasCompletedTour,
     isTourActive,
@@ -36,16 +37,17 @@ export function TourProvider({ children }: TourProviderProps) {
   const currentStepRef = useRef<HTMLElement | null>(null);
   const stepCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-start welcome modal for new users on homepage
+  // Auto-start welcome modal for new users on homepage — but ONLY after the
+  // intro splash has been completed, so the two don't compete for attention.
   useEffect(() => {
-    if (pathname === '/' && !hasSeenWelcome && !hasCompletedTour) {
-      // Small delay to let the page render
+    if (pathname === '/' && hasSeenIntro && !hasSeenWelcome && !hasCompletedTour) {
+      // Small delay to let the page render after the intro fades out.
       const timer = setTimeout(() => {
         setHasSeenWelcome(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [pathname, hasSeenWelcome, hasCompletedTour, setHasSeenWelcome]);
+  }, [pathname, hasSeenIntro, hasSeenWelcome, hasCompletedTour, setHasSeenWelcome]);
 
   // Handle tour navigation
   const handleNext = useCallback(() => {
@@ -134,9 +136,9 @@ export function TourProvider({ children }: TourProviderProps) {
     <>
       {children}
 
-      {/* Welcome Modal */}
+      {/* Welcome Modal — only after the intro splash is done */}
       <WelcomeModal
-        isOpen={pathname === '/' && !hasSeenWelcome && !hasCompletedTour}
+        isOpen={pathname === '/' && hasSeenIntro && !hasSeenWelcome && !hasCompletedTour}
         onClose={handleWelcomeClose}
         onStartTour={handleStartTour}
       />

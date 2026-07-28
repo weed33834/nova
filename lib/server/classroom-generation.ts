@@ -33,6 +33,8 @@ import {
 import { withGenerationRetry } from '@/lib/generation/generation-retry';
 import { buildVideoManifestFromOutlines } from '@/lib/media/video-manifest';
 import { checkGeneratedContent } from '@/lib/guardrails/pipeline-check';
+import { GuardrailBlockError } from '@/lib/guardrails/types';
+import type { GuardrailsBlockingConfig } from '@/lib/guardrails/types';
 import type { UserRequirements } from '@/lib/types/generation';
 import type { Scene, Stage } from '@/lib/types/stage';
 import { AGENT_COLOR_PALETTE, AGENT_DEFAULT_AVATARS } from '@/lib/constants/agent-defaults';
@@ -50,6 +52,7 @@ export interface GenerateClassroomInput {
   enableVideoGeneration?: boolean;
   enableTTS?: boolean;
   agentMode?: 'default' | 'generate';
+  guardrailsBlocking?: GuardrailsBlockingConfig;
 }
 
 export type ClassroomGenerationStep =
@@ -491,10 +494,37 @@ export async function generateClassroom(
     );
     log.info(`Scene "${safeOutline.title}": ${actions.length} actions`);
 
-    // Post-generation guardrail check — non-blocking content safety scan.
-    // Logs warnings for PII / toxicity / hallucination / misinformation but
-    // does NOT modify or reject the generated content.
-    checkGeneratedContent(safeOutline.title, actions);
+    // Post-generation guardrail check. By default this is a non-blocking
+    // warning scan; when guardrailsBlocking is enabled, a failed check at or
+    // above the configured severity throws GuardrailBlockError and the scene
+    // is skipped (like a content-generation failure above).
+    try {
+      checkGeneratedContent(
+        safeOutline.title,
+        actions,
+        pdfContent?.text,
+        input.guardrailsBlocking,
+      );
+    } catch (err) {
+      if (err instanceof GuardrailBlockError) {
+        const failedTypes = err.report.checks
+          .filter((c) => !c.passed)
+          .map((c) => `${c.type}(${c.severity})`)
+          .join(', ');
+        log.warn(
+          `Skipping scene "${safeOutline.title}" — blocked by guardrails: ${failedTypes}`,
+        );
+        await options.onProgress?.({
+          step: 'generating_scenes',
+          progress: 30 + Math.floor(((index + 1) / Math.max(outlines.length, 1)) * 60),
+          message: `Scene "${safeOutline.title}" blocked by guardrails (${failedTypes})`,
+          scenesGenerated: generatedScenes,
+          totalScenes: outlines.length,
+        });
+        continue;
+      }
+      throw err;
+    }
 
     const sceneId = createSceneWithActions(safeOutline, content, actions, api);
     if (!sceneId) {

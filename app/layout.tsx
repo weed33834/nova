@@ -13,6 +13,7 @@ import { AccessCodeGuard } from '@/components/access-code-guard';
 import { TourProvider } from '@/components/tour/TourProvider';
 import { PreloaderInit } from '@/components/ui/preloader-init';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { SessionProviderWrapper } from '@/components/providers/session-provider';
 
 const inter = localFont({
   src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
@@ -76,14 +77,16 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <I18nProvider>
-            <ServerProvidersInit />
-            <AccessCodeGuard>
-              <TourProvider>
-                <ErrorBoundary>{children}</ErrorBoundary>
-              </TourProvider>
-            </AccessCodeGuard>
-            <Toaster position="top-center" />
-            <PreloaderInit />
+            <SessionProviderWrapper>
+              <ServerProvidersInit />
+              <AccessCodeGuard>
+                <TourProvider>
+                  <ErrorBoundary>{children}</ErrorBoundary>
+                </TourProvider>
+              </AccessCodeGuard>
+              <Toaster position="top-center" />
+              <PreloaderInit />
+            </SessionProviderWrapper>
           </I18nProvider>
         </ThemeProvider>
       </body>

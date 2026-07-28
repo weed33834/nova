@@ -2,17 +2,28 @@
  * Guardrails pipeline integration — post-generation content safety check.
  *
  * Connects the guardrails system (PII / toxicity / hallucination / misinformation
- * detection) to the course generation pipeline. Runs as a non-blocking post-check
- * after scene content + actions are generated: logs warnings but does NOT modify
- * or reject the content. The report is returned so callers can optionally surface
- * it to the UI.
+ * detection) to the course generation pipeline. Runs as a post-check after scene
+ * content + actions are generated.
+ *
+ * By default the check is non-blocking: it logs warnings but does NOT modify or
+ * reject the content. When a {@link GuardrailsBlockingConfig} is supplied with
+ * `enabled: true`, any failed check at or above a listed severity causes a
+ * {@link GuardrailBlockError} to be thrown, so the caller can skip the scene.
  */
 import { runAllGuardrails } from './content-safety';
-import type { GuardrailReport } from './types';
+import { GuardrailBlockError } from './types';
+import type { GuardrailReport, GuardrailsBlockingConfig, Severity } from './types';
 import type { Action } from '@/lib/types/action';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('GuardrailsPipeline');
+
+const SEVERITY_RANK: Record<Severity, number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+  critical: 3,
+};
 
 /**
  * Extract spoken/narration text from generated actions.
@@ -30,24 +41,33 @@ function extractSpeechText(actions: Action[]): string {
 /**
  * Run guardrails on generated scene content as a post-generation check.
  *
- * Non-blocking by design:
- * - Logs warnings for any failed checks
- * - Does NOT modify the generated content
- * - Does NOT throw or reject the scene
- * - Returns the report so the caller can attach it to the scene metadata
+ * - Logs warnings for any failed checks.
+ * - Does NOT modify the generated content.
+ * - When `blocking` is enabled and a failed check's severity matches one of
+ *   `blockSeverities`, throws {@link GuardrailBlockError} so the caller can
+ *   skip the scene.
+ * - Returns the report so the caller can optionally attach it to scene metadata.
  *
  * @param sceneTitle - for log attribution
  * @param actions - the generated actions array (speech text is extracted)
+ * @param sourceContent - optional source material to check generated content
+ *   against (enables the hallucination consistency check)
+ * @param blocking - optional blocking configuration; when omitted the check
+ *   is non-blocking (warning-only)
  * @returns the guardrail report, or null if there's no text to check
+ * @throws {GuardrailBlockError} when blocking is enabled and a failed check
+ *   reaches a configured severity
  */
 export function checkGeneratedContent(
   sceneTitle: string,
   actions: Action[],
+  sourceContent?: string,
+  blocking?: GuardrailsBlockingConfig,
 ): GuardrailReport | null {
   const text = extractSpeechText(actions);
   if (!text.trim()) return null;
 
-  const report = runAllGuardrails(text);
+  const report = runAllGuardrails(text, sourceContent);
 
   if (!report.passed) {
     const failed = report.checks.filter((c) => !c.passed);
@@ -55,6 +75,20 @@ export function checkGeneratedContent(
       `Guardrail check flagged scene "${sceneTitle}": ${failed.length} issue(s) — ` +
         failed.map((c) => `${c.type}(${c.severity}): ${c.message}`).join('; '),
     );
+
+    if (blocking?.enabled) {
+      const threshold = SEVERITY_RANK[blocking.minBlockSeverity];
+      const shouldBlock = failed.some(
+        (c) => SEVERITY_RANK[c.severity] >= threshold,
+      );
+      if (shouldBlock) {
+        log.warn(
+          `Blocking scene "${sceneTitle}" — guardrail threshold reached ` +
+            `(min severity: ${blocking.minBlockSeverity})`,
+        );
+        throw new GuardrailBlockError(report);
+      }
+    }
   } else {
     log.debug(`Guardrail check passed for scene "${sceneTitle}"`);
   }

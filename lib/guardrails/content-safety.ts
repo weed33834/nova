@@ -18,9 +18,7 @@ const DEFAULT_CONTENT_SAFETY_CONFIG: ContentSafetyConfig = {
 };
 
 const DEFAULT_HALLUCINATION_CONFIG: HallucinationConfig = {
-  enableFactCheck: true,
   enableConsistencyCheck: true,
-  knowledgeBaseIds: [],
   maxHallucinationScore: 0.4,
 };
 
@@ -35,21 +33,25 @@ function _severityGte(a: Severity, b: Severity): boolean {
 }
 
 const PII_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
-  { pattern: /\b\d{18}[\dXx]\b/g, label: 'Chinese ID number' },
+  // Chinese ID card: 18 chars, last may be X. \b works here because the pattern
+  // is all ASCII digits/X.
+  { pattern: /\b\d{17}[\dXx]\b/g, label: 'Chinese ID number' },
   { pattern: /\b1[3-9]\d{9}\b/g, label: 'Chinese phone number' },
   { pattern: /\b\d{6,16}\b/g, label: 'Possible account number' },
   { pattern: /[\w.+-]+@[\w-]+\.[\w.-]+/g, label: 'Email address' },
 ];
 
 const TOXIC_PATTERNS: Array<{ pattern: RegExp; category: ModerationCategory; score: number }> = [
-  { pattern: /\b(笨蛋|白痴|去死|滚开|蠢货|废物)\b/g, category: 'harassment', score: 0.7 },
-  { pattern: /\b(杀|死|打|揍|砍|炸)\s*(了|掉|死|人)\b/g, category: 'violence', score: 0.8 },
-  { pattern: /\b(色情|淫秽|裸体|性交|成人)\b/g, category: 'sexual_content', score: 0.9 },
+  // Note: \b word boundaries don't work for CJK text in JS regex (\b is ASCII-only),
+  // so Chinese patterns omit \b and rely on the surrounding character classes.
+  { pattern: /(笨蛋|白痴|去死|滚开|蠢货|废物)/g, category: 'harassment', score: 0.7 },
+  { pattern: /(杀|死|打|揍|砍|炸)\s*(了|掉|死|人)/g, category: 'violence', score: 0.8 },
+  { pattern: /(色情|淫秽|裸体|性交|成人)/g, category: 'sexual_content', score: 0.9 },
 ];
 
 const MISINFORMATION_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
-  { pattern: /\b(地球是平的|地球是扁的)\b/g, label: 'Flat Earth' },
-  { pattern: /\b(疫苗导致|疫苗引起)\s*(自闭症|死亡)\b/g, label: 'Vaccine misinformation' },
+  { pattern: /(地球是平的|地球是扁的)/g, label: 'Flat Earth' },
+  { pattern: /(疫苗导致|疫苗引起)\s*(自闭症|死亡)/g, label: 'Vaccine misinformation' },
 ];
 
 export function checkContentSafety(
@@ -148,7 +150,8 @@ export function checkHallucinationRisk(
     if (score > 0.3) reasons.push(`${Math.round(score * 100)}% of claims lack source support`);
   }
 
-  const vagueStatements = generatedContent.match(/\b(可能|大概|也许|据说|好像|应该是|不确定)\b/g);
+  // \b doesn't work for CJK; match the Chinese vague terms directly.
+  const vagueStatements = generatedContent.match(/(可能|大概|也许|据说|好像|应该是|不确定)/g);
   if (vagueStatements && vagueStatements.length > 3) {
     score += 0.1 * vagueStatements.length;
     reasons.push(`High uncertainty language (${vagueStatements.length} vague terms)`);
@@ -171,6 +174,7 @@ export function checkHallucinationRisk(
 
 export function runAllGuardrails(
   content: string,
+  sourceContent?: string,
   safetyConfig?: ContentSafetyConfig,
   hallucinationConfig?: HallucinationConfig,
 ): GuardrailReport {
@@ -179,7 +183,7 @@ export function runAllGuardrails(
   const safetyResults = checkContentSafety(content, safetyConfig);
   checks.push(...safetyResults);
 
-  const hallucinationResult = checkHallucinationRisk(content, undefined, hallucinationConfig);
+  const hallucinationResult = checkHallucinationRisk(content, sourceContent, hallucinationConfig);
   checks.push(hallucinationResult);
 
   checks.push({

@@ -168,6 +168,11 @@ export interface SettingsState {
   videoGenerationEnabled: boolean;
   reviewOutlineEnabled: boolean;
 
+  // Guardrails blocking — when enabled, scenes that fail a guardrail check
+  // at or above `guardrailsMinBlockSeverity` are skipped during generation.
+  guardrailsBlockingEnabled: boolean;
+  guardrailsMinBlockSeverity: 'low' | 'medium' | 'high' | 'critical';
+
   // Web Search settings
   webSearchProviderId: WebSearchProviderId;
   webSearchProvidersConfig: Record<
@@ -368,6 +373,10 @@ export interface SettingsState {
   setImageGenerationEnabled: (enabled: boolean) => void;
   setVideoGenerationEnabled: (enabled: boolean) => void;
   setReviewOutlineEnabled: (enabled: boolean) => void;
+
+  // Guardrails blocking actions
+  setGuardrailsBlockingEnabled: (enabled: boolean) => void;
+  setGuardrailsMinBlockSeverity: (severity: 'low' | 'medium' | 'high' | 'critical') => void;
 
   // Web Search actions
   setWebSearchProvider: (providerId: WebSearchProviderId) => void;
@@ -975,6 +984,10 @@ export const useSettingsStore = create<SettingsState>()(
         videoGenerationEnabled: false,
         reviewOutlineEnabled: false,
 
+        // Guardrails blocking (off by default; threshold = high when enabled)
+        guardrailsBlockingEnabled: false,
+        guardrailsMinBlockSeverity: 'high',
+
         // TTS is OFF by default; auto-enabled on first server-sync when a TTS
         // provider is configured (mirrors image/video). Fresh installs with no
         // provider stay off and show an "enable browser-native" CTA (#665).
@@ -1319,6 +1332,10 @@ export const useSettingsStore = create<SettingsState>()(
           set({ videoGenerationEnabled: enabled });
         },
         setReviewOutlineEnabled: (enabled) => set({ reviewOutlineEnabled: enabled }),
+        setGuardrailsBlockingEnabled: (enabled) =>
+          set({ guardrailsBlockingEnabled: enabled }),
+        setGuardrailsMinBlockSeverity: (severity) =>
+          set({ guardrailsMinBlockSeverity: severity }),
         setTTSEnabled: (enabled) => set({ ttsEnabled: enabled }),
         setASREnabled: (enabled) => set({ asrEnabled: enabled }),
 
