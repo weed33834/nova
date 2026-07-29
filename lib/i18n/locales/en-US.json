@@ -139,6 +139,13 @@
     "exportFailed": "Export failed",
     "classroomZip": "Export Classroom ZIP",
     "classroomZipDesc": "Course structure + media files",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineSuccess": "Video timeline exported",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineWithWarnings": "Timeline exported",
     "inlinePartial": "{{count}} external asset(s) couldn't be bundled; the course may not display correctly offline."
   },
   "import": {

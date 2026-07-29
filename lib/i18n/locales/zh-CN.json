@@ -139,6 +139,13 @@
     "exportFailed": "导出失败",
     "classroomZip": "导出课堂 ZIP",
     "classroomZipDesc": "课程结构 + 媒体文件",
+    "videoTimeline": "导出视频时间线",
+    "videoTimelineDesc": "用于视频渲染的时间线 IR JSON",
+    "exportingVideoTimeline": "正在导出视频时间线...",
+    "timelineSuccess": "视频时间线已导出",
+    "timelineFailed": "导出视频时间线失败",
+    "timelineErrors": "时间线导出完成但存在错误",
+    "timelineWithWarnings": "时间线已导出",
     "inlinePartial": "{{count}} 个外部资源未能打包，离线时课程可能无法正常显示。"
   },
   "import": {

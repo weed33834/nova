@@ -10,7 +10,7 @@
  *  - Concurrent request handling
  *  - Full user flow simulation
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { sanitizeRichText, sanitizePlainText, sanitizeObject, containsDangerousHtml } from '@/lib/server/sanitize';
 import { buildReadinessPayload } from '@/lib/server/health';
 import { RATE_LIMIT_PRESETS, checkRateLimit } from '@/lib/server/rate-limit';
@@ -85,7 +85,7 @@ describe('Scenario: Boundary Conditions', () => {
       expect(result.items[1]).toBe('text');
       expect(result.items[2]).toBe(true);
       expect(result.items[3]).toBe(null);
-      expect(result.items[4].nested).toBe('x');
+      expect((result.items[4] as { nested: string }).nested).toBe('x');
     });
   });
 

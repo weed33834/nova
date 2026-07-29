@@ -11,13 +11,11 @@ import {
   readClassroom,
 } from '@/lib/server/classroom-storage';
 import { recordAuditLog } from '@/lib/db/audit';
-import { createLogger } from '@/lib/logger';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { sanitizeObject, containsDangerousHtml } from '@/lib/server/sanitize';
 import { authOptions } from '@/lib/auth/config';
+import { withApiHandler } from '@/lib/server/api-handler';
 import type { Stage, Scene } from '@/lib/types/stage';
-
-const log = createLogger('Classroom API');
 
 // Zod schema for classroom creation — stage and scenes are complex objects
 // validated structurally (presence + type), not field-by-field.
@@ -29,11 +27,11 @@ const createClassroomSchema = z.object({
   scenes: z.array(z.object({}).passthrough()),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest, ctx) => {
   let stageId: string | undefined;
   let sceneCount: number | undefined;
   try {
-    const body = await request.json();
+    const body = await req.json();
     const validation = validateBody(createClassroomSchema, body);
     if (!validation.ok) return validation.response;
 
@@ -54,14 +52,14 @@ export async function POST(request: NextRequest) {
 
     if (containsDangerousHtml(JSON.stringify(sanitizedStage)) ||
         containsDangerousHtml(JSON.stringify(sanitizedScenes))) {
-      log.warn('Dangerous HTML detected and sanitized in classroom content');
+      ctx.log.warn('Dangerous HTML detected and sanitized in classroom content');
     }
 
     const id = sanitizedStage.id || randomUUID();
     if (typeof id !== 'string' || !isValidClassroomId(id)) {
       return apiError(API_ERROR_CODES.INVALID_REQUEST, 400, 'Invalid classroom id');
     }
-    const baseUrl = buildRequestOrigin(request);
+    const baseUrl = buildRequestOrigin(req);
 
     // Record owner when user is authenticated (optional — no auth = anonymous)
     let ownerId: string | null = null;
@@ -93,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({ id: persisted.id, url: persisted.url }, 201);
   } catch (error) {
-    log.error(
+    ctx.log.error(
       `Classroom storage failed [stageId=${stageId ?? 'unknown'}, scenes=${sceneCount ?? 0}]:`,
       error,
     );
@@ -104,11 +102,11 @@ export async function POST(request: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'moderate' });
 
-export async function GET(request: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest, ctx) => {
   try {
-    const id = request.nextUrl.searchParams.get('id');
+    const id = req.nextUrl.searchParams.get('id');
 
     if (!id) {
       return apiError(
@@ -129,8 +127,8 @@ export async function GET(request: NextRequest) {
 
     return apiSuccess({ classroom });
   } catch (error) {
-    log.error(
-      `Classroom retrieval failed [id=${request.nextUrl.searchParams.get('id') ?? 'unknown'}]:`,
+    ctx.log.error(
+      `Classroom retrieval failed [id=${req.nextUrl.searchParams.get('id') ?? 'unknown'}]:`,
       error,
     );
     return apiError(
@@ -140,4 +138,4 @@ export async function GET(request: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'light' });
