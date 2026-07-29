@@ -26,6 +26,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { llmApiError, upstreamStatusFromError } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { normalizeVoiceDesign } from '@/lib/audio/voice-design';
 import {
   getVoiceRegistrationAdapter,
@@ -36,7 +37,7 @@ const log = createLogger('Voice Registration API');
 
 export const maxDuration = 30;
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let providerId: string | undefined;
   let voiceId: string | undefined;
   try {
@@ -158,4 +159,4 @@ export async function POST(req: NextRequest) {
       context,
     );
   }
-}
+}, { rateLimit: 'generation' });

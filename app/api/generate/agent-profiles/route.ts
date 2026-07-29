@@ -12,6 +12,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { llmApiError } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { AGENT_COLOR_PALETTE } from '@/lib/constants/agent-defaults';
 import { normalizeVoiceDesign } from '@/lib/audio/voice-design';
 
@@ -42,7 +43,7 @@ function stripCodeFences(text: string): string {
   return cleaned.trim();
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let stageName: string | undefined;
   let modelString: string | undefined;
   try {
@@ -247,4 +248,4 @@ Return a JSON object with this exact structure:
     // and the stage/model context — never leak raw provider bodies to client.
     return llmApiError(error, context);
   }
-}
+}, { rateLimit: 'generation' });

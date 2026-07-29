@@ -22,20 +22,14 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { llmApiError, upstreamStatusFromError } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
-import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { VOXCPM_AUTO_VOICE_ID, VOXCPM_TTS_PROVIDER_ID } from '@/lib/audio/voxcpm';
 
 const log = createLogger('TTS API');
 
 export const maxDuration = 30;
 
-export async function POST(req: NextRequest) {
-  // Rate limit: TTS is expensive (external API call per request)
-  const rlResult = await checkRateLimitPreset(req, 'media', 'generate-tts');
-  if (rlResult.limited) {
-    return rateLimitedResponse(rlResult);
-  }
-
+export const POST = withApiHandler(async (req: NextRequest) => {
   let ttsProviderId: string | undefined;
   let ttsVoice: string | undefined;
   let audioId: string | undefined;
@@ -166,4 +160,4 @@ export async function POST(req: NextRequest) {
       context,
     );
   }
-}
+}, { rateLimit: 'generation' });

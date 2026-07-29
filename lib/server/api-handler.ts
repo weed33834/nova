@@ -39,6 +39,25 @@ export interface WithApiHandlerOptions {
 }
 
 /**
+ * Resolve the route pathname for metrics/rate-limit scoping.
+ *
+ * Prefers `req.nextUrl.pathname` (always present on a real `NextRequest`), but
+ * falls back to parsing `req.url` so the wrapper also works with lightweight
+ * test mocks (e.g. a plain `new Request(...)` or a minimal stub object). This
+ * mirrors the defensive `req.cookies`/`req.headers` handling already present
+ * in the rate limiter's `getClientIdentifier`.
+ */
+function resolveRoutePath(req: NextRequest): string {
+  const fromNextUrl = req.nextUrl?.pathname;
+  if (fromNextUrl) return fromNextUrl;
+  try {
+    return new URL(req.url).pathname;
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
  * Wrap a POST/PUT/PATCH/DELETE/GET handler with request ID, metrics, and error handling.
  */
 export function withApiHandler<T extends unknown[]>(
@@ -46,8 +65,9 @@ export function withApiHandler<T extends unknown[]>(
   options?: WithApiHandlerOptions,
 ): (req: NextRequest, ...args: T) => Promise<Response> {
   return async (req: NextRequest, ...args: T) => {
-    const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID().slice(0, 8);
-    const route = req.nextUrl.pathname;
+    const requestId = req.headers?.get('x-request-id') ?? crypto.randomUUID().slice(0, 8);
+    const route = resolveRoutePath(req);
+    const method = req.method ?? 'UNKNOWN';
 
     // ── Rate limiting ────────────────────────────────────────────────────
     if (options?.rateLimit) {
@@ -55,7 +75,7 @@ export function withApiHandler<T extends unknown[]>(
       const result: RateLimitResult = await checkRateLimitPreset(req, options.rateLimit, scope);
       if (result.limited) {
         if (options.metrics !== false) {
-          recordHttpRequest(req.method, route, 429, 0);
+          recordHttpRequest(method, route, 429, 0);
         }
         const res = rateLimitedResponse(result);
         res.headers.set('x-request-id', requestId);
@@ -78,14 +98,14 @@ export function withApiHandler<T extends unknown[]>(
         }
 
         if (options?.metrics !== false) {
-          recordHttpRequest(req.method, route, res.status, Date.now() - start);
+          recordHttpRequest(method, route, res.status, Date.now() - start);
         }
 
         return res;
       } catch (err) {
         const duration = Date.now() - start;
         if (options?.metrics !== false) {
-          recordHttpRequest(req.method, route, 500, duration);
+          recordHttpRequest(method, route, 500, duration);
         }
 
         if (err instanceof Error && err.name === 'AuthRequiredError') {
