@@ -8,6 +8,7 @@ import {
   readClassroom,
 } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 
 const log = createLogger('Classroom API');
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       API_ERROR_CODES.INTERNAL_ERROR,
       500,
       'Failed to store classroom',
-      error instanceof Error ? error.message : String(error),
+      sanitizedErrorDetails(error),
     );
   }
 }
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
       API_ERROR_CODES.INTERNAL_ERROR,
       500,
       'Failed to retrieve classroom',
-      error instanceof Error ? error.message : String(error),
+      sanitizedErrorDetails(error),
     );
   }
 }

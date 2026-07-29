@@ -26,6 +26,8 @@ import { llmApiError } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { resolveVocationalActive } from '@/lib/config/feature-flags';
 import { sortDocumentImagesForVision } from '@/lib/document/bundle';
+import { checkGeneratedText } from '@/lib/guardrails/pipeline-check';
+import { GuardrailBlockError } from '@/lib/guardrails/types';
 
 const log = createLogger('Scene Content API');
 
@@ -190,6 +192,26 @@ export async function POST(req: NextRequest) {
         500,
         `Failed to generate content: ${effectiveOutline.title}`,
       );
+    }
+
+    // ── Guardrails: post-generation content safety check ──
+    try {
+      checkGeneratedText(
+        effectiveOutline.title,
+        content,
+        undefined,
+        { enabled: true, minBlockSeverity: 'high' },
+      );
+    } catch (error) {
+      if (error instanceof GuardrailBlockError) {
+        log.error(`Content blocked by guardrails: "${effectiveOutline.title}"`);
+        return apiError(
+          'CONTENT_SENSITIVE',
+          422,
+          `Content blocked by safety guardrails: ${effectiveOutline.title}`,
+        );
+      }
+      throw error;
     }
 
     log.info(`Content generated successfully: "${effectiveOutline.title}"`);

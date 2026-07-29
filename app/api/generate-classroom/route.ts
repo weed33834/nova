@@ -6,6 +6,7 @@ import { runClassroomGenerationJob } from '@/lib/server/classroom-job-runner';
 import { createClassroomGenerationJob } from '@/lib/server/classroom-job-store';
 import { buildRequestOrigin } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 
 const log = createLogger('GenerateClassroom API');
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
       'INTERNAL_ERROR',
       500,
       'Failed to create classroom generation job',
-      error instanceof Error ? error.message : 'Unknown error',
+      sanitizedErrorDetails(error),
     );
   }
 }

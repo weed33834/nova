@@ -27,6 +27,8 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { llmApiError } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
+import { checkGeneratedContent } from '@/lib/guardrails/pipeline-check';
+import { GuardrailBlockError } from '@/lib/guardrails/types';
 
 const log = createLogger('Scene Actions API');
 
@@ -154,6 +156,26 @@ export async function POST(req: NextRequest) {
     });
 
     log.info(`Generated ${actions.length} actions for: "${outline.title}"`);
+
+    // ── Guardrails: post-generation action safety check ──
+    try {
+      checkGeneratedContent(
+        outline.title,
+        actions,
+        undefined,
+        { enabled: true, minBlockSeverity: 'high' },
+      );
+    } catch (error) {
+      if (error instanceof GuardrailBlockError) {
+        log.error(`Actions blocked by guardrails: "${outline.title}"`);
+        return apiError(
+          'CONTENT_SENSITIVE',
+          422,
+          `Actions blocked by safety guardrails: ${outline.title}`,
+        );
+      }
+      throw error;
+    }
 
     // ── Build complete scene ──
     const scene = buildCompleteScene(outline, content, actions, stageId);

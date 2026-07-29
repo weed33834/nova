@@ -93,17 +93,20 @@ ${commentPrompt ? `Grading guidance: ${commentPrompt}\n` : ''}Student answer: ${
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON found');
       const parsed = JSON.parse(jsonMatch[0]);
+      const parsedScore = Number(parsed.score);
       gradeResult = {
-        score: Math.max(0, Math.min(points, Math.round(Number(parsed.score)))),
+        score: Number.isFinite(parsedScore)
+          ? Math.max(0, Math.min(points, Math.round(parsedScore)))
+          : 0,
         comment: String(parsed.comment || ''),
       };
     } catch {
-      // Fallback: give partial credit with a generic comment
+      // Fallback: give 0 points — do NOT inflate scores with partial credit
       gradeResult = {
-        score: Math.round(points * 0.5),
+        score: 0,
         comment: isZh
-          ? '已作答，请参考标准答案。'
-          : 'Answer received. Please refer to the standard answer.',
+          ? '答案解析失败，请重新作答。'
+          : 'Answer parsing failed. Please try again.',
       };
     }
 

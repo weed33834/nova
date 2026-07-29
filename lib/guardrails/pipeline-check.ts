@@ -39,6 +39,64 @@ function extractSpeechText(actions: Action[]): string {
 }
 
 /**
+ * Recursively extract all string values from an arbitrary object.
+ * Used to pull text from structured generated content (slides, quizzes, PBL)
+ * so guardrails can run on it without knowing the specific content shape.
+ */
+function extractTextFromObject(obj: unknown): string {
+  if (typeof obj === 'string') return obj;
+  if (obj == null || typeof obj !== 'object') return '';
+  if (Array.isArray(obj)) return obj.map(extractTextFromObject).join('\n');
+  return Object.values(obj).map(extractTextFromObject).join('\n');
+}
+
+/**
+ * Run guardrails on a raw text string (e.g. extracted from generated slide
+ * content, quiz questions, or interactive HTML).  Used by the scene-content
+ * API route where actions are not yet available.
+ *
+ * Behaviour mirrors {@link checkGeneratedContent} but operates on text
+ * directly instead of extracting speech from actions.
+ */
+export function checkGeneratedText(
+  sceneTitle: string,
+  text: string | object,
+  sourceContent?: string,
+  blocking?: GuardrailsBlockingConfig,
+): GuardrailReport | null {
+  const actualText = typeof text === 'string' ? text : extractTextFromObject(text);
+  if (!actualText.trim()) return null;
+
+  const report = runAllGuardrails(actualText, sourceContent);
+
+  if (!report.passed) {
+    const failed = report.checks.filter((c) => !c.passed);
+    log.warn(
+      `Guardrail check flagged scene "${sceneTitle}": ${failed.length} issue(s) — ` +
+        failed.map((c) => `${c.type}(${c.severity}): ${c.message}`).join('; '),
+    );
+
+    if (blocking?.enabled) {
+      const threshold = SEVERITY_RANK[blocking.minBlockSeverity];
+      const shouldBlock = failed.some(
+        (c) => SEVERITY_RANK[c.severity] >= threshold,
+      );
+      if (shouldBlock) {
+        log.warn(
+          `Blocking scene "${sceneTitle}" — guardrail threshold reached ` +
+            `(min severity: ${blocking.minBlockSeverity})`,
+        );
+        throw new GuardrailBlockError(report);
+      }
+    }
+  } else {
+    log.debug(`Guardrail check passed for scene "${sceneTitle}"`);
+  }
+
+  return report;
+}
+
+/**
  * Run guardrails on generated scene content as a post-generation check.
  *
  * - Logs warnings for any failed checks.
