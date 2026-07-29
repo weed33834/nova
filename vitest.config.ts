@@ -14,6 +14,14 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['lcov', 'text-summary'],
       reportsDirectory: './coverage',
+      // Thresholds set slightly below current levels to prevent regression
+      // without breaking CI. Raise incrementally as coverage improves.
+      thresholds: {
+        statements: 30,
+        branches: 28,
+        functions: 27,
+        lines: 30,
+      },
       include: [
         'app/**/*.{ts,tsx}',
         'components/**/*.{ts,tsx}',
