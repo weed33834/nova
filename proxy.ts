@@ -280,7 +280,22 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-request-id', requestId);
 
-  const { pathname } = request.nextUrl;
+  const { pathname: rawPathname } = request.nextUrl;
+
+  // ── API version routing (/api/v1/* → /api/*) ─────────────────────────────
+  // Supports versioned API calls by stripping the /v1 prefix and rewriting
+  // to the actual route. Backward compatible: /api/* still works as-is.
+  let pathname = rawPathname;
+  if (rawPathname.startsWith('/api/v1/')) {
+    pathname = '/api/' + rawPathname.slice('/api/v1/'.length);
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    const rewritten = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    rewritten.headers.set('x-api-version', '1');
+    rewritten.headers.set('x-request-id', requestId);
+    return applyAllHeaders(rewritten, request);
+  }
+
   const isApi = pathname.startsWith('/api/');
 
   // ── Global rate limiting (DDoS protection) ──────────────────────────────
