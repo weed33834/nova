@@ -26,6 +26,9 @@ COPY --from=deps /app/packages ./packages
 COPY . .
 COPY --from=deps /app/public/vendor ./public/vendor
 
+# Required by NextAuth config during page-data collection at build time.
+# The real secret is injected at runtime via the environment.
+ENV NEXTAUTH_SECRET=build-placeholder-not-for-runtime
 RUN pnpm build
 
 # ---- Stage 4: Runner ----
