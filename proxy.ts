@@ -145,38 +145,61 @@ function checkCsrf(request: NextRequest): NextResponse | null {
 }
 
 export async function proxy(request: NextRequest) {
+  // ── Request ID injection (for log correlation) ──────────────────────────
+  // If the client didn't send one, generate a short ID so all log lines for
+  // a single request can be correlated downstream.
+  const requestId =
+    request.headers.get('x-request-id') ??
+    crypto.randomUUID().slice(0, 8);
+  // Clone headers so we can add the request ID without mutating the original
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-request-id', requestId);
+
   // ── CSRF protection (always on, regardless of ACCESS_CODE) ──────────────
   const csrfError = checkCsrf(request);
-  if (csrfError) return csrfError;
+  if (csrfError) {
+    csrfError.headers.set('x-request-id', requestId);
+    return csrfError;
+  }
 
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
-    return NextResponse.next();
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    res.headers.set('x-request-id', requestId);
+    return res;
   }
 
   const { pathname } = request.nextUrl;
 
   // Always allow public routes
   if (isPublicRoute(pathname)) {
-    return NextResponse.next();
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    res.headers.set('x-request-id', requestId);
+    return res;
   }
 
   // Check cookie — validate HMAC signature, not just existence
   const cookie = request.cookies.get('nova_access');
   if (cookie?.value && (await verifyToken(cookie.value, accessCode))) {
-    return NextResponse.next();
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    res.headers.set('x-request-id', requestId);
+    return res;
   }
 
   // API requests without valid cookie → 401
   if (pathname.startsWith('/api/')) {
-    return NextResponse.json(
+    const res = NextResponse.json(
       { success: false, errorCode: 'UNAUTHORIZED', error: 'Access code required' },
       { status: 401 },
     );
+    res.headers.set('x-request-id', requestId);
+    return res;
   }
 
   // Page requests → let through, frontend shows modal
-  return NextResponse.next();
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  res.headers.set('x-request-id', requestId);
+  return res;
 }
 
 export const config = {

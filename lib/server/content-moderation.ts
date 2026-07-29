@@ -10,7 +10,6 @@
  * the enterprise analysis. It wraps both input (user prompt) and output
  * (LLM response) moderation.
  */
-import { createOpenAI } from '@ai-sdk/openai';
 import { createLogger } from '@/lib/logger';
 import { checkContentSafety } from '@/lib/guardrails/content-safety';
 import type { GuardrailResult } from '@/lib/guardrails/types';
@@ -65,9 +64,8 @@ export async function moderateContent(content: string): Promise<ModerationResult
   }
 
   try {
-    const openai = createOpenAI({ apiKey: openaiApiKey });
-    // Use the moderation model — `omni-moderation-latest` is the current model.
-    // The AI SDK exposes this via `openai moderation()`.
+    // Use the OpenAI Moderation API directly via fetch for Edge compatibility.
+    // `omni-moderation-latest` is the current model.
     const response = await fetch('https://api.openai.com/v1/moderations', {
       method: 'POST',
       headers: {
