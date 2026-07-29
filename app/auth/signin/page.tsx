@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { Github, Mail, Loader2 } from 'lucide-react';
 
-export default function SignInPage() {
+function SignInForm() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,5 +145,13 @@ export default function SignInPage() {
         </p>
       </Card>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInForm />
+    </Suspense>
   );
 }

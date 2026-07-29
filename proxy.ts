@@ -1,3 +1,17 @@
+/**
+ * Edge proxy (Next.js 16 successor to middleware) — access-code gate.
+ *
+ * Responsibilities:
+ * 1. When `ACCESS_CODE` env var is set, gates all non-public routes behind the
+ *    `nova_access` cookie. The cookie's HMAC signature is verified using the
+ *    Web Crypto API (Edge-compatible).
+ * 2. Public routes (home, auth pages, health, access-code endpoints, public
+ *    classroom playback, static assets) are always accessible.
+ *
+ * Fine-grained permission checks (RBAC) happen server-side via
+ * `requirePermission()` in the route handlers — the proxy is a first-pass
+ * gate only.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 
 const ACCESS_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -54,6 +68,27 @@ async function verifyToken(token: string, accessCode: string): Promise<boolean> 
   return mismatch === 0;
 }
 
+// ── Public route patterns (no access code required) ─────────────────────────
+
+const PUBLIC_PATTERNS = [
+  /^\/$/, // home
+  /^\/auth\//, // sign-in, sign-up pages
+  /^\/api\/auth\//, // NextAuth endpoints
+  /^\/api\/health/, // liveness/readiness probes
+  /^\/api\/access-code\//, // access code verify/status
+  /^\/api\/usage/, // public usage info
+  /^\/_next\//, // static assets
+  /^\/favicon/, // favicon
+  /^\/icons\//, // icon files
+  /^\/classroom\//, // public classroom playback (URL: /classroom/[id])
+  /^\/fonts\//, // font files
+  /^\/manifest/, // PWA manifest
+];
+
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_PATTERNS.some((p) => p.test(pathname));
+}
+
 export async function proxy(request: NextRequest) {
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
@@ -62,15 +97,8 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Whitelist: access-code endpoints, health probes (liveness + readiness +
-  // legacy alias). Health probes must stay unauthenticated so container
-  // orchestrators and load balancers can reach them without an access cookie.
-  if (
-    pathname.startsWith('/api/access-code/') ||
-    pathname === '/api/health' ||
-    pathname === '/api/health/live' ||
-    pathname === '/api/health/ready'
-  ) {
+  // Always allow public routes
+  if (isPublicRoute(pathname)) {
     return NextResponse.next();
   }
 
@@ -83,7 +111,7 @@ export async function proxy(request: NextRequest) {
   // API requests without valid cookie → 401
   if (pathname.startsWith('/api/')) {
     return NextResponse.json(
-      { success: false, errorCode: 'INVALID_REQUEST', error: 'Access code required' },
+      { success: false, errorCode: 'UNAUTHORIZED', error: 'Access code required' },
       { status: 401 },
     );
   }
@@ -93,5 +121,15 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logos/).*)'],
+  matcher: [
+    /*
+     * Match all paths EXCEPT:
+     * - Static assets (_next/static, _next/image, favicon, icons, logos, fonts)
+     * - NextAuth API endpoints (/api/auth/*)
+     * - Health/access-code/usage API endpoints (public)
+     *
+     * Everything else goes through the proxy for access-code gating.
+     */
+    '/((?!api/access-code|api/health|api/usage|api/auth|_next/static|_next/image|favicon.ico|icons|logos|fonts|manifest).*)',
+  ],
 };
