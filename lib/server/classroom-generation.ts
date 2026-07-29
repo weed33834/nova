@@ -53,6 +53,8 @@ export interface GenerateClassroomInput {
   enableTTS?: boolean;
   agentMode?: 'default' | 'generate';
   guardrailsBlocking?: GuardrailsBlockingConfig;
+  /** Owner user ID for resource-level ACL (when auth is enabled). */
+  ownerId?: string | null;
 }
 
 export type ClassroomGenerationStep =
@@ -600,6 +602,7 @@ export async function generateClassroom(
       id: stageId,
       stage,
       scenes,
+      ownerId: input.ownerId ?? null,
     },
     options.baseUrl,
   );

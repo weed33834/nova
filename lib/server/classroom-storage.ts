@@ -37,6 +37,8 @@ export interface PersistedClassroomData {
   stage: Stage;
   scenes: Scene[];
   createdAt: string;
+  /** Owner user ID (when auth is enabled). null/undefined = legacy or anonymous. */
+  ownerId?: string | null;
 }
 
 export function isValidClassroomId(id: string): boolean {
@@ -61,6 +63,7 @@ function isValidClassroomData(value: unknown): value is PersistedClassroomData {
     typeof v.stage === 'object' &&
     Array.isArray(v.scenes) &&
     typeof v.createdAt === 'string'
+    // ownerId is optional — legacy classrooms have no owner
   );
 }
 
@@ -86,6 +89,8 @@ export async function persistClassroom(
     id: string;
     stage: Stage;
     scenes: Scene[];
+    /** Owner user ID (when auth is enabled). Omit for anonymous/legacy. */
+    ownerId?: string | null;
   },
   baseUrl: string,
 ): Promise<PersistedClassroomData & { url: string }> {
@@ -97,6 +102,7 @@ export async function persistClassroom(
     stage: data.stage,
     scenes: data.scenes,
     createdAt: new Date().toISOString(),
+    ...(data.ownerId ? { ownerId: data.ownerId } : {}),
   };
 
   await ensureClassroomsDir();

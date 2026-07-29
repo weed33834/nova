@@ -1,5 +1,6 @@
 import { after, type NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
+import { getServerSession } from 'next-auth';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { type GenerateClassroomInput } from '@/lib/server/classroom-generation';
 import { runClassroomGenerationJob } from '@/lib/server/classroom-job-runner';
@@ -8,6 +9,7 @@ import { buildRequestOrigin } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
+import { authOptions } from '@/lib/auth/config';
 
 const log = createLogger('GenerateClassroom API');
 
@@ -47,11 +49,22 @@ export async function POST(req: NextRequest) {
     }
 
     const baseUrl = buildRequestOrigin(req);
+
+    // Record owner when user is authenticated (optional — no auth = anonymous)
+    let ownerId: string | null = null;
+    try {
+      const session = await getServerSession(authOptions);
+      ownerId = (session?.user as { id?: string } | undefined)?.id ?? null;
+    } catch {
+      // Auth not configured — generation is anonymous
+    }
+
+    const jobBody: GenerateClassroomInput = { ...body, ownerId };
     const jobId = nanoid(10);
-    const job = await createClassroomGenerationJob(jobId, body);
+    const job = await createClassroomGenerationJob(jobId, jobBody);
     const pollUrl = `${baseUrl}/api/generate-classroom/${jobId}`;
 
-    after(() => runClassroomGenerationJob(jobId, body, baseUrl));
+    after(() => runClassroomGenerationJob(jobId, jobBody, baseUrl));
 
     return apiSuccess(
       {

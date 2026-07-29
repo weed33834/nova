@@ -1,5 +1,6 @@
 import { type NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
+import { getServerSession } from 'next-auth';
 import { apiSuccess, apiError, API_ERROR_CODES } from '@/lib/server/api-response';
 import {
   buildRequestOrigin,
@@ -9,6 +10,7 @@ import {
 } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
+import { authOptions } from '@/lib/auth/config';
 
 const log = createLogger('Classroom API');
 
@@ -35,7 +37,19 @@ export async function POST(request: NextRequest) {
     }
     const baseUrl = buildRequestOrigin(request);
 
-    const persisted = await persistClassroom({ id, stage: { ...stage, id }, scenes }, baseUrl);
+    // Record owner when user is authenticated (optional — no auth = anonymous)
+    let ownerId: string | null = null;
+    try {
+      const session = await getServerSession(authOptions);
+      ownerId = (session?.user as { id?: string } | undefined)?.id ?? null;
+    } catch {
+      // Auth not configured — classroom is anonymous
+    }
+
+    const persisted = await persistClassroom(
+      { id, stage: { ...stage, id }, scenes, ownerId },
+      baseUrl,
+    );
 
     return apiSuccess({ id: persisted.id, url: persisted.url }, 201);
   } catch (error) {
