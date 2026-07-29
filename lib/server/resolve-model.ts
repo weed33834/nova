@@ -16,6 +16,7 @@ import {
 } from '@/lib/server/provider-config';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { getStageRoute, type LlmStage } from '@/lib/server/model-routes';
+import { getFallbackModels } from '@/lib/ai/fallback';
 
 export interface ResolvedModel extends ModelWithInfo {
   /** Original model string (e.g. "openai/gpt-4o-mini") */
@@ -30,6 +31,12 @@ export interface ResolvedModel extends ModelWithInfo {
   baseUrl?: string;
   /** Optional per-request thinking configuration from the client. */
   thinkingConfig?: ThinkingConfig;
+  /**
+   * Ordered fallback model strings (from `FALLBACK_MODELS`) used for provider
+   * failover when the primary model fails with a retryable error. The primary
+   * model itself is excluded so it is never retried. Empty when unset.
+   */
+  fallbackModels?: string[];
 }
 
 /**
@@ -115,6 +122,12 @@ export async function resolveModel(params: {
     ? stageRoute?.thinking
     : params.thinkingConfig;
 
+  // Fallback chain (provider/model failover). Read the operator-configured
+  // FALLBACK_MODELS list and drop the primary so it is never retried after a
+  // failure. The strings are resolved to LanguageModels lazily, at fallback
+  // time, by callLLMWithFallback — each resolves its own credentials.
+  const fallbackModels = getFallbackModels().filter((m) => m !== modelString);
+
   return {
     model,
     modelInfo,
@@ -124,6 +137,7 @@ export async function resolveModel(params: {
     apiKey,
     baseUrl,
     thinkingConfig,
+    fallbackModels,
   };
 }
 

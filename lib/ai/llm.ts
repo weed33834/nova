@@ -316,14 +316,31 @@ function recordUsageSafe(
  * @param source - A short label for log grouping (e.g. 'scene-stream', 'pbl-chat')
  * @param retryOptions - Optional retry-on-validation-failure settings
  * @param thinking - Optional per-call thinking config (overrides global LLM_THINKING_DISABLED)
+ * @param fallbackModels - Optional ordered fallback model strings. When set,
+ *        a retryable failure (5xx/timeout/network) on the primary model is
+ *        retried against each fallback in turn. Unset = no failover (today's
+ *        behavior). See lib/ai/fallback.ts.
+ * @param apiKey - Client API key used to resolve unmanaged fallback providers
+ *        (managed providers always use the server key). Only used with `fallbackModels`.
  */
 export async function callLLM<T extends GenerateTextParams>(
   params: T,
   source: string,
   retryOptions?: LLMRetryOptions,
   thinking?: ThinkingConfig,
+  fallbackModels?: string[],
+  apiKey?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<GenerateTextResult<any, any>> {
+  // When a fallback chain is requested, delegate to callLLMWithFallback so a
+  // retryable failure on the primary model transparently falls over to the
+  // configured alternatives. Imported dynamically to avoid a static import
+  // cycle (lib/ai/fallback.ts imports callLLM from this module).
+  if (fallbackModels && fallbackModels.length > 0) {
+    const { callLLMWithFallback } = await import('./fallback');
+    return callLLMWithFallback(params, source, apiKey ?? '', thinking, fallbackModels);
+  }
+
   const maxAttempts = (retryOptions?.retries ?? 0) + 1;
   const validate = retryOptions?.validate ?? (maxAttempts > 1 ? DEFAULT_VALIDATE : undefined);
 
