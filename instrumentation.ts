@@ -30,5 +30,9 @@ export async function register() {
     // Start audit log retention timer (prunes old entries every 24h)
     const { startAuditRetentionTimer } = await import('@/lib/server/audit-retention');
     startAuditRetentionTimer();
+
+    // Register OpenTelemetry tracing (automatic HTTP/Next.js instrumentation)
+    const { registerOpenTelemetry } = await import('@/lib/server/otel');
+    registerOpenTelemetry();
   }
 }
