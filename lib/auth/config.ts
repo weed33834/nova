@@ -24,6 +24,7 @@ import { getDb } from '@/lib/db/client';
 import { users, accounts } from '@/lib/db/schema';
 import { hashPassword, verifyPassword } from './password';
 import type { Role } from './rbac';
+import { getSsoProviders } from './sso-providers';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('Auth');
@@ -134,6 +135,8 @@ export const authOptions: NextAuthOptions = {
           }),
         ]
       : []),
+    // Enterprise SSO providers (OIDC + SAML) — conditionally added.
+    ...getSsoProviders(),
   ],
 };
 
