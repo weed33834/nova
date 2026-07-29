@@ -134,7 +134,9 @@ export const skills = sqliteTable('skills', {
 // ---------------------------------------------------------------------------
 
 export const usageRecords = sqliteTable('usage_records', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   createdAt: integer('created_at').notNull(), // epoch ms (matches UsageRecord.createdAt)
   kind: text('kind', { enum: ['llm', 'image', 'video', 'tts', 'asr'] })
     .notNull()
