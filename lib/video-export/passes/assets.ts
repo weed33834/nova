@@ -29,7 +29,8 @@ export interface AssetsResult {
 }
 
 /** Sanitize one path segment (scene title / element id) into a safe filename part. */
-export function sanitizeFilenamePart(value: string): string {
+export function sanitizeFilenamePart(value: string | undefined | null): string {
+  if (!value) return 'scene';
   const normalized = value
     .normalize('NFKC')
     .trim()
