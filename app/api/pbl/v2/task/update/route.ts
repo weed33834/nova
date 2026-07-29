@@ -22,6 +22,7 @@ export const maxDuration = 60;
 import type { NextRequest } from 'next/server';
 
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 
 import {
   startMicrotask,
@@ -45,7 +46,7 @@ interface UpdateRequest {
   microtaskId?: string;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let body: UpdateRequest;
   try {
     body = (await req.json()) as UpdateRequest;
@@ -159,4 +160,4 @@ export async function POST(req: NextRequest) {
     default:
       return apiError('INVALID_REQUEST', 400, `Unknown action: ${String(body.action)}`);
   }
-}
+}, { rateLimit: 'moderate' });
