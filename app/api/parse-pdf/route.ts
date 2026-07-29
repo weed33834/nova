@@ -11,6 +11,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { withApiHandler } from '@/lib/server/api-handler';
 const log = createLogger('Parse PDF');
 
 // Mirror extract-document's per-file cap: arrayBuffer() loads the whole upload
@@ -24,7 +25,7 @@ const MAX_PDF_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 // mid-parse on managed platforms.
 export const maxDuration = 120;
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let pdfFileName: string | undefined;
   let resolvedProviderId: string | undefined;
   try {
@@ -119,4 +120,4 @@ export async function POST(req: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'moderate' });

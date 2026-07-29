@@ -11,7 +11,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
-import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
+import { withApiHandler } from '@/lib/server/api-handler';
 const log = createLogger('Quiz Grade');
 
 // Single LLM grading turn — pin an explicit ceiling so a slow model isn't
@@ -31,9 +31,7 @@ interface GradeResponse {
   comment: string;
 }
 
-export async function POST(req: NextRequest) {
-  const rlResult = await checkRateLimitPreset(req, 'moderate', 'quiz-grade');
-  if (rlResult.limited) return rateLimitedResponse(rlResult);
+export const POST = withApiHandler(async (req: NextRequest) => {
   let questionSnippet: string | undefined;
   let resolvedPoints: number | undefined;
   try {
@@ -126,4 +124,4 @@ ${commentPrompt ? `Grading guidance: ${commentPrompt}\n` : ''}Student answer: ${
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'moderate' });

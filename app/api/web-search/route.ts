@@ -16,6 +16,7 @@ import {
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import {
   buildSearchQuery,
   SEARCH_QUERY_REWRITE_EXCERPT_LENGTH,
@@ -32,7 +33,7 @@ const log = createLogger('WebSearch');
 // platform default. Cap explicitly so Vercel doesn't kill it mid-search.
 export const maxDuration = 60;
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let query: string | undefined;
   try {
     const body = await req.json();
@@ -168,7 +169,7 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : 'Web search failed';
     return apiError('INTERNAL_ERROR', 500, message);
   }
-}
+}, { rateLimit: 'moderate' });
 
 function getMissingBaseUrlMessage(providerId: WebSearchProviderId, providerName: string): string {
   if (providerId === 'searxng') {

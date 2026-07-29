@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { apiError } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ProxyMedia');
@@ -27,7 +28,7 @@ export const maxDuration = 60;
 // leaving headroom for the redirect chain.
 const UPSTREAM_HOP_TIMEOUT_MS = 15_000;
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   let url: string | undefined;
   try {
     ({ url } = await request.json());
@@ -157,4 +158,4 @@ export async function POST(request: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'media' });

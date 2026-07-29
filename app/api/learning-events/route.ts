@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getServerSession } from 'next-auth';
 import { apiSuccess, apiError, API_ERROR_CODES } from '@/lib/server/api-response';
 import { validateBody } from '@/lib/server/validate';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { recordLearningEvent, getClassroomStats } from '@/lib/server/learning-analytics';
 import { authOptions } from '@/lib/auth/config';
 import { createLogger } from '@/lib/logger';
@@ -34,7 +35,7 @@ const recordEventSchema = z.object({
 });
 
 /** POST /api/learning-events — Record a learning event */
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const body = await req.json();
     const validation = validateBody(recordEventSchema, body);
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
     log.error('Failed to record learning event:', error);
     return apiError(API_ERROR_CODES.INTERNAL_ERROR, 500, 'Failed to record learning event');
   }
-}
+}, { rateLimit: 'moderate' });
 
 /** GET /api/learning-events — Get classroom learning stats */
 export async function GET(req: NextRequest) {

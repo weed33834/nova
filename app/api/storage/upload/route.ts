@@ -7,11 +7,12 @@
  */
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { getStorageProvider } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const contentType = req.headers.get('content-type') || '';
   if (!contentType.includes('multipart/form-data')) {
     return apiError(
@@ -53,4 +54,4 @@ export async function POST(req: NextRequest) {
       err instanceof Error ? err.message : 'Storage upload failed',
     );
   }
-}
+}, { rateLimit: 'media' });
