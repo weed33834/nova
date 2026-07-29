@@ -113,28 +113,37 @@ function getDistributedLimiter() {
  * from NextAuth session token if available, otherwise falls back to IP address.
  */
 function getClientIdentifier(req: NextRequest): string {
-  // Check for NextAuth session cookie (JWT)
-  const sessionCookie =
-    req.cookies.get('next-auth.session-token')?.value ??
-    req.cookies.get('__Secure-next-auth.session-token')?.value ??
-    null;
+  // In test environments or edge cases, req.cookies / req.headers may be undefined
+  const cookies = req.cookies;
+  if (cookies) {
+    // Check for NextAuth session cookie (JWT)
+    const sessionCookie =
+      cookies.get('next-auth.session-token')?.value ??
+      cookies.get('__Secure-next-auth.session-token')?.value ??
+      null;
 
-  if (sessionCookie) {
-    // Use a hash of the session token as identifier (don't store the raw token)
-    return `session:${sessionCookie.slice(0, 16)}`;
-  }
+    if (sessionCookie) {
+      // Use a hash of the session token as identifier (don't store the raw token)
+      return `session:${sessionCookie.slice(0, 16)}`;
+    }
 
-  // Check for access code cookie
-  const accessCookie = req.cookies.get('nova_access')?.value;
-  if (accessCookie) {
-    return `access:${accessCookie.slice(0, 16)}`;
+    // Check for access code cookie
+    const accessCookie = cookies.get('nova_access')?.value;
+    if (accessCookie) {
+      return `access:${accessCookie.slice(0, 16)}`;
+    }
   }
 
   // Fall back to IP address
-  const forwarded = req.headers.get('x-forwarded-for');
-  const realIp = req.headers.get('x-real-ip');
-  const ip = forwarded?.split(',')[0]?.trim() ?? realIp ?? 'unknown';
-  return `ip:${ip}`;
+  const headers = req.headers;
+  if (headers) {
+    const forwarded = headers.get('x-forwarded-for');
+    const realIp = headers.get('x-real-ip');
+    const ip = forwarded?.split(',')[0]?.trim() ?? realIp ?? 'unknown';
+    return `ip:${ip}`;
+  }
+
+  return 'unknown:no-headers';
 }
 
 // ── Core rate limit check ──────────────────────────────────────────────────

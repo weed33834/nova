@@ -29,6 +29,8 @@ const eslintConfig = defineConfig([
     '.worktrees/**',
     // Playwright e2e tests (not React code):
     'e2e/**',
+    // Test coverage reports (generated, not source code):
+    'coverage/**',
   ]),
   {
     rules: {

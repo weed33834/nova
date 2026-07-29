@@ -38,7 +38,9 @@ const PII_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /\b\d{17}[\dXx]\b/g, label: 'Chinese ID number' },
   { pattern: /\b1[3-9]\d{9}\b/g, label: 'Chinese phone number' },
   { pattern: /\b\d{6,16}\b/g, label: 'Possible account number' },
-  { pattern: /[\w.+-]+@[\w-]+\.[\w.-]+/g, label: 'Email address' },
+  // Require a letter-only TLD (≥2 chars) to avoid false positives on npm-style
+  // version specifiers (e.g. katex@0.16.9) and other @-delimited identifiers.
+  { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, label: 'Email address' },
 ];
 
 const TOXIC_PATTERNS: Array<{ pattern: RegExp; category: ModerationCategory; score: number }> = [

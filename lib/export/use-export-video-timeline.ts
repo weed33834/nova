@@ -26,7 +26,7 @@ import {
   type AssetSource,
   type AssetMeta,
 } from '@/lib/video-export';
-import type { SpeechAction, PlayVideoAction, SceneCore } from '@nova/dsl';
+import type { SpeechAction, PlayVideoAction } from '@nova/dsl';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ExportVideoTimeline');
@@ -88,7 +88,7 @@ function createDexieAssetSource(
  * The compiler needs synchronous access to durations (the pure compile fold
  * can't await). We pre-load everything into Maps before calling compileVideoTimeline.
  */
-async function preloadAssetMetadata(stageId: string): Promise<{
+async function preloadAssetMetadata(_stageId: string): Promise<{
   audioDurationMap: Map<string, number>;
   videoDurationMap: Map<string, number>;
   audioMetaMap: Map<string, AssetMeta>;
