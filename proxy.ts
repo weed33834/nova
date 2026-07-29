@@ -20,6 +20,7 @@
  * gate only.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { buildCorsHeaders } from '@/lib/server/cors';
 
 const ACCESS_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -53,6 +54,29 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
     }
   }
   return res;
+}
+
+/**
+ * Apply CORS headers to a NextResponse.
+ * Uses the centralized CORS policy from lib/server/cors.ts.
+ */
+function applyCorsHeaders(res: NextResponse, request: NextRequest): NextResponse {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host') || request.nextUrl.host;
+  const corsHeaders = buildCorsHeaders(origin, host);
+  for (const [key, value] of Object.entries(corsHeaders)) {
+    if (!res.headers.has(key)) {
+      res.headers.set(key, value);
+    }
+  }
+  return res;
+}
+
+/**
+ * Apply all response headers (security + CORS) to a NextResponse.
+ */
+function applyAllHeaders(res: NextResponse, request: NextRequest): NextResponse {
+  return applyCorsHeaders(applySecurityHeaders(res), request);
 }
 
 /** Convert string to Uint8Array */
@@ -240,6 +264,12 @@ function checkCsrf(request: NextRequest): NextResponse | null {
 }
 
 export async function proxy(request: NextRequest) {
+  // ── Handle CORS preflight (OPTIONS) ─────────────────────────────────────
+  if (request.method === 'OPTIONS') {
+    const res = new NextResponse(null, { status: 204 });
+    return applyAllHeaders(res, request);
+  }
+
   // ── Request ID injection (for log correlation) ──────────────────────────
   // If the client didn't send one, generate a short ID so all log lines for
   // a single request can be correlated downstream.
@@ -273,7 +303,7 @@ export async function proxy(request: NextRequest) {
           },
         },
       );
-      return applySecurityHeaders(res);
+      return applyAllHeaders(res, request);
     }
   }
 
@@ -281,21 +311,21 @@ export async function proxy(request: NextRequest) {
   const csrfError = checkCsrf(request);
   if (csrfError) {
     csrfError.headers.set('x-request-id', requestId);
-    return applySecurityHeaders(csrfError);
+    return applyAllHeaders(csrfError, request);
   }
 
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set('x-request-id', requestId);
-    return applySecurityHeaders(res);
+    return applyAllHeaders(res, request);
   }
 
   // Always allow public routes
   if (isPublicRoute(pathname)) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set('x-request-id', requestId);
-    return applySecurityHeaders(res);
+    return applyAllHeaders(res, request);
   }
 
   // Check cookie — validate HMAC signature, not just existence
@@ -303,7 +333,7 @@ export async function proxy(request: NextRequest) {
   if (cookie?.value && (await verifyToken(cookie.value, accessCode))) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set('x-request-id', requestId);
-    return applySecurityHeaders(res);
+    return applyAllHeaders(res, request);
   }
 
   // API requests without valid cookie → 401
@@ -313,13 +343,13 @@ export async function proxy(request: NextRequest) {
       { status: 401 },
     );
     res.headers.set('x-request-id', requestId);
-    return applySecurityHeaders(res);
+    return applyAllHeaders(res, request);
   }
 
   // Page requests → let through, frontend shows modal
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set('x-request-id', requestId);
-  return applySecurityHeaders(res);
+  return applyAllHeaders(res, request);
 }
 
 export const config = {
