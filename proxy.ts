@@ -128,6 +128,66 @@ function isPublicRoute(pathname: string): boolean {
   return PUBLIC_PATTERNS.some((p) => p.test(pathname));
 }
 
+// ── Edge-compatible global rate limiter ─────────────────────────────────────
+
+/**
+ * Lightweight in-memory rate limiter for the Edge proxy.
+ *
+ * Acts as a global DDoS protection layer — per-route limiters in the
+ * route handlers enforce more specific limits (e.g. 'generation' preset).
+ *
+ * Limits:
+ * - API routes: 120 req/min per IP
+ * - Page routes: 60 req/min per IP
+ * - Health/static: unlimited
+ *
+ * Uses a sliding window with periodic cleanup. Not shared across instances
+ * (Edge functions are stateless per cold start), but provides a baseline
+ * protection against abuse from a single client.
+ */
+const GLOBAL_API_LIMIT = 120; // requests per window
+const GLOBAL_PAGE_LIMIT = 60;
+const GLOBAL_WINDOW_MS = 60_000; // 1 minute
+const globalBuckets = new Map<string, { count: number; resetAt: number }>();
+let lastGlobalSweep = Date.now();
+
+function checkGlobalRateLimit(ip: string, isApi: boolean): { allowed: boolean; retryAfter: number } {
+  const now = Date.now();
+
+  // Sweep stale entries every 60s
+  if (now - lastGlobalSweep > GLOBAL_WINDOW_MS) {
+    for (const [key, bucket] of globalBuckets) {
+      if (bucket.resetAt <= now) globalBuckets.delete(key);
+    }
+    lastGlobalSweep = now;
+  }
+
+  const key = `${ip}:${isApi ? 'api' : 'page'}`;
+  const limit = isApi ? GLOBAL_API_LIMIT : GLOBAL_PAGE_LIMIT;
+  const bucket = globalBuckets.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    globalBuckets.set(key, { count: 1, resetAt: now + GLOBAL_WINDOW_MS });
+    return { allowed: true, retryAfter: 0 };
+  }
+
+  bucket.count++;
+  if (bucket.count > limit) {
+    return { allowed: false, retryAfter: Math.ceil((bucket.resetAt - now) / 1000) };
+  }
+
+  return { allowed: true, retryAfter: 0 };
+}
+
+/** Extract client IP from request, accounting for common proxy headers. */
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
 // ── CSRF protection ──────────────────────────────────────────────────────────
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -190,6 +250,33 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-request-id', requestId);
 
+  const { pathname } = request.nextUrl;
+  const isApi = pathname.startsWith('/api/');
+
+  // ── Global rate limiting (DDoS protection) ──────────────────────────────
+  // Skip for health checks and static assets (they're served from CDN/cache).
+  if (!pathname.startsWith('/api/health') && !pathname.startsWith('/_next/')) {
+    const clientIp = getClientIp(request);
+    const rateLimitResult = checkGlobalRateLimit(clientIp, isApi);
+    if (!rateLimitResult.allowed) {
+      const res = NextResponse.json(
+        {
+          success: false,
+          errorCode: 'RATE_LIMITED',
+          error: 'Too many requests',
+        },
+        {
+          status: 429,
+          headers: {
+            'retry-after': String(rateLimitResult.retryAfter),
+            'x-request-id': requestId,
+          },
+        },
+      );
+      return applySecurityHeaders(res);
+    }
+  }
+
   // ── CSRF protection (always on, regardless of ACCESS_CODE) ──────────────
   const csrfError = checkCsrf(request);
   if (csrfError) {
@@ -203,8 +290,6 @@ export async function proxy(request: NextRequest) {
     res.headers.set('x-request-id', requestId);
     return applySecurityHeaders(res);
   }
-
-  const { pathname } = request.nextUrl;
 
   // Always allow public routes
   if (isPublicRoute(pathname)) {

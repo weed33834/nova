@@ -21,13 +21,14 @@ function makeRequest(
   body?: unknown,
   headers?: Record<string, string>,
 ): NextRequest {
-  const init: RequestInit & { headers: Record<string, string> } = {
+  const headersObj = new Headers({
+    'content-type': 'application/json',
+    host: 'localhost:3000',
+    ...headers,
+  });
+  const init: ConstructorParameters<typeof NextRequest>[1] = {
     method,
-    headers: {
-      'content-type': 'application/json',
-      host: 'localhost:3000',
-      ...headers,
-    },
+    headers: headersObj,
   };
   if (body !== undefined) {
     init.body = JSON.stringify(body);
@@ -49,7 +50,7 @@ describe('Route Factory', () => {
         age: z.number().int().positive(),
       });
 
-      const handler = vi.fn(async () =>
+      const handler = vi.fn(async (_body: unknown) =>
         new Response(JSON.stringify({ success: true, id: '123' }), { status: 200 }),
       );
 
@@ -123,7 +124,7 @@ describe('Route Factory', () => {
     });
 
     it('passes through to handler when no schema provided', async () => {
-      const handler = vi.fn(async () =>
+      const handler = vi.fn(async (_body: unknown) =>
         new Response(JSON.stringify({ success: true }), { status: 200 }),
       );
 
@@ -145,7 +146,7 @@ describe('Route Factory', () => {
         page: z.string().optional(),
       });
 
-      const handler = vi.fn(async () =>
+      const handler = vi.fn(async (_query: unknown) =>
         new Response(JSON.stringify({ success: true }), { status: 200 }),
       );
 
