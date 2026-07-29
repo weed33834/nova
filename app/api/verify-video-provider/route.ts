@@ -25,6 +25,7 @@ import type { VideoProviderId } from '@/lib/media/types';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { createLogger } from '@/lib/logger';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { withApiHandler } from '@/lib/server/api-handler';
 
 const log = createLogger('VerifyVideoProvider');
 
@@ -32,7 +33,7 @@ const log = createLogger('VerifyVideoProvider');
 // Vercel doesn't kill it mid-probe. Matches verify-image-provider's ceiling.
 export const maxDuration = 30;
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   try {
     const providerId = (request.headers.get('x-video-provider') || 'seedance') as VideoProviderId;
     const model = request.headers.get('x-video-model') || undefined;
@@ -74,4 +75,4 @@ export async function POST(request: NextRequest) {
     );
     return apiError('INTERNAL_ERROR', 500, `Connectivity test error: ${err}`);
   }
-}
+}, { rateLimit: 'light' });

@@ -9,10 +9,11 @@ import {
 } from '@/lib/server/provider-config';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { MINERU_CLOUD_DEFAULT_BASE } from '@/lib/pdf/constants';
+import { withApiHandler } from '@/lib/server/api-handler';
 
 const log = createLogger('Verify PDF Provider');
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let providerId: string | undefined;
   try {
     const body = await req.json();
@@ -177,4 +178,4 @@ export async function POST(req: NextRequest) {
 
     return apiError('INTERNAL_ERROR', 500, errorMessage);
   }
-}
+}, { rateLimit: 'light' });

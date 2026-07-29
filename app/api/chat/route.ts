@@ -20,8 +20,8 @@ import { apiError } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { createLogger } from '@/lib/logger';
 import { resolveModel } from '@/lib/server/resolve-model';
+import { withApiHandler } from '@/lib/server/api-handler';
 import type { ThinkingConfig } from '@/lib/types/provider';
-import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 const log = createLogger('Chat API');
 
 // Allow streaming responses up to 60 seconds
@@ -43,9 +43,7 @@ export const maxDuration = 60;
  *
  * Response: SSE stream of StatelessEvent
  */
-export async function POST(req: NextRequest) {
-  const rlResult = await checkRateLimitPreset(req, 'moderate', 'chat');
-  if (rlResult.limited) return rateLimitedResponse(rlResult);
+export const POST = withApiHandler(async (req: NextRequest) => {
   const encoder = new TextEncoder();
   let chatModel: string | undefined;
   let chatMessageCount: number | undefined;
@@ -209,4 +207,4 @@ export async function POST(req: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'moderate' });

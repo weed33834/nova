@@ -18,6 +18,7 @@ import type { NextRequest } from 'next/server';
 import { createLogger } from '@/lib/logger';
 import { apiError } from '@/lib/server/api-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 import { createSSEResponse } from '@/lib/pbl/v2/api/sse';
 import { applyRequestLocaleToProject } from '@/lib/pbl/v2/api/locale';
@@ -36,6 +37,9 @@ interface InstructorRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'pbl-v2-instructor');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
+
   let body: InstructorRequest;
   try {
     body = (await req.json()) as InstructorRequest;

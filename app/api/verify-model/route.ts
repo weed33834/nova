@@ -5,6 +5,7 @@ import { apiError, apiSuccess, type ApiErrorCode } from '@/lib/server/api-respon
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModel } from '@/lib/server/resolve-model';
 import { callLLM } from '@/lib/ai/llm';
+import { withApiHandler } from '@/lib/server/api-handler';
 const log = createLogger('VerifyModel');
 
 // Sends a real (minimal) LLM round-trip — a slow or stalled provider can run
@@ -113,7 +114,7 @@ function statusToError(status: number): {
   };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   let model: string | undefined;
   let apiKey: string | undefined;
   try {
@@ -220,4 +221,4 @@ export async function POST(req: NextRequest) {
       `Model verification: ${modelLabel}`,
     );
   }
-}
+}, { rateLimit: 'light' });

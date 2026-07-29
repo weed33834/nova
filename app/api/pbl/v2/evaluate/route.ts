@@ -31,6 +31,7 @@ import type { NextRequest } from 'next/server';
 import { createLogger } from '@/lib/logger';
 import { apiError } from '@/lib/server/api-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 import { createSSEResponse } from '@/lib/pbl/v2/api/sse';
 import {
@@ -55,6 +56,9 @@ interface EvaluateRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'pbl-v2-evaluate');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
+
   let body: EvaluateRequest;
   try {
     body = (await req.json()) as EvaluateRequest;

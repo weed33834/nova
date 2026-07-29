@@ -20,7 +20,14 @@ vi.mock('@/lib/logger', () => ({
     warn: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
+    child: () => ({
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+    }),
   }),
+  runWithRequestId: (_id: string, fn: () => Promise<unknown>) => fn(),
 }));
 
 async function postVerifyModel(body: Record<string, unknown>) {

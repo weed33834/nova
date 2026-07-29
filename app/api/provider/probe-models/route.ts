@@ -4,6 +4,7 @@ import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { fetchModels, ModelFetchError } from '@/lib/server/model-fetch';
+import { withApiHandler } from '@/lib/server/api-handler';
 
 const log = createLogger('ProbeModels');
 
@@ -22,7 +23,7 @@ export const maxDuration = 30;
  * /models endpoint (with multi-candidate fallback). Returns the lit-up list, or
  * a typed status so the UI can fall back to manual model entry.
  */
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const body = await req.json();
     const { baseUrl, apiKey, modelsUrl } = body as {
@@ -68,4 +69,4 @@ export async function POST(req: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'moderate' });

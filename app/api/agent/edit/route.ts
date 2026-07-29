@@ -22,6 +22,7 @@ import { getMCPClientManager } from '@/lib/mcp/client-manager';
 import { adaptAllMCPTools } from '@/lib/mcp/pi-adapter';
 import type { MCPServersConfig } from '@/lib/mcp/config';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('Nova Agent');
 
@@ -99,6 +100,9 @@ export async function POST(req: NextRequest) {
   if (!isNovaEditorEnabled()) {
     return new Response('Not found', { status: 404 });
   }
+
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'agent-edit');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
 
   const body = (await req.json()) as AgentEditBody & Record<string, unknown>;
   const message = (body.message ?? '').toString().trim();

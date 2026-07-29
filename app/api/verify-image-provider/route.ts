@@ -25,6 +25,7 @@ import type { ImageProviderId } from '@/lib/media/types';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { createLogger } from '@/lib/logger';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { withApiHandler } from '@/lib/server/api-handler';
 
 const log = createLogger('VerifyImageProvider');
 
@@ -33,7 +34,7 @@ const log = createLogger('VerifyImageProvider');
 // upstream can't tie up the function indefinitely.
 export const maxDuration = 30;
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   try {
     const providerId = (request.headers.get('x-image-provider') || 'seedream') as ImageProviderId;
     const model = request.headers.get('x-image-model') || undefined;
@@ -76,4 +77,4 @@ export async function POST(request: NextRequest) {
     );
     return apiError('INTERNAL_ERROR', 500, `Connectivity test error: ${err}`);
   }
-}
+}, { rateLimit: 'light' });
