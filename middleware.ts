@@ -29,7 +29,7 @@ const PUBLIC_PATTERNS = [
   /^\/_next\//, // static assets
   /^\/favicon/, // favicon
   /^\/icons\//, // icon files
-  /^\/classroom\/play\//, // public playback links
+  /^\/classroom\//, // public classroom playback (URL: /classroom/[id])
   /^\/fonts\//, // font files
   /^\/manifest/, // PWA manifest
 ];

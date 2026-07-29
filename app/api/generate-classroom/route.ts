@@ -11,7 +11,7 @@ import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-lim
 
 const log = createLogger('GenerateClassroom API');
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const rlResult = await checkRateLimitPreset(req, 'generation', 'generate-classroom');

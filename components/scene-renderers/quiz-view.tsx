@@ -120,16 +120,16 @@ async function gradeShortAnswerQuestion(
     };
   } catch (err) {
     log.error('[quiz-view] AI grading failed for', q.id, err);
-    // Fallback: give half credit
+    // Fallback: give 0 points — do NOT inflate scores with unearned partial credit
     return {
       questionId: q.id,
       correct: null,
       status: 'incorrect',
-      earned: Math.round(pts * 0.5),
+      earned: 0,
       aiComment:
         language === 'zh-CN'
-          ? '评分服务暂时不可用，已给予基础分。'
-          : 'Grading service unavailable. Base score given.',
+          ? '评分服务暂时不可用，请重新作答。'
+          : 'Grading service unavailable. Please try again.',
     };
   }
 }
