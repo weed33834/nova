@@ -1,11 +1,15 @@
 /**
- * Edge proxy (Next.js 16 successor to middleware) — access-code gate.
+ * Edge proxy (Next.js 16 successor to middleware) — access-code gate + CSRF.
  *
  * Responsibilities:
- * 1. When `ACCESS_CODE` env var is set, gates all non-public routes behind the
- *    `nova_access` cookie. The cookie's HMAC signature is verified using the
- *    Web Crypto API (Edge-compatible).
- * 2. Public routes (home, auth pages, health, access-code endpoints, public
+ * 1. CSRF protection: for state-changing requests (POST/PUT/DELETE/PATCH),
+ *    validates the Origin header against the expected host. Browser requests
+ *    with a mismatched Origin are rejected with 403. Non-browser requests
+ *    (no Origin header, e.g. curl, API key clients) are allowed through.
+ * 2. Access-code gate: when `ACCESS_CODE` env var is set, gates all non-public
+ *    routes behind the `nova_access` cookie. The cookie's HMAC signature is
+ *    verified using the Web Crypto API (Edge-compatible).
+ * 3. Public routes (home, auth pages, health, access-code endpoints, public
  *    classroom playback, static assets) are always accessible.
  *
  * Fine-grained permission checks (RBAC) happen server-side via
@@ -89,7 +93,62 @@ function isPublicRoute(pathname: string): boolean {
   return PUBLIC_PATTERNS.some((p) => p.test(pathname));
 }
 
+// ── CSRF protection ──────────────────────────────────────────────────────────
+
+const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Validate the Origin header for state-changing requests to prevent CSRF.
+ *
+ * Strategy:
+ * - Only applies to POST/PUT/PATCH/DELETE (GET/HEAD/OPTIONS are safe).
+ * - NextAuth endpoints (/api/auth/*) are skipped — NextAuth has its own CSRF
+ *   token mechanism.
+ * - If no Origin header is present, the request is allowed (non-browser clients
+ *   like curl, API SDKs, server-to-server calls don't send Origin).
+ * - If Origin is present, it must match the request's host. This prevents
+ *   cross-site form submissions and fetch() calls from other origins.
+ */
+function checkCsrf(request: NextRequest): NextResponse | null {
+  if (!STATE_CHANGING_METHODS.has(request.method)) return null;
+
+  const { pathname } = request.nextUrl;
+  // NextAuth has built-in CSRF tokens
+  if (pathname.startsWith('/api/auth/')) return null;
+
+  const origin = request.headers.get('origin');
+  if (!origin) return null; // Non-browser client — allow
+
+  const expectedHost = request.headers.get('host') || request.nextUrl.host;
+  if (!expectedHost) return null; // Can't verify — allow (proxy/load balancer scenario)
+
+  // Extract the host portion of the Origin URL and compare
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    // Malformed Origin header — reject
+    return NextResponse.json(
+      { success: false, errorCode: 'FORBIDDEN', error: 'Invalid Origin header' },
+      { status: 403 },
+    );
+  }
+
+  if (originHost !== expectedHost) {
+    return NextResponse.json(
+      { success: false, errorCode: 'FORBIDDEN', error: 'Cross-site requests are not allowed' },
+      { status: 403 },
+    );
+  }
+
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
+  // ── CSRF protection (always on, regardless of ACCESS_CODE) ──────────────
+  const csrfError = checkCsrf(request);
+  if (csrfError) return csrfError;
+
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
     return NextResponse.next();

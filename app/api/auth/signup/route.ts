@@ -1,12 +1,20 @@
 import { type NextRequest } from 'next/server';
+import { z } from 'zod';
 import { createUserWithCredentials } from '@/lib/auth/config';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { validateBody } from '@/lib/server/validate';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
 import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('Signup API');
+
+const signupSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(128),
+  name: z.string().min(1).max(100).optional(),
+});
 
 /**
  * Email + password sign-up. Creates a user with the `user` role and returns
@@ -19,17 +27,12 @@ export async function POST(req: NextRequest) {
   const rlResult = await checkRateLimitPreset(req, 'auth', 'signup');
   if (rlResult.limited) return rateLimitedResponse(rlResult);
   try {
-    const body = (await req.json()) as {
-      email?: string;
-      password?: string;
-      name?: string;
-    };
+    const body = await req.json();
+    const validation = validateBody(signupSchema, body);
+    if (!validation.ok) return validation.response;
 
-    if (!body.email || !body.password) {
-      return apiError('MISSING_REQUIRED_FIELD', 400, 'Email and password are required');
-    }
-
-    const user = await createUserWithCredentials(body.email, body.password, body.name);
+    const { email, password, name } = validation.data;
+    const user = await createUserWithCredentials(email, password, name);
 
     recordAuditLog({
       actorId: user.id,

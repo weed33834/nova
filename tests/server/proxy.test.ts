@@ -154,3 +154,157 @@ describe('Edge Proxy — Access Code Gate', () => {
     expect(response.status).toBe(401);
   });
 });
+
+describe('Edge Proxy — CSRF Protection', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env.ACCESS_CODE;
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    vi.clearAllMocks();
+    vi.resetModules();
+  });
+
+  it('should allow GET requests without Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint');
+    const response = await proxy(request);
+
+    expect(response.status).toBe(200);
+  });
+
+  it('should allow POST requests without Origin header (non-browser client)', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'POST',
+      headers: {},
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(200);
+  });
+
+  it('should allow POST requests with matching Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'POST',
+      headers: {
+        origin: 'http://localhost:3000',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(200);
+  });
+
+  it('should reject POST requests with mismatched Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'POST',
+      headers: {
+        origin: 'https://evil.example.com',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(403);
+
+    const body = await response.json();
+    expect(body.success).toBe(false);
+    expect(body.errorCode).toBe('FORBIDDEN');
+    expect(body.error).toContain('Cross-site');
+  });
+
+  it('should reject PUT requests with mismatched Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'PUT',
+      headers: {
+        origin: 'https://evil.example.com',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(403);
+  });
+
+  it('should reject DELETE requests with mismatched Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'DELETE',
+      headers: {
+        origin: 'https://evil.example.com',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(403);
+  });
+
+  it('should reject PATCH requests with mismatched Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'PATCH',
+      headers: {
+        origin: 'https://evil.example.com',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(403);
+  });
+
+  it('should allow NextAuth POST endpoints regardless of Origin (NextAuth has its own CSRF)', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/auth/signin', {
+      method: 'POST',
+      headers: {
+        origin: 'https://evil.example.com',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(200);
+  });
+
+  it('should reject requests with malformed Origin header', async () => {
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'POST',
+      headers: {
+        origin: 'not-a-valid-url',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(403);
+  });
+
+  it('should apply CSRF check even when ACCESS_CODE is not set', async () => {
+    delete process.env.ACCESS_CODE;
+    const { proxy } = await import('@/proxy');
+
+    const request = new NextRequest('http://localhost:3000/api/some-endpoint', {
+      method: 'POST',
+      headers: {
+        origin: 'https://evil.example.com',
+      },
+    });
+
+    const response = await proxy(request);
+    expect(response.status).toBe(403);
+  });
+});

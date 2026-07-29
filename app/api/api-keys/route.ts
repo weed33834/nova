@@ -1,22 +1,33 @@
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/lib/db/client';
 import { apiKeys } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { requirePermission } from '@/lib/auth/rbac';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { generateApiKey } from '@/lib/server/api-key-auth';
+import { validateBody } from '@/lib/server/validate';
+import { recordAuditLog } from '@/lib/db/audit';
+import { extractPagination, paginateArray } from '@/lib/server/pagination';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ApiKeysRoute');
 
-/** GET /api/api-keys — 列出当前用户的 API keys */
-export async function GET() {
+// Zod schema for API key creation
+const createApiKeySchema = z.object({
+  label: z.string().min(1).max(100),
+  scopes: z.array(z.string()).optional(),
+  expiresAt: z.string().datetime().optional().nullable(),
+});
+
+/** GET /api/api-keys — 列出当前用户的 API keys（支持分页） */
+export async function GET(req: NextRequest) {
   try {
     const session = await requirePermission('apikey:manage');
     const userId = (session.user as { id: string }).id;
     const db = getDb();
 
-    const keys = await db
+    const allKeys = await db
       .select({
         id: apiKeys.id,
         label: apiKeys.label,
@@ -30,7 +41,11 @@ export async function GET() {
       .from(apiKeys)
       .where(eq(apiKeys.ownerId, userId));
 
-    return apiSuccess({ keys });
+    // Apply pagination
+    const params = extractPagination(req);
+    const { items, pagination } = paginateArray(allKeys, params);
+
+    return apiSuccess({ keys: items, pagination });
   } catch (error) {
     log.error('Failed to list API keys:', error);
     return apiError('INTERNAL_ERROR', 500, 'Failed to list API keys');
@@ -45,13 +60,10 @@ export async function POST(req: NextRequest) {
     const db = getDb();
 
     const body = await req.json();
-    const label = body.label as string;
-    const scopes = body.scopes as string[] | undefined;
-    const expiresAt = body.expiresAt as string | undefined;
+    const validation = validateBody(createApiKeySchema, body);
+    if (!validation.ok) return validation.response;
 
-    if (!label || label.length < 1 || label.length > 100) {
-      return apiError('VALIDATION_ERROR', 400, 'Label is required (1-100 chars)');
-    }
+    const { label, scopes, expiresAt } = validation.data;
 
     const { plaintext, hash, prefix } = generateApiKey();
 
@@ -65,6 +77,16 @@ export async function POST(req: NextRequest) {
     });
 
     log.info('API key created', { userId, label });
+
+    // Audit log
+    recordAuditLog({
+      actorId: userId,
+      actorRole: (session.user as { role?: string }).role,
+      action: 'apikey.create',
+      entityType: 'api_key',
+      entityId: prefix,
+      details: { label, scopes: scopes || [], expiresAt: expiresAt || null },
+    });
 
     return apiSuccess({
       key: plaintext,

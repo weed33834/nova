@@ -210,6 +210,58 @@ export const apiKeys = sqliteTable('api_keys', {
 });
 
 // ---------------------------------------------------------------------------
+// Learning events — xAPI-inspired event tracking for learning analytics.
+// Captures user behavior (scene viewed, quiz answered, TTS played, etc.)
+// for BI dashboards and learning path optimization.
+// ---------------------------------------------------------------------------
+
+export const learningEvents = sqliteTable('learning_events', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  createdAt: integer('created_at').notNull(), // epoch ms
+  // Actor
+  userId: text('user_id'), // null = anonymous
+  // Context
+  classroomId: text('classroom_id'),
+  sceneId: text('scene_id'),
+  sessionId: text('session_id'), // browser session identifier
+  // Event verb (xAPI-inspired): 'viewed', 'completed', 'answered', 'played', 'interacted', 'exported', 'shared'
+  verb: text('verb').notNull(),
+  // The object of the event (what was acted upon)
+  objectType: text('object_type'), // 'scene', 'quiz', 'tts', 'video', 'classroom', 'slide'
+  objectId: text('object_id'),
+  // Result (for quiz/assessment events)
+  resultJson: text('result_json'), // JSON: { score, success, completion, duration }
+  // Metadata
+  durationMs: integer('duration_ms'), // time spent on this interaction
+  metadataJson: text('metadata_json'), // additional context
+});
+
+// ---------------------------------------------------------------------------
+// Content versions — DB-backed version control for classrooms.
+// Replaces the file-system snapshot approach in content-versioning.ts.
+// ---------------------------------------------------------------------------
+
+export const contentVersions = sqliteTable('content_versions', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  classroomId: text('classroom_id').notNull(),
+  version: integer('version').notNull(), // incrementing version number
+  // Snapshot
+  stageJson: text('stage_json').notNull(),
+  scenesJson: text('scenes_json').notNull(),
+  // Author
+  createdBy: text('created_by'), // user id
+  // Metadata
+  label: text('label'), // optional human-readable label
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+// ---------------------------------------------------------------------------
 // Type exports — inferred from the schema so callers stay in sync.
 // ---------------------------------------------------------------------------
 
@@ -222,3 +274,7 @@ export type Skill = typeof skills.$inferSelect;
 export type UsageRecord = typeof usageRecords.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
+export type LearningEvent = typeof learningEvents.$inferSelect;
+export type NewLearningEvent = typeof learningEvents.$inferInsert;
+export type ContentVersion = typeof contentVersions.$inferSelect;
+export type NewContentVersion = typeof contentVersions.$inferInsert;

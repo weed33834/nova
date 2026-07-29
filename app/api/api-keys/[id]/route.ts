@@ -4,6 +4,7 @@ import { apiKeys } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { requirePermission } from '@/lib/auth/rbac';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ApiKeysRoute');
@@ -31,6 +32,15 @@ export async function DELETE(
     }
 
     log.info('API key revoked', { keyId: id, userId });
+
+    // Audit log
+    recordAuditLog({
+      actorId: userId,
+      actorRole: (session.user as { role?: string }).role,
+      action: 'apikey.revoke',
+      entityType: 'api_key',
+      entityId: id,
+    });
 
     return apiSuccess({ revoked: true });
   } catch (error) {

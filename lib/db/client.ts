@@ -192,6 +192,38 @@ function createSchemaDirectly(sqlite: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_api_keys_owner ON api_keys(owner_id);
     CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
+
+    CREATE TABLE IF NOT EXISTS learning_events (
+      id TEXT PRIMARY KEY,
+      created_at INTEGER NOT NULL,
+      user_id TEXT,
+      classroom_id TEXT,
+      scene_id TEXT,
+      session_id TEXT,
+      verb TEXT NOT NULL,
+      object_type TEXT,
+      object_id TEXT,
+      result_json TEXT,
+      duration_ms INTEGER,
+      metadata_json TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS content_versions (
+      id TEXT PRIMARY KEY,
+      classroom_id TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      stage_json TEXT NOT NULL,
+      scenes_json TEXT NOT NULL,
+      created_by TEXT,
+      label TEXT,
+      created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_learning_events_user ON learning_events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_learning_events_classroom ON learning_events(classroom_id);
+    CREATE INDEX IF NOT EXISTS idx_learning_events_verb ON learning_events(verb);
+    CREATE INDEX IF NOT EXISTS idx_learning_events_created ON learning_events(created_at);
+    CREATE INDEX IF NOT EXISTS idx_content_versions_classroom ON content_versions(classroom_id);
   `);
   log.info('Schema created directly (fallback path)');
 }

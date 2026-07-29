@@ -4,6 +4,7 @@ import {
   getServerVideoProviders,
   getServerTTSProviders,
 } from '@/lib/server/provider-config';
+import { getBreakerStatuses } from '@/lib/server/circuit-breaker';
 
 const version = process.env.npm_package_version || '0.1.0';
 
@@ -15,10 +16,14 @@ const version = process.env.npm_package_version || '0.1.0';
  * 报告所有企业级服务的配置状态，便于运维和监控。
  */
 export function buildReadinessPayload() {
+  const breakerStatuses = getBreakerStatuses();
+  const anyBreakerOpen = Object.values(breakerStatuses).some((s) => s.opened);
+
   return {
-    status: 'ok' as const,
+    status: anyBreakerOpen ? ('degraded' as const) : ('ok' as const),
     version,
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
     capabilities: {
       webSearch: Object.keys(getServerWebSearchProviders()).length > 0,
       imageGeneration: Object.keys(getServerImageProviders()).length > 0,
@@ -45,6 +50,15 @@ export function buildReadinessPayload() {
       sentry: !!process.env.SENTRY_DSN,
       // 访问控制
       accessCode: !!process.env.ACCESS_CODE,
+      // Prometheus metrics endpoint
+      metrics: true,
+      // OpenAPI documentation
+      apiDocs: true,
+      // Learning analytics
+      learningAnalytics: true,
+      // Content moderation
+      contentModeration: !!process.env.OPENAI_API_KEY,
     },
+    circuitBreakers: breakerStatuses,
   };
 }
