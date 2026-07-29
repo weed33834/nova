@@ -13,10 +13,10 @@
  * - Network partition resilience
  * - Large payload handling
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { sanitizeObject, sanitizeRichText, sanitizePlainText } from '@/lib/server/sanitize';
-import { checkRateLimitPreset, RATE_LIMIT_PRESETS } from '@/lib/server/rate-limit';
+import { sanitizeObject, sanitizeRichText } from '@/lib/server/sanitize';
+import { checkRateLimitPreset } from '@/lib/server/rate-limit';
 import { sanitizeFilenamePart } from '@/lib/video-export/passes/assets';
 import type { NextRequest } from 'next/server';
 
@@ -445,77 +445,6 @@ describe('Enterprise: Input Validation Edge Cases', () => {
       // Should produce a safe filename
       expect(sanitized.length).toBeGreaterThan(0);
     }
-  });
-});
-
-// ── Phase 10: Content Versioning ────────────────────────────────────────────
-
-describe('Enterprise: Content Versioning', () => {
-  it('creates version snapshots with incrementing version numbers', () => {
-    const versions = [
-      { version: 1, label: 'initial', createdAt: '2024-01-01T00:00:00Z' },
-      { version: 2, label: 'updated content', createdAt: '2024-01-02T00:00:00Z' },
-      { version: 3, label: 'minor fix', createdAt: '2024-01-03T00:00:00Z' },
-    ];
-
-    // Verify version numbers are sequential
-    for (let i = 1; i < versions.length; i++) {
-      expect(versions[i].version).toBe(versions[i - 1].version + 1);
-    }
-
-    // Latest version is the last one
-    const latest = versions[versions.length - 1];
-    expect(latest.version).toBe(3);
-  });
-
-  it('can restore to a previous version', () => {
-    const versions = [
-      { version: 1, content: { title: 'V1' } },
-      { version: 2, content: { title: 'V2' } },
-      { version: 3, content: { title: 'V3' } },
-    ];
-
-    const targetVersion = 2;
-    const restored = versions.find((v) => v.version === targetVersion);
-
-    expect(restored).toBeDefined();
-    expect(restored?.content.title).toBe('V2');
-  });
-});
-
-// ── Phase 11: Webhook Delivery ──────────────────────────────────────────────
-
-describe('Enterprise: Webhook Delivery', () => {
-  it('retries failed webhook deliveries', async () => {
-    let attempts = 0;
-    const maxAttempts = 3;
-
-    const deliverWebhook = async (): Promise<'delivered' | 'failed'> => {
-      attempts++;
-      if (attempts < maxAttempts) {
-        return 'failed';
-      }
-      return 'delivered';
-    };
-
-    let result: 'delivered' | 'failed' = 'failed';
-    for (let i = 0; i < maxAttempts && result === 'failed'; i++) {
-      result = await deliverWebhook();
-    }
-
-    expect(result).toBe('delivered');
-    expect(attempts).toBe(maxAttempts);
-  });
-
-  it('signs webhook payloads with HMAC', () => {
-    const payload = JSON.stringify({ event: 'classroom.created', id: 'cls-1' });
-    const secret = 'webhook-secret';
-
-    // Simple HMAC simulation (the real implementation uses crypto.subtle)
-    const signature = `sha256=${Buffer.from(payload + secret).toString('base64')}`;
-
-    expect(signature).toMatch(/^sha256=/);
-    expect(signature.length).toBeGreaterThan(20);
   });
 });
 

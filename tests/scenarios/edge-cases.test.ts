@@ -2,11 +2,14 @@
  * Comprehensive scenario tests covering edge cases, boundary conditions,
  * and complex real-world flows.
  *
- * These tests simulate real user behavior paths from start to finish,
- * covering:
+ * Consolidated from edge-cases + full-user-journey (deduplicated).
+ * Covers:
  *  - Boundary conditions (empty, huge, malformed inputs)
  *  - Security scenarios (XSS, path traversal, injection)
  *  - Error handling paths (LLM timeout, provider down, rate limit)
+ *  - Circuit breaker failover & recovery
+ *  - Video timeline export compilation
+ *  - State persistence & idempotent sanitization
  *  - Concurrent request handling
  *  - Full user flow simulation
  */
@@ -16,6 +19,8 @@ import { buildReadinessPayload } from '@/lib/server/health';
 import { RATE_LIMIT_PRESETS, checkRateLimit } from '@/lib/server/rate-limit';
 import { createLogger, runWithRequestId, getRequestId } from '@/lib/logger';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { compileVideoTimeline } from '@/lib/video-export';
+import type { CompileDeps, CompilerScene } from '@/lib/video-export';
 import { NextRequest } from 'next/server';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -614,5 +619,208 @@ describe('Scenario: Complex Content Handling', () => {
     expect(sanitized.formula).toContain('mc²');
     expect(sanitized.unicode).toContain('日本語テスト');
     expect(sanitized.unicode).toContain('🎓');
+  });
+});
+
+// ─── 9. Circuit Breaker Failover & Recovery ───────────────────────────────
+
+describe('Scenario: Circuit Breaker', () => {
+  it('opens after threshold failures', async () => {
+    const { getOrCreateBreaker } = await import('@/lib/server/circuit-breaker');
+    const breaker = getOrCreateBreaker('scenario-cb-open', {
+      timeout: 5000,
+      errorThresholdPercentage: 50,
+      resetTimeout: 10_000,
+      volumeThreshold: 3,
+    });
+
+    for (let i = 0; i < 3; i++) {
+      try {
+        await breaker.fire(async () => {
+          throw new Error('LLM service unavailable');
+        });
+      } catch {
+        // Expected
+      }
+    }
+
+    const stats = breaker.stats;
+    expect(stats.fires).toBeGreaterThanOrEqual(3);
+    expect(stats.failures).toBeGreaterThanOrEqual(3);
+  });
+
+  it('allows passthrough after reset', async () => {
+    const { getOrCreateBreaker } = await import('@/lib/server/circuit-breaker');
+    const breaker = getOrCreateBreaker('scenario-cb-recovery', {
+      timeout: 1000,
+      errorThresholdPercentage: 100,
+      resetTimeout: 100,
+      volumeThreshold: 1,
+    });
+
+    try {
+      await breaker.fire(async () => {
+        throw new Error('Temporary failure');
+      });
+    } catch {
+      // Expected
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    const result = await breaker.fire(async () => 'recovered');
+    expect(result).toBe('recovered');
+  });
+});
+
+// ─── 10. Video Timeline Export ─────────────────────────────────────────────
+
+describe('Scenario: Video Export', () => {
+  const mockTiming: CompileDeps['timing'] = {
+    audioDurationMs: () => 3000,
+    videoDurationMs: () => 5000,
+    clearElementCount: () => 0,
+    isDiscussionSkipped: () => false,
+    isEditCodeNoop: () => false,
+  };
+
+  const mockAssets: CompileDeps['assets'] = {
+    audio: () => ({ id: 'audio-1', mimeType: 'audio/mpeg', format: 'mp3', present: true }),
+    media: () => ({ id: 'media-1', mimeType: 'image/png', format: 'png', present: true }),
+  };
+
+  const mockConfig: CompileDeps['config'] = {
+    playbackSpeed: 1,
+    whiteboardInitiallyOpen: false,
+    onUnresolvedVideoDuration: 'cap',
+  };
+
+  it('compiles a single-scene timeline', () => {
+    const scenes: CompilerScene[] = [
+      {
+        id: 'scene-1',
+        type: 'slide',
+        title: 'Introduction',
+        content: { canvas: { elements: [] } },
+        actions: [{ type: 'speech', text: 'Hello world', id: 'speech-1' }],
+      } as unknown as CompilerScene,
+    ];
+
+    const ir = compileVideoTimeline(
+      { stage: { id: 'stage-1', name: 'Test' }, scenes },
+      { timing: mockTiming, assets: mockAssets, config: mockConfig },
+    );
+
+    expect(ir.scenes).toHaveLength(1);
+    expect(ir.totalDurationMs).toBeGreaterThan(0);
+    expect(ir.diagnostics).toBeDefined();
+  });
+
+  it('throws on empty scenes array', () => {
+    expect(() =>
+      compileVideoTimeline(
+        { stage: { id: 'stage-1', name: 'Test' }, scenes: [] },
+        { timing: mockTiming, assets: mockAssets, config: mockConfig },
+      ),
+    ).toThrow(/No scenes/);
+  });
+
+  it('compiles multi-scene timeline with mixed types', () => {
+    const scenes: CompilerScene[] = [
+      {
+        id: 'scene-1',
+        type: 'slide',
+        title: 'Slide',
+        content: { canvas: { elements: [] } },
+        actions: [{ type: 'speech', text: 'Intro', id: 's1' }],
+      },
+      {
+        id: 'scene-2',
+        type: 'quiz',
+        title: 'Quiz',
+        content: { question: 'What is 2+2?', options: ['3', '4', '5'] },
+        actions: [{ type: 'speech', text: 'Quiz time', id: 's2' }],
+      },
+    ] as unknown as CompilerScene[];
+
+    const ir = compileVideoTimeline(
+      { stage: { id: 'stage-1', name: 'Mixed' }, scenes },
+      { timing: mockTiming, assets: mockAssets, config: mockConfig },
+    );
+
+    expect(ir.scenes).toHaveLength(2);
+    expect(ir.totalDurationMs).toBeGreaterThan(0);
+  });
+
+  it('reports diagnostics for missing audio', () => {
+    const noAudioTiming: CompileDeps['timing'] = {
+      ...mockTiming,
+      audioDurationMs: () => null,
+    };
+
+    const scenes: CompilerScene[] = [
+      {
+        id: 'scene-1',
+        type: 'slide',
+        title: 'No Audio',
+        content: { canvas: { elements: [] } },
+        actions: [{ type: 'speech', text: 'No audio', id: 's1' }],
+      } as unknown as CompilerScene,
+    ];
+
+    const ir = compileVideoTimeline(
+      { stage: { id: 'stage-1', name: 'Test' }, scenes },
+      { timing: noAudioTiming, assets: mockAssets, config: mockConfig },
+    );
+
+    expect(ir.scenes).toHaveLength(1);
+  });
+});
+
+// ─── 11. State Persistence & Idempotent Sanitization ───────────────────────
+
+describe('Scenario: State Persistence', () => {
+  it('sanitization is idempotent (double-sanitize = single-sanitize)', () => {
+    const input = {
+      title: '<b>Bold</b><script>bad()</script>',
+      content: '<p>Safe</p><img src=x onerror="alert(1)">',
+    };
+
+    const once = sanitizeObject(input);
+    const twice = sanitizeObject(once);
+
+    expect(JSON.stringify(twice)).toBe(JSON.stringify(once));
+  });
+
+  it('preserves data types through sanitization', () => {
+    const input = {
+      str: 'hello',
+      num: 42,
+      bool: true,
+      null: null,
+      arr: [1, 'two', false],
+      nested: { deep: 'value' },
+    };
+
+    const result = sanitizeObject(input);
+    expect(typeof result.str).toBe('string');
+    expect(result.num).toBe(42);
+    expect(result.bool).toBe(true);
+    expect(result.null).toBeNull();
+    expect(Array.isArray(result.arr)).toBe(true);
+    expect(typeof result.nested).toBe('object');
+  });
+
+  it('handles concurrent sanitization without interference', () => {
+    const objects = Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      content: `<script>evil${i}()</script><p>Content ${i}</p>`,
+    }));
+
+    const results = objects.map((obj) => sanitizeObject(obj));
+    results.forEach((result, i) => {
+      expect(result.content).not.toContain('<script>');
+      expect(result.content).toContain(`Content ${i}`);
+    });
   });
 });

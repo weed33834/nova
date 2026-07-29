@@ -9,6 +9,7 @@ import { buildRequestOrigin } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { moderateContent } from '@/lib/server/content-moderation';
 import { authOptions } from '@/lib/auth/config';
 
 const log = createLogger('GenerateClassroom API');
@@ -44,6 +45,22 @@ export const POST = withApiHandler(async (req: NextRequest) => {
 
     if (!requirement) {
       return apiError('MISSING_REQUIRED_FIELD', 400, 'Missing required field: requirement');
+    }
+
+    // ── Content moderation: reject unsafe input before generation ──────────
+    const moderation = await moderateContent(requirement);
+    if (moderation.flagged) {
+      const flaggedCategories = Object.entries(moderation.categories)
+        .filter(([, v]) => v)
+        .map(([k]) => k)
+        .join(', ');
+      log.warn(`Content moderation blocked input [categories=${flaggedCategories}]`);
+      return apiError(
+        'INVALID_REQUEST',
+        400,
+        'Content moderation check failed',
+        `Input flagged for: ${flaggedCategories}`,
+      );
     }
 
     const baseUrl = buildRequestOrigin(req);

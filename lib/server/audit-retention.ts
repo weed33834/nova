@@ -17,7 +17,7 @@
  */
 import { getDb, getSqlite } from '@/lib/db/client';
 import { auditLogs } from '@/lib/db/schema';
-import { lt, count, min } from 'drizzle-orm';
+import { count, min } from 'drizzle-orm';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('AuditRetention');
@@ -52,7 +52,6 @@ export function pruneAuditLogs(): number {
   const cutoffIso = cutoff.toISOString();
 
   try {
-    const db = getDb();
     const sqlite = getSqlite();
 
     // Use raw SQL for efficient batch DELETE with RETURNING count

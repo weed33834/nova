@@ -39,7 +39,6 @@ export function registerOpenTelemetry(): void {
     });
   } catch {
     // Silently fail — OTel is observability, not critical path
-    // eslint-disable-next-line no-console
     console.warn('[OTel] Failed to register OpenTelemetry instrumentation');
   }
 }
