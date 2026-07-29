@@ -29,7 +29,7 @@ export interface ApiHandlerContext {
   log: Logger;
 }
 
-interface WithApiHandlerOptions {
+export interface WithApiHandlerOptions {
   /** Rate limit preset to apply. If omitted, no rate limiting. */
   rateLimit?: 'generation' | 'moderate' | 'light' | 'media' | 'auth';
   /** Rate limit scope name (defaults to the route path). */

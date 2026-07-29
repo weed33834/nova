@@ -256,3 +256,32 @@ export function closeDb(): void {
 export function resetDbForTests(): void {
   closeDb();
 }
+
+/**
+ * Return the raw better-sqlite3 instance for low-level operations
+ * (transactions, prepared statements, pragma).
+ */
+export function getSqlite(): Database.Database {
+  if (!_sqlite) getDb();
+  return _sqlite!;
+}
+
+/**
+ * Run a function inside a database transaction.
+ *
+ * Uses better-sqlite3's synchronous transaction, which is the safest
+ * approach for SQLite — the transaction commits only if the function
+ * returns normally, and rolls back on any thrown error.
+ *
+ * Example:
+ * ```ts
+ * await dbTransaction(() => {
+ *   db.insert(classrooms).values({ ... }).run();
+ *   db.insert(usageRecords).values({ ... }).run();
+ * });
+ * ```
+ */
+export function dbTransaction<T>(fn: () => T): T {
+  const sqlite = getSqlite();
+  return sqlite.transaction(fn)();
+}

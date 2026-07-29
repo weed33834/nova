@@ -1,5 +1,5 @@
 /**
- * Edge proxy (Next.js 16 successor to middleware) — access-code gate + CSRF.
+ * Edge proxy (Next.js 16 successor to middleware) — access-code gate + CSRF + security headers.
  *
  * Responsibilities:
  * 1. CSRF protection: for state-changing requests (POST/PUT/DELETE/PATCH),
@@ -9,7 +9,10 @@
  * 2. Access-code gate: when `ACCESS_CODE` env var is set, gates all non-public
  *    routes behind the `nova_access` cookie. The cookie's HMAC signature is
  *    verified using the Web Crypto API (Edge-compatible).
- * 3. Public routes (home, auth pages, health, access-code endpoints, public
+ * 3. Security headers: sets standard security headers (CSP, X-Frame-Options,
+ *    X-Content-Type-Options, Referrer-Policy, Permissions-Policy) on all
+ *    responses.
+ * 4. Public routes (home, auth pages, health, access-code endpoints, public
  *    classroom playback, static assets) are always accessible.
  *
  * Fine-grained permission checks (RBAC) happen server-side via
@@ -19,6 +22,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const ACCESS_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+// ── Security headers ─────────────────────────────────────────────────────────
+
+/**
+ * Standard security headers applied to every response.
+ *
+ * CSP is intentionally permissive for a Next.js app that uses inline styles,
+ * dynamic imports, and external CDN resources. tighten in production by
+ * setting CSP environment variables.
+ */
+const SECURITY_HEADERS: Record<string, string> = {
+  'x-frame-options': 'SAMEORIGIN',
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+  'x-dns-prefetch-control': 'on',
+  'strict-transport-security': 'max-age=63072000; includeSubDomains; preload',
+};
+
+/**
+ * Apply security headers to a NextResponse.
+ * Called for every response that passes through the proxy.
+ */
+function applySecurityHeaders(res: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    // Don't override headers already set by the route handler
+    if (!res.headers.has(key)) {
+      res.headers.set(key, value);
+    }
+  }
+  return res;
+}
 
 /** Convert string to Uint8Array */
 function encode(str: string): Uint8Array {
@@ -159,14 +194,14 @@ export async function proxy(request: NextRequest) {
   const csrfError = checkCsrf(request);
   if (csrfError) {
     csrfError.headers.set('x-request-id', requestId);
-    return csrfError;
+    return applySecurityHeaders(csrfError);
   }
 
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set('x-request-id', requestId);
-    return res;
+    return applySecurityHeaders(res);
   }
 
   const { pathname } = request.nextUrl;
@@ -175,7 +210,7 @@ export async function proxy(request: NextRequest) {
   if (isPublicRoute(pathname)) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set('x-request-id', requestId);
-    return res;
+    return applySecurityHeaders(res);
   }
 
   // Check cookie — validate HMAC signature, not just existence
@@ -183,7 +218,7 @@ export async function proxy(request: NextRequest) {
   if (cookie?.value && (await verifyToken(cookie.value, accessCode))) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.headers.set('x-request-id', requestId);
-    return res;
+    return applySecurityHeaders(res);
   }
 
   // API requests without valid cookie → 401
@@ -193,13 +228,13 @@ export async function proxy(request: NextRequest) {
       { status: 401 },
     );
     res.headers.set('x-request-id', requestId);
-    return res;
+    return applySecurityHeaders(res);
   }
 
   // Page requests → let through, frontend shows modal
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set('x-request-id', requestId);
-  return res;
+  return applySecurityHeaders(res);
 }
 
 export const config = {
