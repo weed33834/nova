@@ -6,6 +6,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { getSkillCatalogEntry, BUILT_IN_SKILL_IDS } from '@/lib/agent/tools/registry';
 import { CustomSkill, validateCustomSkill } from '@/lib/agent/tools/custom-skill';
 import {
@@ -55,10 +56,11 @@ interface UpdateSkillBody {
   enabled?: unknown;
 }
 
-export async function PUT(
+export const PUT = withApiHandler(async (
   req: NextRequest,
+  _ctx,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
     const { id } = await params;
 
@@ -102,12 +104,13 @@ export async function PUT(
       label: 'SkillDetailAPI',
     });
   }
-}
+}, { rateLimit: 'moderate' });
 
-export async function DELETE(
+export const DELETE = withApiHandler(async (
   _req: NextRequest,
+  _ctx,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
     const { id } = await params;
 
@@ -128,4 +131,4 @@ export async function DELETE(
       label: 'SkillDetailAPI',
     });
   }
-}
+}, { rateLimit: 'moderate' });

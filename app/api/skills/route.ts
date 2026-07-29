@@ -11,6 +11,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { SKILL_CATALOG, V0_ALLOWLIST } from '@/lib/agent/tools/registry';
 import {
@@ -72,7 +73,7 @@ interface CreateSkillBody {
   enabled?: unknown;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const body = (await req.json()) as CreateSkillBody;
     const now = new Date().toISOString();
@@ -118,4 +119,4 @@ export async function POST(req: NextRequest) {
       label: 'SkillsAPI',
     });
   }
-}
+}, { rateLimit: 'moderate' });

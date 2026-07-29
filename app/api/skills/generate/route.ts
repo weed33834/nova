@@ -14,6 +14,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { validateCustomSkill } from '@/lib/agent/tools/custom-skill';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { callLLM } from '@/lib/ai/llm';
@@ -46,7 +47,7 @@ interface GenerateBody {
   description?: unknown;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const body = (await req.json().catch(() => ({}))) as GenerateBody;
     const description =
@@ -109,4 +110,4 @@ export async function POST(req: NextRequest) {
       label: 'SkillGenAPI',
     });
   }
-}
+}, { rateLimit: 'generation' });

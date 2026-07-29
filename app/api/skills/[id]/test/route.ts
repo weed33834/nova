@@ -11,6 +11,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { BUILT_IN_SKILL_IDS } from '@/lib/agent/tools/registry';
 import {
   buildCustomSkillTool,
@@ -23,10 +24,11 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('SkillTestAPI');
 
-export async function POST(
+export const POST = withApiHandler(async (
   req: NextRequest,
+  _ctx,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
     const { id } = await params;
 
@@ -84,4 +86,4 @@ export async function POST(
       label: 'SkillTestAPI',
     });
   }
-}
+}, { rateLimit: 'generation' });

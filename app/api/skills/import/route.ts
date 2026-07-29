@@ -10,6 +10,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { CustomSkill, validateCustomSkill } from '@/lib/agent/tools/custom-skill';
 import {
   readCustomSkill,
@@ -26,7 +27,7 @@ interface ImportBody {
   overwrite?: unknown;
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const body = (await req.json()) as ImportBody;
     const overwrite = body.overwrite === true;
@@ -89,4 +90,4 @@ export async function POST(req: NextRequest) {
       label: 'SkillImportAPI',
     });
   }
-}
+}, { rateLimit: 'moderate' });

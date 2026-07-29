@@ -9,6 +9,7 @@ import { generateApiKey } from '@/lib/server/api-key-auth';
 import { validateBody } from '@/lib/server/validate';
 import { recordAuditLog } from '@/lib/db/audit';
 import { extractPagination, paginateArray } from '@/lib/server/pagination';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ApiKeysRoute');
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
 }
 
 /** POST /api/api-keys — 创建新 API key（明文仅返回一次） */
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const session = await requirePermission('apikey:manage');
     const userId = (session.user as { id: string }).id;
@@ -99,4 +100,4 @@ export async function POST(req: NextRequest) {
     log.error('Failed to create API key:', error);
     return apiError('INTERNAL_ERROR', 500, 'Failed to create API key');
   }
-}
+}, { rateLimit: 'auth' });

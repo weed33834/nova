@@ -4,16 +4,18 @@ import { apiKeys } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { requirePermission } from '@/lib/auth/rbac';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ApiKeysRoute');
 
 /** DELETE /api/api-keys/[id] — 撤销 API key */
-export async function DELETE(
+export const DELETE = withApiHandler(async (
   _req: NextRequest,
+  _ctx,
   { params }: { params: Promise<{ id: string }> },
-) {
+) => {
   try {
     const session = await requirePermission('apikey:manage');
     const userId = (session.user as { id: string }).id;
@@ -47,4 +49,4 @@ export async function DELETE(
     log.error('Failed to revoke API key:', error);
     return apiError('INTERNAL_ERROR', 500, 'Failed to revoke API key');
   }
-}
+}, { rateLimit: 'auth' });

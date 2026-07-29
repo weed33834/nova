@@ -6,7 +6,7 @@ import { validateBody } from '@/lib/server/validate';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
-import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
+import { withApiHandler } from '@/lib/server/api-handler';
 
 const log = createLogger('Signup API');
 
@@ -23,9 +23,7 @@ const signupSchema = z.object({
  * Intentionally simple: no email verification flow (Phase 3B baseline).
  * Email verification can be layered on later via NextAuth's EmailProvider.
  */
-export async function POST(req: NextRequest) {
-  const rlResult = await checkRateLimitPreset(req, 'auth', 'signup');
-  if (rlResult.limited) return rateLimitedResponse(rlResult);
+export const POST = withApiHandler(async (req: NextRequest) => {
   try {
     const body = await req.json();
     const validation = validateBody(signupSchema, body);
@@ -58,4 +56,4 @@ export async function POST(req: NextRequest) {
     log.error('Signup failed:', error);
     return apiError('INTERNAL_ERROR', 500, 'Failed to create user', message);
   }
-}
+}, { rateLimit: 'auth' });
