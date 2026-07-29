@@ -29,12 +29,15 @@ import { llmApiError } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { checkGeneratedContent } from '@/lib/guardrails/pipeline-check';
 import { GuardrailBlockError } from '@/lib/guardrails/types';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('Scene Actions API');
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'scene-actions');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let outlineTitle: string | undefined;
   let resolvedModelString: string | undefined;
   try {

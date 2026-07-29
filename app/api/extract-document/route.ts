@@ -21,6 +21,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('Extract Document');
 const MAX_EXTRACT_DOCUMENT_FILE_SIZE_BYTES = 50 * 1024 * 1024;
@@ -111,6 +112,8 @@ function formatTimestamp(ms: number): string {
 }
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'moderate', 'extract-document');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let fileName: string | undefined;
   let resolvedProviderId: string | undefined;
   try {

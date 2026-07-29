@@ -29,12 +29,15 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('VideoGeneration API');
 
 export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
+  const rlResult = await checkRateLimitPreset(request, 'media', 'generate-video');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   try {
     const body = (await request.json()) as VideoGenerationOptions;
 

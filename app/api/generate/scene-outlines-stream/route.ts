@@ -40,6 +40,7 @@ import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { sortDocumentImagesForVision } from '@/lib/document/bundle';
 import { resolveVocationalActive } from '@/lib/config/feature-flags';
 import { getEffectiveMediaFlags } from '@/lib/utils/course-format';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 const log = createLogger('Outlines Stream');
 
 export const maxDuration = 300;
@@ -285,6 +286,8 @@ function ensureUniqueOutlineId(outline: SceneOutline, usedIds: Set<string>): Sce
 }
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'scene-outlines-stream');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let requirementSnippet: string | undefined;
   let resolvedModelString: string | undefined;
   try {

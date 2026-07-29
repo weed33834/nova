@@ -7,12 +7,15 @@ import { createClassroomGenerationJob } from '@/lib/server/classroom-job-store';
 import { buildRequestOrigin } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('GenerateClassroom API');
 
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'generate-classroom');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let requirementSnippet: string | undefined;
   try {
     const rawBody = (await req.json()) as Partial<GenerateClassroomInput>;

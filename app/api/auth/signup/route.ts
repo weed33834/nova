@@ -4,6 +4,7 @@ import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('Signup API');
 
@@ -15,6 +16,8 @@ const log = createLogger('Signup API');
  * Email verification can be layered on later via NextAuth's EmailProvider.
  */
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'auth', 'signup');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   try {
     const body = (await req.json()) as {
       email?: string;

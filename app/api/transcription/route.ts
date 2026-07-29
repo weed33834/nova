@@ -10,6 +10,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 const log = createLogger('Transcription');
 
 export const maxDuration = 60;
@@ -21,6 +22,8 @@ export const maxDuration = 60;
 const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'moderate', 'transcription');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let resolvedProviderId: string | undefined;
   let resolvedModelId: string | undefined;
   try {

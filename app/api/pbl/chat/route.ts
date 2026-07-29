@@ -12,6 +12,7 @@ import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 const log = createLogger('PBL Chat');
 
 // Single LLM turn — match chat's 60s ceiling so a slow model isn't killed by
@@ -28,6 +29,8 @@ interface PBLChatRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'moderate', 'pbl-chat');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let agentName: string | undefined;
   let resolvedAgentType: string | undefined;
   try {

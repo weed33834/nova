@@ -28,12 +28,15 @@ import { resolveVocationalActive } from '@/lib/config/feature-flags';
 import { sortDocumentImagesForVision } from '@/lib/document/bundle';
 import { checkGeneratedText } from '@/lib/guardrails/pipeline-check';
 import { GuardrailBlockError } from '@/lib/guardrails/types';
+import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
 
 const log = createLogger('Scene Content API');
 
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
+  const rlResult = await checkRateLimitPreset(req, 'generation', 'scene-content');
+  if (rlResult.limited) return rateLimitedResponse(rlResult);
   let outlineTitle: string | undefined;
   let resolvedModelString: string | undefined;
   try {
