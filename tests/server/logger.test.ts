@@ -6,10 +6,9 @@ describe('Structured Logger (pino)', () => {
 
   beforeEach(() => {
     // Reset env between tests
-    process.env = { ...originalEnv };
+    process.env = { ...originalEnv } as NodeJS.ProcessEnv;
     // Force JSON output for testability
     process.env.LOG_FORMAT = 'json';
-    process.env.NODE_ENV = 'production';
   });
 
   afterEach(() => {

@@ -8,14 +8,16 @@ function mockRequest(
   body?: unknown,
 ): NextRequest {
   const url = `http://localhost:3000${pathname}`;
-  const init: RequestInit = {
+  const headers: Record<string, string> = { 'content-type': 'application/json', host: 'localhost:3000' };
+  const init: { method: string; headers: Record<string, string>; body?: string } = {
     method,
-    headers: { 'content-type': 'application/json', host: 'localhost:3000' },
+    headers,
   };
   if (body !== undefined) {
     init.body = JSON.stringify(body);
   }
-  return new NextRequest(url, init);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new NextRequest(url, init as any);
 }
 
 describe('withApiHandler', () => {

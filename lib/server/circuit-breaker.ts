@@ -112,15 +112,40 @@ export async function withCircuitBreaker<T>(
 const breakers = new Map<string, CircuitBreaker>();
 
 /**
- * Register a breaker for monitoring. Returns the breaker for chaining.
+ * Get an existing registered breaker by name, or undefined if not registered.
  */
-export function registerBreaker<TArgs extends unknown[], TResult>(
+export function getBreaker(name: string): CircuitBreaker | undefined {
+  return breakers.get(name);
+}
+
+/**
+ * Get or create a persistent breaker for a named service.
+ *
+ * The breaker wraps a generic executor: callers pass their function as the
+ * argument to `.fire()`. This allows a single breaker instance to protect
+ * many different calls to the same external service (e.g. all OpenAI API
+ * calls share one 'llm:openai' breaker).
+ *
+ * Usage:
+ * ```ts
+ * const breaker = getOrCreateBreaker('llm:openai', {
+ *   timeout: 30000,
+ *   errorThresholdPercentage: 50,
+ * });
+ * const result = await breaker.fire(async () => {
+ *   return await generateText({ model: openai('gpt-4'), prompt: '...' });
+ * });
+ * ```
+ */
+export function getOrCreateBreaker(
   name: string,
-  fn: (...args: TArgs) => Promise<TResult>,
   options?: BreakerOptions,
-): CircuitBreaker<TArgs, TResult> {
-  const breaker = createBreaker(name, fn, options);
-  breakers.set(name, breaker as unknown as CircuitBreaker);
+): CircuitBreaker<[() => Promise<unknown>], unknown> {
+  let breaker = breakers.get(name) as CircuitBreaker<[() => Promise<unknown>], unknown> | undefined;
+  if (!breaker) {
+    breaker = createBreaker(name, async (fn: () => Promise<unknown>) => fn(), options);
+    breakers.set(name, breaker as unknown as CircuitBreaker);
+  }
   return breaker;
 }
 

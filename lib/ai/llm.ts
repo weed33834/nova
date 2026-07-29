@@ -7,6 +7,7 @@
 import { generateText, streamText } from 'ai';
 import type { GenerateTextResult, JSONValue, LanguageModel, StreamTextResult } from 'ai';
 import { createLogger } from '@/lib/logger';
+import { getOrCreateBreaker } from '@/lib/server/circuit-breaker';
 import { PROVIDERS } from './providers';
 import { thinkingContext } from './thinking-context';
 import { getModelMetadataKey } from './model-metadata';
@@ -45,6 +46,47 @@ function getModelId(params: GenerateTextParams | StreamTextParams): string {
   if (typeof m === 'string') return m;
   if (m && typeof m === 'object' && 'modelId' in m) return (m as { modelId: string }).modelId;
   return 'unknown';
+}
+
+// ── Circuit breaker integration ────────────────────────────────────────────
+//
+// Each LLM provider gets its own circuit breaker so an outage on one provider
+// doesn't block calls to others. Breakers are created lazily on first use and
+// persist for the process lifetime (visible in /api/health/ready).
+//
+// Breaker config: 30s timeout, 50% error threshold, 10s reset, min 10 calls
+// before evaluating — tuned for LLM API latency characteristics.
+
+const LLM_BREAKER_OPTIONS = {
+  timeout: 30_000,
+  errorThresholdPercentage: 50,
+  resetTimeout: 10_000,
+  volumeThreshold: 10,
+} as const;
+
+/**
+ * Extract the provider name from a model identifier for breaker namespacing.
+ * Model IDs are typically in `provider:model` or just `model` format.
+ */
+function getProviderFromModelId(modelId: string): string {
+  const colonIdx = modelId.indexOf(':');
+  if (colonIdx > 0) return modelId.substring(0, colonIdx);
+  // If no colon, try to match known provider prefixes
+  if (modelId.startsWith('gpt') || modelId.startsWith('o1') || modelId.startsWith('o3')) return 'openai';
+  if (modelId.startsWith('claude')) return 'anthropic';
+  if (modelId.startsWith('gemini')) return 'google';
+  return 'unknown';
+}
+
+/**
+ * Wrap a function with the appropriate LLM circuit breaker.
+ * Returns the result of the function, or throws if the circuit is open.
+ */
+async function withLlmBreaker<T>(modelId: string, fn: () => Promise<T>): Promise<T> {
+  const provider = getProviderFromModelId(modelId);
+  const breakerName = `llm:${provider}`;
+  const breaker = getOrCreateBreaker(breakerName, LLM_BREAKER_OPTIONS);
+  return breaker.fire(fn) as Promise<T>;
 }
 
 // ---------------------------------------------------------------------------
@@ -357,8 +399,12 @@ export async function callLLM<T extends GenerateTextParams>(
       // Wrap in thinkingContext so the custom fetch wrapper in providers.ts
       // can read the config and inject vendor-specific body params for
       // OpenAI-compatible providers.
+      // Circuit breaker protects against cascading failures when a provider
+      // is down — the breaker opens after repeated failures, failing fast
+      // instead of waiting for timeouts.
+      const modelId = getModelId(params);
       const result = await thinkingContext.run(effectiveThinking, () =>
-        generateText(injectedParams),
+        withLlmBreaker(modelId, () => generateText(injectedParams)),
       );
 
       // Validate result (only when retries are configured)

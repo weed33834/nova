@@ -13,6 +13,7 @@ import {
 import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
+import { sanitizeObject, containsDangerousHtml } from '@/lib/server/sanitize';
 import { authOptions } from '@/lib/auth/config';
 import type { Stage, Scene } from '@/lib/types/stage';
 
@@ -45,7 +46,18 @@ export async function POST(request: NextRequest) {
     stageId = stage?.id;
     sceneCount = scenes?.length;
 
-    const id = stage.id || randomUUID();
+    // ── Input sanitization: strip XSS vectors from stored content ──────────
+    // Deeply sanitize all string values in stage and scenes to prevent
+    // stored XSS attacks (script tags, event handlers, javascript: URLs).
+    const sanitizedStage = sanitizeObject(stage);
+    const sanitizedScenes = sanitizeObject(scenes);
+
+    if (containsDangerousHtml(JSON.stringify(sanitizedStage)) ||
+        containsDangerousHtml(JSON.stringify(sanitizedScenes))) {
+      log.warn('Dangerous HTML detected and sanitized in classroom content');
+    }
+
+    const id = sanitizedStage.id || randomUUID();
     if (typeof id !== 'string' || !isValidClassroomId(id)) {
       return apiError(API_ERROR_CODES.INVALID_REQUEST, 400, 'Invalid classroom id');
     }
@@ -63,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const persisted = await persistClassroom(
-      { id, stage: { ...stage, id }, scenes, ownerId },
+      { id, stage: { ...sanitizedStage, id }, scenes: sanitizedScenes, ownerId },
       baseUrl,
     );
 
