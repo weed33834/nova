@@ -86,6 +86,10 @@ export function apiError(
 /**
  * Like `apiError`, but also logs the error with context for server-side debugging.
  * Use this in catch blocks where you want both a log entry and a structured response.
+ *
+ * When `SENTRY_DSN` is set, the error is also reported to Sentry for
+ * centralized error tracking. This uses a synchronous require to avoid
+ * adding async overhead to error responses.
  */
 export function apiErrorLogged(
   code: ApiErrorCode,
@@ -106,6 +110,21 @@ export function apiErrorLogged(
     options?.context ? `  context: ${options.context}` : '',
     options?.cause ?? '',
   );
+
+  // Report to Sentry when configured (synchronous, non-blocking)
+  if (process.env.SENTRY_DSN) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const Sentry = require('@sentry/nextjs');
+      Sentry.captureException(options?.cause ?? new Error(error), {
+        tags: { errorCode: code, label },
+        extra: { context: options?.context, status },
+      });
+    } catch {
+      // Sentry not available — silently skip
+    }
+  }
+
   return apiError(code, status, error, options?.details, options?.context);
 }
 

@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   // Next's standalone trace chunks can contain ':' on Windows. Generate the
@@ -86,4 +87,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap with Sentry config — no-op when SENTRY_DSN / SENTRY_AUTH_TOKEN are unset.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  widenClientFileUpload: true,
+  disableLogger: true,
+});
