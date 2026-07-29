@@ -58,6 +58,10 @@ export function buildReadinessPayload() {
       learningAnalytics: true,
       // Content moderation
       contentModeration: !!process.env.OPENAI_API_KEY,
+      // Audit log retention (always on, configurable via AUDIT_LOG_RETENTION_DAYS)
+      auditRetention: true,
+      // CORS (configured via CORS_ALLOWED_ORIGINS)
+      cors: !!process.env.CORS_ALLOWED_ORIGINS,
     },
     circuitBreakers: breakerStatuses,
   };

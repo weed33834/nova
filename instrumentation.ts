@@ -26,5 +26,9 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const { registerGracefulShutdown } = await import('@/lib/server/shutdown');
     registerGracefulShutdown();
+
+    // Start audit log retention timer (prunes old entries every 24h)
+    const { startAuditRetentionTimer } = await import('@/lib/server/audit-retention');
+    startAuditRetentionTimer();
   }
 }
