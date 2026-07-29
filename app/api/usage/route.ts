@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import {
   readUsageRecords,
   type UsageRecord,
@@ -110,7 +111,8 @@ export async function GET(req: NextRequest) {
     return apiError(
       'INTERNAL_ERROR',
       500,
-      error instanceof Error ? error.message : 'Failed to read usage',
+      'Failed to read usage data.',
+      sanitizedErrorDetails(error),
     );
   }
 }

@@ -8,6 +8,7 @@ import {
 import type { ASRProviderId } from '@/lib/audio/types';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 const log = createLogger('Transcription');
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
       'TRANSCRIPTION_FAILED',
       500,
       'Transcription failed',
-      error instanceof Error ? error.message : 'Unknown error',
+      sanitizedErrorDetails(error),
     );
   }
 }

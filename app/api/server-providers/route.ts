@@ -9,6 +9,7 @@ import {
   getParallelSceneConcurrency,
 } from '@/lib/server/provider-config';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ServerProviders');
@@ -32,7 +33,8 @@ export async function GET() {
     return apiError(
       'INTERNAL_ERROR',
       500,
-      error instanceof Error ? error.message : 'Unknown error',
+      'Failed to load server providers.',
+      sanitizedErrorDetails(error),
     );
   }
 }

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CLASSROOMS_DIR, isValidClassroomId } from '@/lib/server/classroom-storage';
 import { createLogger } from '@/lib/logger';
 import { apiError } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 
 const log = createLogger('ClassroomMedia');
 
@@ -125,7 +126,7 @@ export async function GET(
       'INTERNAL_ERROR',
       500,
       'Failed to load classroom media file.',
-      error instanceof Error ? error.message : String(error),
+      sanitizedErrorDetails(error),
       `Loading classroom media: ${joined}`,
     );
   }

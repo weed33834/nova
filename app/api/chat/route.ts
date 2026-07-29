@@ -17,6 +17,7 @@ import { statelessGenerate } from '@/lib/orchestration/stateless-generate';
 import { isProviderKeyRequired } from '@/lib/ai/providers';
 import type { StatelessChatRequest, StatelessEvent } from '@/lib/types/chat';
 import { apiError } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { createLogger } from '@/lib/logger';
 import { resolveModel } from '@/lib/server/resolve-model';
 import type { ThinkingConfig } from '@/lib/types/provider';
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
           const errorEvent: StatelessEvent = {
             type: 'error',
             data: {
-              message: error instanceof Error ? error.message : String(error),
+              message: sanitizedErrorDetails(error),
             },
           };
           await writer.write(encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`));
@@ -201,7 +202,8 @@ export async function POST(req: NextRequest) {
     return apiError(
       'INTERNAL_ERROR',
       500,
-      error instanceof Error ? error.message : 'Failed to process request',
+      'Failed to process request.',
+      sanitizedErrorDetails(error),
     );
   }
 }

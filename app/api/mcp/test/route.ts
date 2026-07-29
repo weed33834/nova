@@ -16,6 +16,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { getMCPClientManager } from '@/lib/mcp/client-manager';
 import type { MCPServerConfig } from '@/lib/mcp/config';
 import { createLogger } from '@/lib/logger';
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
   try {
     await manager.connectAll(singleServerConfig);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = sanitizedErrorDetails(error);
     log.warn(`MCP test threw for "${server.name}": ${message}`);
     return apiSuccess({
       success: false,

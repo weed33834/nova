@@ -1,5 +1,6 @@
 import { type NextRequest } from 'next/server';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import {
   isValidClassroomJobId,
   readClassroomGenerationJob,
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ jobId: 
       'INTERNAL_ERROR',
       500,
       'Failed to retrieve classroom generation job',
-      error instanceof Error ? error.message : String(error),
+      sanitizedErrorDetails(error),
     );
   }
 }

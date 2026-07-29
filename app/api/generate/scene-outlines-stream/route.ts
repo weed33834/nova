@@ -34,6 +34,7 @@ import type {
   ImageMapping,
 } from '@/lib/types/generation';
 import { apiError } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { createLogger } from '@/lib/logger';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { sortDocumentImagesForVision } from '@/lib/document/bundle';
@@ -582,7 +583,7 @@ export async function POST(req: NextRequest) {
                 stopHeartbeat();
                 return;
               }
-              lastError = error instanceof Error ? error.message : String(error);
+              lastError = sanitizedErrorDetails(error);
               log.warn(
                 `Outlines stream error detail (attempt ${attempt}/${MAX_STREAM_RETRIES + 1}): ${lastError}`,
               );
@@ -629,7 +630,7 @@ export async function POST(req: NextRequest) {
         } catch (error) {
           const errorEvent = JSON.stringify({
             type: 'error',
-            error: error instanceof Error ? error.message : String(error),
+            error: sanitizedErrorDetails(error),
           });
           controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
         } finally {

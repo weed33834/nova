@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server';
 import { createUserWithCredentials } from '@/lib/auth/config';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { recordAuditLog } from '@/lib/db/audit';
 import { createLogger } from '@/lib/logger';
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     log.info(`User signed up: ${user.email}`);
     return apiSuccess({ id: user.id, email: user.email, role: user.role }, 201);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = sanitizedErrorDetails(error);
     if (message.includes('already exists')) {
       return apiError('EMAIL_TAKEN', 409, message);
     }

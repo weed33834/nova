@@ -19,6 +19,7 @@ import type { MediaArtifact } from '@/lib/document';
 import { normalizeDocumentMimeType, SUPPORTED_MEDIA_MIME_TYPES } from '@/lib/document/mime';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 
 const log = createLogger('Extract Document');
@@ -343,6 +344,11 @@ export async function POST(req: NextRequest) {
       `Document extraction failed [provider=${resolvedProviderId ?? 'unknown'}, file="${fileName ?? 'unknown'}"]:`,
       error,
     );
-    return apiError('PARSE_FAILED', 500, error instanceof Error ? error.message : 'Unknown error');
+    return apiError(
+      'PARSE_FAILED',
+      500,
+      'Document extraction failed. Please try again.',
+      sanitizedErrorDetails(error),
+    );
   }
 }

@@ -24,6 +24,7 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import { isMCPExposureEnabled } from '@/lib/mcp/config';
 import { createNovaMcpServer } from '@/lib/mcp/server/nova-server';
 import { createLogger } from '@/lib/logger';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 
 const log = createLogger('NovaMCPServer');
 
@@ -147,7 +148,7 @@ async function handleMcpRequest(req: NextRequest): Promise<Response> {
         jsonrpc: '2.0',
         error: {
           code: -32603,
-          message: error instanceof Error ? error.message : 'Internal error',
+          message: sanitizedErrorDetails(error),
         },
         id: null,
       }),

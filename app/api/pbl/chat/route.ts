@@ -10,6 +10,7 @@ import { callLLM } from '@/lib/ai/llm';
 import type { PBLAgent, PBLIssue } from '@/lib/pbl/types';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 const log = createLogger('PBL Chat');
 
@@ -82,6 +83,11 @@ export async function POST(req: NextRequest) {
       `PBL chat failed [agent="${agentName ?? 'unknown'}", type=${resolvedAgentType ?? 'question'}]:`,
       error,
     );
-    return apiError('INTERNAL_ERROR', 500, error instanceof Error ? error.message : String(error));
+    return apiError(
+      'INTERNAL_ERROR',
+      500,
+      'PBL chat failed. Please try again.',
+      sanitizedErrorDetails(error),
+    );
   }
 }

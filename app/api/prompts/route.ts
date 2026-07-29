@@ -10,6 +10,7 @@
  */
 import { getPromptRegistry } from '@/lib/prompts';
 import { apiSuccess, apiError } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('PromptsAPI');
@@ -22,7 +23,7 @@ export async function GET() {
       total: registry.length,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = sanitizedErrorDetails(error);
     log.error('Failed to list prompts:', message);
     return apiError('INTERNAL_ERROR', 500, 'Failed to list prompts');
   }

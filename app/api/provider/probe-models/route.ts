@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { fetchModels, ModelFetchError } from '@/lib/server/model-fetch';
 
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
     return apiError(
       'INTERNAL_ERROR',
       500,
-      error instanceof Error ? error.message : 'Failed to probe models',
+      'Failed to probe models.',
+      sanitizedErrorDetails(error),
     );
   }
 }

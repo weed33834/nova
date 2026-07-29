@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { APICallError, RetryError } from 'ai';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess, type ApiErrorCode } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModel } from '@/lib/server/resolve-model';
 import { callLLM } from '@/lib/ai/llm';
 const log = createLogger('VerifyModel');
@@ -215,7 +216,7 @@ export async function POST(req: NextRequest) {
       'INTERNAL_ERROR',
       500,
       'An unexpected error occurred during model verification. Please try again.',
-      error instanceof Error ? error.message : String(error),
+      sanitizedErrorDetails(error),
       `Model verification: ${modelLabel}`,
     );
   }

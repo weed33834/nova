@@ -11,6 +11,7 @@
  */
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { SKILL_CATALOG, V0_ALLOWLIST } from '@/lib/agent/tools/registry';
 import {
   CustomSkill,
@@ -54,7 +55,7 @@ export async function GET() {
       enabledCount: skills.filter((s) => s.enabled).length,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = sanitizedErrorDetails(error);
     log.error('Failed to list skills:', message);
     return apiError('INTERNAL_ERROR', 500, 'Failed to list skills');
   }
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     log.info(`created custom skill "${created.id}"`);
     return apiSuccess({ skill: created }, 201);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = sanitizedErrorDetails(error);
     if (message.includes('already exists')) {
       return apiError('INVALID_REQUEST', 409, message);
     }

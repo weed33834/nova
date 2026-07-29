@@ -30,6 +30,7 @@ import {
 import type { ImageProviderId, ImageGenerationOptions } from '@/lib/media/types';
 import { createLogger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 
 const log = createLogger('ImageGeneration API');
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({ result });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = sanitizedErrorDetails(error);
     // Detect content safety filter rejections (e.g. Seedream OutputImageSensitiveContentDetected)
     if (message.includes('SensitiveContent') || message.includes('sensitive information')) {
       log.warn(`Image blocked by content safety filter: ${message}`);

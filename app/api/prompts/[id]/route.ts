@@ -10,6 +10,7 @@ import type { NextRequest } from 'next/server';
 import { loadPrompt } from '@/lib/prompts';
 import type { PromptId } from '@/lib/prompts';
 import { apiSuccess, apiError } from '@/lib/server/api-response';
+import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('PromptDetailAPI');
@@ -32,7 +33,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = sanitizedErrorDetails(error);
     log.error('Failed to load prompt:', message);
     return apiError('INTERNAL_ERROR', 500, 'Failed to load prompt');
   }
