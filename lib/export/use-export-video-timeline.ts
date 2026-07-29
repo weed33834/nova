@@ -27,6 +27,7 @@ import {
   type AssetMeta,
 } from '@/lib/video-export';
 import type { SpeechAction, PlayVideoAction } from '@nova/dsl';
+import type { Scene } from '@/lib/types/stage';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ExportVideoTimeline');
@@ -83,12 +84,55 @@ function createDexieAssetSource(
 }
 
 /**
+ * Extract all audio action IDs from the scenes' actions arrays.
+ * Used to selectively load only the needed audio records from IndexedDB,
+ * instead of loading ALL records (which includes heavy Blob data).
+ */
+function extractAudioIds(scenes: readonly Scene[]): string[] {
+  const ids: string[] = [];
+  for (const scene of scenes) {
+    for (const action of scene.actions ?? []) {
+      if (action.type === 'speech') {
+        const actionId = (action as { id?: string }).id;
+        if (actionId) ids.push(actionId);
+      }
+    }
+  }
+  return ids;
+}
+
+/**
+ * Extract all media element IDs from scenes' canvas elements.
+ * Used to selectively load only the needed media records.
+ */
+function extractMediaElementIds(scenes: readonly Scene[]): Set<string> {
+  const ids = new Set<string>();
+  for (const scene of scenes) {
+    const canvas = (scene.content as { canvas?: { elements?: Array<{ id?: string }> } })?.canvas;
+    if (canvas?.elements) {
+      for (const el of canvas.elements) {
+        if (el.id) ids.add(el.id);
+      }
+    }
+  }
+  return ids;
+}
+
+/**
  * Pre-resolve audio durations and media metadata from IndexedDB.
  *
  * The compiler needs synchronous access to durations (the pure compile fold
- * can't await). We pre-load everything into Maps before calling compileVideoTimeline.
+ * can't await). We pre-load only the metadata needed for the current stage's
+ * scenes into Maps before calling compileVideoTimeline.
+ *
+ * Performance: Only loads records referenced by the current stage's scenes,
+ * not ALL records in the database. This avoids loading large Blob data for
+ * other stages' audio/media.
  */
-async function preloadAssetMetadata(_stageId: string): Promise<{
+async function preloadAssetMetadata(
+  stageId: string,
+  scenes: readonly Scene[],
+): Promise<{
   audioDurationMap: Map<string, number>;
   videoDurationMap: Map<string, number>;
   audioMetaMap: Map<string, AssetMeta>;
@@ -100,29 +144,42 @@ async function preloadAssetMetadata(_stageId: string): Promise<{
   const mediaMetaMap = new Map<string, AssetMeta>();
 
   try {
-    // Load audio records from Dexie (audioFiles table)
-    const audioRecords = await db.audioFiles.toArray();
-    for (const rec of audioRecords) {
-      // AudioFileRecord.id is the audioId (e.g. "tts_s1_a1"), which encodes
-      // the scene + action. We use it directly as the lookup key.
-      if (rec.duration) {
-        audioDurationMap.set(rec.id, rec.duration * 1000);
+    // ── Audio: load only records referenced by this stage's speech actions ──
+    const audioIds = extractAudioIds(scenes);
+    if (audioIds.length > 0) {
+      // Use where('id').anyOf() to avoid loading ALL audio records
+      // (which would include heavy Blob data from every stage)
+      const audioRecords = await db.audioFiles.where('id').anyOf(audioIds).toArray();
+      for (const rec of audioRecords) {
+        if (rec.duration) {
+          audioDurationMap.set(rec.id, rec.duration * 1000);
+        }
+        audioMetaMap.set(rec.id, {
+          id: rec.id,
+          mimeType: rec.format === 'wav' ? 'audio/wav' : 'audio/mpeg',
+          format: rec.format || 'mp3',
+          durationMs: rec.duration ? rec.duration * 1000 : undefined,
+          present: true,
+        });
       }
-      audioMetaMap.set(rec.id, {
-        id: rec.id,
-        mimeType: rec.format === 'wav' ? 'audio/wav' : 'audio/mpeg',
-        format: rec.format || 'mp3',
-        durationMs: rec.duration ? rec.duration * 1000 : undefined,
-        present: true,
-      });
     }
 
-    // Load media records from Dexie (mediaFiles table)
-    const mediaRecords = await db.mediaFiles.toArray();
+    // ── Media: filter by stageId using the compound key prefix ──
+    // MediaFileRecord.id is `${stageId}:${elementId}`, so we can use
+    // startsWith to only load media for the current stage.
+    const mediaRecords = await db.mediaFiles
+      .where('id')
+      .startsWith(`${stageId}:`)
+      .toArray();
+
+    // Also filter to only elements referenced in scenes (further reduction)
+    const referencedElementIds = extractMediaElementIds(scenes);
+
     for (const rec of mediaRecords) {
-      // MediaFileRecord.id is compound: `${stageId}:${elementId}`.
-      // Extract the elementId part for media lookup.
       const elementId = rec.id.includes(':') ? rec.id.split(':')[1] : rec.id;
+      // Skip media records not referenced by any scene element
+      if (referencedElementIds.size > 0 && !referencedElementIds.has(elementId)) continue;
+
       const isVideo = rec.type === 'video';
       const meta: AssetMeta = {
         id: rec.id,
@@ -161,9 +218,9 @@ export function useExportVideoTimeline() {
     );
 
     try {
-      // Pre-load all asset metadata from IndexedDB
+      // Pre-load only the asset metadata needed for this stage
       const { audioDurationMap, videoDurationMap, audioMetaMap, mediaMetaMap } =
-        await preloadAssetMetadata(stage.id);
+        await preloadAssetMetadata(stage.id, scenes);
 
       // Build compiler dependencies
       const deps: CompileDeps = {

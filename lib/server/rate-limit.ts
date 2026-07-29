@@ -69,20 +69,19 @@ function sweepStale(now: number): void {
 
 // ── Distributed (Upstash Redis) support ────────────────────────────────────
 
-let distributedLimiter: ReturnType<typeof createDistributedLimiter> | null = null;
+let distributedLimiter: Awaited<ReturnType<typeof createDistributedLimiter>> | null = null;
 let distributedChecked = false;
 
-function createDistributedLimiter() {
+async function createDistributedLimiter() {
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!redisUrl || !redisToken) return null;
 
   try {
-    // Dynamic import so the dependency is optional
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Ratelimit } = require('@upstash/ratelimit');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Redis } = require('@upstash/redis');
+    // Dynamic import so the dependency is optional and Edge-compatible.
+    // Type stubs in types/upstash.d.ts allow compilation without the package.
+    const { Ratelimit } = await import('@upstash/ratelimit');
+    const { Redis } = await import('@upstash/redis');
     const redis = new Redis({ url: redisUrl, token: redisToken });
     return new Ratelimit({
       redis,
@@ -95,10 +94,10 @@ function createDistributedLimiter() {
   }
 }
 
-function getDistributedLimiter() {
+async function getDistributedLimiter() {
   if (!distributedChecked) {
     distributedChecked = true;
-    distributedLimiter = createDistributedLimiter();
+    distributedLimiter = await createDistributedLimiter();
     if (distributedLimiter) {
       log.info('Distributed rate limiting enabled (Upstash Redis)');
     }
@@ -111,7 +110,20 @@ function getDistributedLimiter() {
 /**
  * Extract a client identifier from the request. Uses the authenticated user ID
  * from NextAuth session token if available, otherwise falls back to IP address.
+ *
+ * Uses a simple hash (DJB2) of the token/cookie value instead of the raw
+ * prefix, to avoid collision between users whose tokens share a prefix and
+ * to avoid storing any recognizable token fragment in the rate-limit key.
  */
+function hashIdentifier(value: string): string {
+  // DJB2 hash — fast, synchronous, no dependencies, Edge-compatible
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash + value.charCodeAt(i)) | 0; // |0 keeps it 32-bit
+  }
+  return (hash >>> 0).toString(16); // unsigned hex
+}
+
 function getClientIdentifier(req: NextRequest): string {
   // In test environments or edge cases, req.cookies / req.headers may be undefined
   const cookies = req.cookies;
@@ -123,14 +135,13 @@ function getClientIdentifier(req: NextRequest): string {
       null;
 
     if (sessionCookie) {
-      // Use a hash of the session token as identifier (don't store the raw token)
-      return `session:${sessionCookie.slice(0, 16)}`;
+      return `session:${hashIdentifier(sessionCookie)}`;
     }
 
     // Check for access code cookie
     const accessCookie = cookies.get('nova_access')?.value;
     if (accessCookie) {
-      return `access:${accessCookie.slice(0, 16)}`;
+      return `access:${hashIdentifier(accessCookie)}`;
     }
   }
 
@@ -164,7 +175,7 @@ export async function checkRateLimit(
   const now = Date.now();
 
   // Try distributed limiter first
-  const distLimiter = getDistributedLimiter();
+  const distLimiter = await getDistributedLimiter();
   if (distLimiter) {
     try {
       const { success, remaining, reset } = await distLimiter.limit(key);
