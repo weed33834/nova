@@ -62,8 +62,6 @@ export function EditableElement({
       [ElementTypes.LATEX]: LatexElement,
       [ElementTypes.TABLE]: TableElement,
       [ElementTypes.VIDEO]: VideoElement,
-      // TODO: Add other element types
-      // [ElementTypes.AUDIO]: AudioElement,
     };
     return elementTypeMap[elementInfo.type] || null;
   }, [elementInfo.type]);
@@ -226,7 +224,7 @@ export function EditableElement({
         }}
       >
         <div className="p-2 bg-gray-100 border border-gray-300 text-xs text-gray-500">
-          {elementInfo.type} element (not implemented)
+          Unsupported element type: {elementInfo.type}
         </div>
       </div>
     );

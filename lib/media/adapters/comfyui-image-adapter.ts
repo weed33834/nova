@@ -26,26 +26,13 @@ import type {
   ImageGenerationResult,
 } from '../types';
 import { aspectRatioToDimensions, IMAGE_PROVIDERS } from '../image-providers';
+import { createLogger } from '@/lib/logger';
 
 function truncateErrorText(text: string, max = 300): string {
   return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
 }
 
-// ---------------------------------------------------------------------------
-// Logger  (matches nova's [TIMESTAMP] [LEVEL] [Component] format)
-// ---------------------------------------------------------------------------
-
-const COMPONENT = 'ComfyUI Image';
-
-const log = {
-  info: (msg: string) => console.log(`[${new Date().toISOString()}] [INFO]  [${COMPONENT}] ${msg}`),
-  warn: (msg: string) =>
-    console.warn(`[${new Date().toISOString()}] [WARN]  [${COMPONENT}] ${msg}`),
-  error: (msg: string) =>
-    console.error(`[${new Date().toISOString()}] [ERROR] [${COMPONENT}] ${msg}`),
-  debug: (msg: string) =>
-    console.debug(`[${new Date().toISOString()}] [DEBUG] [${COMPONENT}] ${msg}`),
-};
+const log = createLogger('ComfyUI Image');
 
 // ---------------------------------------------------------------------------
 // Constants

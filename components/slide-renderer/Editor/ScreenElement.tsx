@@ -34,8 +34,6 @@ export function ScreenElement({ elementInfo, elementIndex, animate }: ScreenElem
       [ElementTypes.TABLE]: BaseTableElement,
       [ElementTypes.VIDEO]: BaseVideoElement,
       [ElementTypes.CODE]: BaseCodeElement,
-      // TODO: Add other element types
-      // [ElementTypes.AUDIO]: BaseAudioElement,
     };
     return elementTypeMap[elementInfo.type] || null;
   }, [elementInfo.type]);
