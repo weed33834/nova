@@ -11,6 +11,7 @@
  */
 
 declare module 'postgres' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface PostgresError extends Error {
     code?: string;
   }

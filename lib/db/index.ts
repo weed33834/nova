@@ -81,6 +81,7 @@ export function getDbSync() {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { getDb: getSqliteDb } = require('@/lib/db/client');
   return getSqliteDb();
 }

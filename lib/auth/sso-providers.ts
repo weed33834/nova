@@ -58,7 +58,8 @@ function createOidcProvider(): AnyProvider | null {
 
   if (!issuer || !clientId || !clientSecret) return null;
 
-  // Dynamic import so next-auth/providers/oauth is only loaded when needed
+  // Dynamic require so next-auth/providers/oauth is only loaded when SSO is configured
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const OAuthProvider = require('next-auth/providers/oauth').default;
 
   log.info(`SSO: OIDC provider enabled (issuer: ${issuer})`);
@@ -114,6 +115,7 @@ function createSamlProvider(): AnyProvider | null {
   // SAML authentication is handled by custom routes, but we register a
   // placeholder provider so NextAuth knows about the "saml" provider
   // and can display it on the sign-in page.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const CredentialsProvider = require('next-auth/providers/credentials').default;
 
   return CredentialsProvider({

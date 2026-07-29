@@ -14,11 +14,29 @@
  * JSON. In development, pino-pretty provides colorized, readable output.
  */
 import pino from 'pino';
-import { AsyncLocalStorage } from 'async_hooks';
 
 // ── Request ID correlation ─────────────────────────────────────────────────
+// AsyncLocalStorage is a Node.js built-in not available in browsers.
+// Initialize lazily on the server; on the client, request-ID correlation is a no-op.
 
-const requestIdStorage = new AsyncLocalStorage<string>();
+type AsyncStore = {
+  run: <T>(id: string, fn: () => T) => T;
+  getStore: () => string | undefined;
+};
+
+let requestIdStorage: AsyncStore | null = null;
+
+if (typeof window === 'undefined') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { AsyncLocalStorage } = require('async_hooks') as {
+      AsyncLocalStorage: new () => AsyncStore;
+    };
+    requestIdStorage = new AsyncLocalStorage();
+  } catch {
+    // Edge runtime or unusual environment — request-ID correlation disabled
+  }
+}
 
 /**
  * Run a callback within a request context so all log lines emitted inside it
@@ -33,6 +51,7 @@ const requestIdStorage = new AsyncLocalStorage<string>();
  * ```
  */
 export function runWithRequestId<T>(id: string, fn: () => T): T {
+  if (!requestIdStorage) return fn();
   return requestIdStorage.run(id, fn);
 }
 
@@ -40,7 +59,7 @@ export function runWithRequestId<T>(id: string, fn: () => T): T {
  * Get the current request ID from the async context, if any.
  */
 export function getRequestId(): string | undefined {
-  return requestIdStorage.getStore();
+  return requestIdStorage?.getStore();
 }
 
 // ── pino instance configuration ────────────────────────────────────────────

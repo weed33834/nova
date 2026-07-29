@@ -6,7 +6,12 @@ const nextConfig: NextConfig = {
   // Docker-only standalone artifact on POSIX hosts, and use normal output locally.
   output: process.env.VERCEL || process.platform === 'win32' ? undefined : 'standalone',
   transpilePackages: ['mathml2omml', 'pptxgenjs', '@nova/importer'],
-  serverExternalPackages: ['@earendil-works/pi-ai', '@earendil-works/pi-agent-core'],
+  serverExternalPackages: [
+    '@earendil-works/pi-ai',
+    '@earendil-works/pi-agent-core',
+    'postgres',
+    '@node-saml/passport-saml',
+  ],
   experimental: {
     proxyClientMaxBodySize: '200mb',
     optimizePackageImports: [

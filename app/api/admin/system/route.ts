@@ -12,7 +12,7 @@ import { getDatabaseType } from '@/lib/db';
 import { isFeatureEnabled } from '@/lib/server/feature-flags';
 import { resolveDbPath } from '@/lib/db/client';
 
-export const GET = withApiHandler(async (req: NextRequest) => {
+export const GET = withApiHandler(async (_req: NextRequest) => {
   await requirePermission('settings:manage');
 
   // Collect configured providers (keys exist but values are redacted)

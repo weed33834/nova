@@ -65,7 +65,7 @@ async function migrateTable(tableName) {
   const columns = Object.keys(rows[0]);
   const colList = columns.join(', ');
   const paramList = columns.map((_, i) => `$${i + 1}`).join(', ');
-  const updateList = columns
+  const _updateList = columns
     .filter((c) => c !== 'id')
     .map((c) => `${c} = EXCLUDED.${c}`)
     .join(', ');

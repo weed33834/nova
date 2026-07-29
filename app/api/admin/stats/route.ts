@@ -12,7 +12,7 @@ import { getDb } from '@/lib/db/client';
 import { users, classrooms, usageRecords, apiKeys, auditLogs, learningEvents } from '@/lib/db/schema';
 import { count, sql } from 'drizzle-orm';
 
-export const GET = withApiHandler(async (req: NextRequest) => {
+export const GET = withApiHandler(async (_req: NextRequest) => {
   await requirePermission('user:read');
 
   const db = getDb();

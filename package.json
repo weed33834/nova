@@ -199,8 +199,8 @@
     "vitest": "^4.1.10"
   },
   "optionalDependencies": {
-    "postgres": "^3.4.7",
-    "@node-saml/passport-saml": "^5.0.0"
+    "@node-saml/passport-saml": "^5.0.0",
+    "postgres": "^3.4.9"
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
