@@ -184,11 +184,19 @@ function createSchemaDirectly(sqlite: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_classrooms_owner ON classrooms(owner_id);
     CREATE INDEX IF NOT EXISTS idx_classrooms_created ON classrooms(created_at);
+    CREATE INDEX IF NOT EXISTS idx_classrooms_deleted ON classrooms(deleted);
     CREATE INDEX IF NOT EXISTS idx_skills_owner ON skills(owner_id);
+    CREATE INDEX IF NOT EXISTS idx_skills_category ON skills(category);
+    CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+    CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
+    CREATE INDEX IF NOT EXISTS idx_accounts_provider ON accounts(provider);
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
     CREATE INDEX IF NOT EXISTS idx_usage_created ON usage_records(created_at);
     CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records(user_id);
+    CREATE INDEX IF NOT EXISTS idx_usage_kind ON usage_records(kind);
     CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);
     CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
     CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);
     CREATE INDEX IF NOT EXISTS idx_api_keys_owner ON api_keys(owner_id);
     CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
@@ -221,9 +229,11 @@ function createSchemaDirectly(sqlite: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_learning_events_user ON learning_events(user_id);
     CREATE INDEX IF NOT EXISTS idx_learning_events_classroom ON learning_events(classroom_id);
+    CREATE INDEX IF NOT EXISTS idx_learning_events_session ON learning_events(session_id);
     CREATE INDEX IF NOT EXISTS idx_learning_events_verb ON learning_events(verb);
     CREATE INDEX IF NOT EXISTS idx_learning_events_created ON learning_events(created_at);
     CREATE INDEX IF NOT EXISTS idx_content_versions_classroom ON content_versions(classroom_id);
+    CREATE INDEX IF NOT EXISTS idx_content_versions_version ON content_versions(version);
   `);
   log.info('Schema created directly (fallback path)');
 }

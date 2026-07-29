@@ -17,7 +17,7 @@
  *    read; SQLite's JSON1 extension is available but we keep the column types
  *    simple for Drizzle compatibility.
  */
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
@@ -46,7 +46,9 @@ export const users = sqliteTable('users', {
   updatedAt: text('updated_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-});
+}, (table) => ({
+  roleIdx: index('users_role_idx').on(table.role),
+}));
 
 export const accounts = sqliteTable('accounts', {
   userId: text('user_id')
@@ -62,7 +64,10 @@ export const accounts = sqliteTable('accounts', {
   scope: text('scope'),
   idToken: text('id_token'),
   sessionState: text('session_state'),
-});
+}, (table) => ({
+  userIdx: index('accounts_user_id_idx').on(table.userId),
+  providerIdx: index('accounts_provider_idx').on(table.provider),
+}));
 
 // NextAuth Drizzle adapter expects a composite PK on accounts.
 // (Drizzle's primaryKey helper is used in the relations below.)
@@ -73,7 +78,9 @@ export const sessions = sqliteTable('sessions', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   expires: text('expires').notNull(),
-});
+}, (table) => ({
+  userIdx: index('sessions_user_id_idx').on(table.userId),
+}));
 
 export const verificationTokens = sqliteTable(
   'verification_tokens',
@@ -106,7 +113,11 @@ export const classrooms = sqliteTable('classrooms', {
     .default(sql`(CURRENT_TIMESTAMP)`),
   // Soft delete so restore is possible.
   deleted: integer('deleted', { mode: 'boolean' }).notNull().default(false),
-});
+}, (table) => ({
+  ownerIdx: index('classrooms_owner_id_idx').on(table.ownerId),
+  createdIdx: index('classrooms_created_at_idx').on(table.createdAt),
+  deletedIdx: index('classrooms_deleted_idx').on(table.deleted),
+}));
 
 // ---------------------------------------------------------------------------
 // Skills — migrated from data/skills/<id>.json
@@ -127,7 +138,10 @@ export const skills = sqliteTable('skills', {
   updatedAt: text('updated_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-});
+}, (table) => ({
+  ownerIdx: index('skills_owner_id_idx').on(table.ownerId),
+  categoryIdx: index('skills_category_idx').on(table.category),
+})); 
 
 // ---------------------------------------------------------------------------
 // Usage records — migrated from data/usage/<YYYY-MM>.jsonl
@@ -154,7 +168,11 @@ export const usageRecords = sqliteTable('usage_records', {
   unit: text('unit', { enum: ['token', 'image', 'second', 'character'] }),
   // Link to the owning user once auth is in place.
   userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
-});
+}, (table) => ({
+  createdIdx: index('usage_records_created_at_idx').on(table.createdAt),
+  userIdx: index('usage_records_user_id_idx').on(table.userId),
+  kindIdx: index('usage_records_kind_idx').on(table.kind),
+}));
 
 // ---------------------------------------------------------------------------
 // Audit logs — new, for enterprise compliance / observability.
@@ -181,7 +199,12 @@ export const auditLogs = sqliteTable('audit_logs', {
   // Request context for traceability.
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
-});
+}, (table) => ({
+  actorIdx: index('audit_logs_actor_id_idx').on(table.actorId),
+  actionIdx: index('audit_logs_action_idx').on(table.action),
+  entityIdx: index('audit_logs_entity_idx').on(table.entityType, table.entityId),
+  createdIdx: index('audit_logs_created_at_idx').on(table.createdAt),
+}));
 
 // ---------------------------------------------------------------------------
 // API keys — for programmatic access (enterprise feature).
@@ -207,7 +230,9 @@ export const apiKeys = sqliteTable('api_keys', {
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
   revokedAt: text('revoked_at'),
-});
+}, (table) => ({
+  ownerIdx: index('api_keys_owner_id_idx').on(table.ownerId),
+}));
 
 // ---------------------------------------------------------------------------
 // Learning events — xAPI-inspired event tracking for learning analytics.
@@ -236,7 +261,13 @@ export const learningEvents = sqliteTable('learning_events', {
   // Metadata
   durationMs: integer('duration_ms'), // time spent on this interaction
   metadataJson: text('metadata_json'), // additional context
-});
+}, (table) => ({
+  userIdx: index('learning_events_user_id_idx').on(table.userId),
+  classroomIdx: index('learning_events_classroom_id_idx').on(table.classroomId),
+  sessionIdx: index('learning_events_session_id_idx').on(table.sessionId),
+  verbIdx: index('learning_events_verb_idx').on(table.verb),
+  createdIdx: index('learning_events_created_at_idx').on(table.createdAt),
+}));
 
 // ---------------------------------------------------------------------------
 // Content versions — DB-backed version control for classrooms.
@@ -259,7 +290,10 @@ export const contentVersions = sqliteTable('content_versions', {
   createdAt: text('created_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-});
+}, (table) => ({
+  classroomIdx: index('content_versions_classroom_id_idx').on(table.classroomId),
+  versionIdx: index('content_versions_version_idx').on(table.version),
+}));
 
 // ---------------------------------------------------------------------------
 // Type exports — inferred from the schema so callers stay in sync.
