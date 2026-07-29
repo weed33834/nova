@@ -47,8 +47,16 @@ jobs:
       - name: i18n key & value alignment
         run: pnpm check:i18n-keys
 
-      - name: Unit tests
-        run: pnpm test
+      - name: Unit tests with coverage
+        run: pnpm exec vitest run --coverage
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   build:
     name: Build
@@ -78,3 +86,135 @@ jobs:
           # The standalone trace is only emitted on POSIX; CI is Linux so the
           # Docker/standalone artifact is produced for downstream image builds.
           NEXT_TELEMETRY_DISABLED: '1'
+
+  e2e:
+    name: E2E Tests
+    needs: build
+    # Only run the (expensive) E2E suite on main pushes and PRs targeting main.
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: pnpm build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Start Next.js server
+        run: |
+          nohup pnpm start > /tmp/nova-server.log 2>&1 &
+          echo $! > /tmp/nova-server.pid
+        env:
+          PORT: '3002'
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Wait for server to be ready
+        run: |
+          echo "Waiting for http://localhost:3002 ..."
+          for i in $(seq 1 90); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002 || true)
+            if [ -n "$code" ] && [ "$code" != "000" ]; then
+              echo "Server is ready (HTTP $code)."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Server did not become ready within 180s."
+          [ -f /tmp/nova-server.log ] && tail -n 200 /tmp/nova-server.log
+          exit 1
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          # Tells Playwright a server is already running on 3002 so it skips
+          # its own webServer block (see playwright.config.ts).
+          PLAYWRIGHT_BASE_URL: 'http://localhost:3002'
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            /tmp/nova-server.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Audit production dependencies
+        run: pnpm audit --prod
+
+  codeql:
+    name: CodeQL Analysis
+    # Static analysis (SAST) only on main pushes and PRs targeting main.
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
