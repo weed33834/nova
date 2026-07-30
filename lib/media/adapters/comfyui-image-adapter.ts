@@ -27,10 +27,7 @@ import type {
 } from '../types';
 import { aspectRatioToDimensions, IMAGE_PROVIDERS } from '../image-providers';
 import { createLogger } from '@/lib/logger';
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
+import { truncateErrorText } from '@/lib/utils/truncate';
 
 const log = createLogger('ComfyUI Image');
 
@@ -99,7 +96,7 @@ async function loadWorkflow(
   // Fast path: caller already supplied the parsed JSON.
   if (config.workflowJson) {
     log.debug('Using pre-supplied workflowJson (skipping fetch)');
-    return JSON.parse(JSON.stringify(config.workflowJson)) as Record<string, unknown>;
+    return structuredClone(config.workflowJson) as Record<string, unknown>;
   }
 
   // Server-side: read from disk (public/ directory relative to cwd)

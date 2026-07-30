@@ -2149,6 +2149,7 @@
     "parseFailed": "Failed to parse the response.",
     "providerDisabled": "This provider is currently disabled.",
     "rateLimited": "Rate limit exceeded. Please wait a moment and try again.",
+    "quotaExceeded": "할당량이 초과되었습니다. 구독 플랜을 확인하거나 지원팀에 문의하세요.",
     "reloadPage": "Reload page",
     "reportIssue": "Report issue",
     "retry": "Retry",

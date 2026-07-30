@@ -90,6 +90,23 @@ export const mediaGenerationCounter = new Counter({
   registers: [register],
 });
 
+/** Agent tool invocation counter by tool name and outcome. */
+export const toolInvocationCounter = new Counter({
+  name: 'nova_tool_invocations_total',
+  help: 'Total agent tool invocations',
+  labelNames: ['tool', 'status'] as const,
+  registers: [register],
+});
+
+/** Agent tool execution duration histogram. */
+export const toolDuration = new Histogram({
+  name: 'nova_tool_duration_seconds',
+  help: 'Agent tool execution duration in seconds',
+  labelNames: ['tool'] as const,
+  buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 30, 60],
+  registers: [register],
+});
+
 /** Current process memory gauge (supplements default metrics). */
 export const processMemoryGauge = new Gauge({
   name: 'nova_process_memory_heap_used_bytes',
@@ -123,6 +140,23 @@ export function recordHttpRequest(
   const labels = { method, route, status: String(status) };
   httpRequestCounter.inc(labels);
   httpRequestDuration.observe(labels, durationMs / 1000);
+}
+
+/**
+ * Record an agent tool invocation in Prometheus metrics.
+ *
+ * Mirrors {@link recordHttpRequest}: increments the invocation counter by
+ * tool name + outcome (`success` | `error` | `timeout`) and observes the
+ * execution latency in the duration histogram. The counter's `status` label
+ * is what powers success/error-rate calculations.
+ */
+export function recordToolInvocation(
+  toolName: string,
+  status: 'success' | 'error' | 'timeout',
+  durationMs: number,
+) {
+  toolInvocationCounter.inc({ tool: toolName, status });
+  toolDuration.observe({ tool: toolName }, durationMs / 1000);
 }
 
 /** Get the Prometheus-format metrics string. */

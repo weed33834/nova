@@ -5,10 +5,13 @@ import * as echarts from 'echarts/core';
 import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent } from 'echarts/components';
 import { SVGRenderer } from 'echarts/renderers';
-import { Loader2, RefreshCw, BarChart3 } from 'lucide-react';
+import { Loader2, RefreshCw, BarChart3, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useTheme } from '@/lib/hooks/use-theme';
+import { cn } from '@/lib/utils';
 
 echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
@@ -30,6 +33,21 @@ interface UsageResponse {
   byDay: Bucket[];
   byKind: Bucket[];
 }
+
+/** Modalities that carry a monthly quota (ASR has no quota). */
+type QuotaKind = 'llm' | 'image' | 'video' | 'tts';
+
+interface QuotaStatus {
+  kind: QuotaKind;
+  used: number;
+  /** Server uses `Infinity` for admins, which serializes to `null` over JSON. */
+  limit: number | null;
+  remaining: number | null;
+  exceeded: boolean;
+}
+
+/** Shape of GET /api/quota -> { success, quotas: Record<QuotaKind, QuotaStatus> } */
+type QuotaMap = Record<QuotaKind, QuotaStatus>;
 
 function fmtNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
@@ -55,11 +73,15 @@ const UNIT_LABEL_KEY: Record<UsageUnit, string> = {
 /** Display order of modality sections. */
 const KIND_ORDER: UsageKind[] = ['llm', 'image', 'video', 'tts', 'asr'];
 
+/** Quota kinds reported by /api/quota, in display order (ASR has no quota). */
+const QUOTA_KINDS: QuotaKind[] = ['llm', 'image', 'video', 'tts'];
+
 export function UsageDashboard() {
   const { t } = useI18n();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const [data, setData] = useState<UsageResponse | null>(null);
+  const [quota, setQuota] = useState<QuotaMap | null>(null);
   const [loading, setLoading] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -67,9 +89,20 @@ export function UsageDashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/usage');
-      const json = await res.json();
-      if (json.success !== false) setData(json as UsageResponse);
+      // Fetch usage and monthly quota in parallel. Each is best-effort so a
+      // failure in one endpoint never blocks the other.
+      const [usageRes, quotaRes] = await Promise.allSettled([
+        fetch('/api/usage').then((r) => r.json()),
+        fetch('/api/quota').then((r) => r.json()),
+      ]);
+      if (usageRes.status === 'fulfilled') {
+        const json = usageRes.value as UsageResponse & { success?: boolean };
+        if (json.success !== false) setData(json);
+      }
+      if (quotaRes.status === 'fulfilled') {
+        const json = quotaRes.value as { success?: boolean; quotas?: QuotaMap };
+        if (json.success !== false && json.quotas) setQuota(json.quotas);
+      }
     } catch {
       // best-effort
     } finally {
@@ -197,6 +230,58 @@ export function UsageDashboard() {
       </div>
 
       <p className="text-xs text-muted-foreground -mt-3">{t('settings.usage.disclaimer')}</p>
+
+      {/* Monthly quota status — used / limit per modality, shown alongside usage stats. */}
+      {quota ? (
+        <div className="rounded-lg border p-3 flex flex-col gap-3">
+          <span className="text-xs font-medium">Monthly Quota</span>
+          {QUOTA_KINDS.map((kind) => {
+            const q = quota[kind];
+            // Admins get limit: Infinity on the server, which serializes to null over JSON.
+            if (q.limit == null || !Number.isFinite(q.limit)) {
+              return (
+                <div key={kind} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{t(KIND_LABEL_KEY[kind])}</span>
+                    <span className={cn('font-medium', q.exceeded && 'text-destructive')}>
+                      {fmtNum(q.used)} / Unlimited
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+            // q.limit is narrowed to a finite number here; capture it for math/formatting.
+            const limit = q.limit;
+            const pct = limit <= 0 ? 0 : Math.min(100, Math.round((q.used / limit) * 100));
+            return (
+              <div key={kind} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{t(KIND_LABEL_KEY[kind])}</span>
+                  <span className={cn('font-medium', q.exceeded && 'text-destructive')}>
+                    {fmtNum(q.used)} / {fmtNum(limit)} · {pct}%
+                  </span>
+                </div>
+                <Progress
+                  value={pct}
+                  className={cn(
+                    q.exceeded && '[&_[data-slot=progress-indicator]]:bg-destructive',
+                  )}
+                />
+              </div>
+            );
+          })}
+          {QUOTA_KINDS.some((k) => quota[k].exceeded) ? (
+            <Alert variant="destructive">
+              <AlertTriangle />
+              <AlertTitle>Quota exceeded</AlertTitle>
+              <AlertDescription>
+                You have reached the monthly limit for one or more modalities. Generation
+                requests for the affected types are blocked until the cycle resets.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Per-modality summary chips — each with its own unit. */}
       {sections.length > 0 ? (

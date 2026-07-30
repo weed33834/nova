@@ -24,7 +24,7 @@ export function useOrderElement() {
    * @param element The element being operated on
    */
   const moveUpElement = (elementList: PPTElement[], element: PPTElement) => {
-    const copyOfElementList: PPTElement[] = JSON.parse(JSON.stringify(elementList));
+    const copyOfElementList: PPTElement[] = structuredClone(elementList);
 
     // If the element is a group member, all group members must be moved together
     if (element.groupId) {
@@ -78,7 +78,7 @@ export function useOrderElement() {
    * @param element The element being operated on
    */
   const moveDownElement = (elementList: PPTElement[], element: PPTElement) => {
-    const copyOfElementList: PPTElement[] = JSON.parse(JSON.stringify(elementList));
+    const copyOfElementList: PPTElement[] = structuredClone(elementList);
 
     if (element.groupId) {
       const combineElementList = copyOfElementList.filter(
@@ -120,7 +120,7 @@ export function useOrderElement() {
    * @param element The element being operated on
    */
   const moveTopElement = (elementList: PPTElement[], element: PPTElement) => {
-    const copyOfElementList: PPTElement[] = JSON.parse(JSON.stringify(elementList));
+    const copyOfElementList: PPTElement[] = structuredClone(elementList);
 
     // If the element is a group member, all group members must be moved together
     if (element.groupId) {
@@ -160,7 +160,7 @@ export function useOrderElement() {
    * @param element The element being operated on
    */
   const moveBottomElement = (elementList: PPTElement[], element: PPTElement) => {
-    const copyOfElementList: PPTElement[] = JSON.parse(JSON.stringify(elementList));
+    const copyOfElementList: PPTElement[] = structuredClone(elementList);
 
     if (element.groupId) {
       const combineElementList = copyOfElementList.filter(

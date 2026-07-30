@@ -17,6 +17,7 @@ import type {
   VoiceRegistrationAdapter,
   VoiceRegistrationConfig,
 } from '@/lib/audio/voice-registration';
+import { base64ToBlob, bytesToBase64 } from '@/lib/audio/codec';
 
 function v1(baseUrl: string): string {
   const clean = baseUrl.replace(/\/$/, '');
@@ -25,19 +26,6 @@ function v1(baseUrl: string): string {
 
 function authHeaders(apiKey?: string): Record<string, string> {
   return apiKey?.trim() ? { Authorization: `Bearer ${apiKey.trim()}` } : {};
-}
-
-function base64ToBlob(base64: string, mimeType?: string): Blob {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mimeType || 'audio/wav' });
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
 }
 
 /** vLLM-Omni requires a consent string on voice registration. */

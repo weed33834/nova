@@ -150,10 +150,7 @@ import { experimental_transcribe as transcribe } from 'ai';
 import type { ASRModelConfig } from './types';
 import { isCustomASRProvider } from './types';
 import { ASR_PROVIDERS } from './constants';
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
+import { truncateErrorText } from '@/lib/utils/truncate';
 
 /**
  * Result of ASR transcription

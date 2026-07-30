@@ -8,6 +8,7 @@
  * this module without injecting its own `RuntimeStore`.
  */
 import { BrowserRuntimeStore, type RuntimeStore } from '@nova/storage';
+import { withTimeout } from '@/lib/utils/async';
 
 // BrowserRuntimeStore's default dbName; passed explicitly below so the probe
 // in deleteStageRuntimeSafely and the store itself can never drift apart.
@@ -35,21 +36,6 @@ async function runtimeDbExists(): Promise<boolean> {
   }
   const databases = await indexedDB.databases();
   return databases.some((db) => db.name === RUNTIME_DB_NAME);
-}
-
-/** Reject after `ms`, clearing the timer once the raced promise settles. */
-async function withTimeout(work: Promise<void>, ms: number): Promise<void> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    await Promise.race([
-      work,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms);
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 /**

@@ -1,14 +1,8 @@
 import type { StatelessChatRequest } from '@/lib/types/chat';
 import { buildWhiteboardConflicts } from './whiteboard-conflicts';
+import { stripHtml } from '@/lib/utils/html';
 
 // ==================== Element Summarization ====================
-
-/**
- * Strip HTML tags to extract plain text
- */
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '').trim();
-}
 
 /**
  * Summarize a single PPT element into a one-line description

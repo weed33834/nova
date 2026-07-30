@@ -28,6 +28,7 @@ const ERROR_CODE_TO_I18N_KEY: Record<ApiErrorCode, string> = {
   CONTENT_SENSITIVE: 'errors.contentSensitive',
   UPSTREAM_ERROR: 'errors.upstreamError',
   RATE_LIMITED: 'errors.rateLimited',
+  QUOTA_EXCEEDED: 'errors.quotaExceeded',
   CONNECTION_ERROR: 'errors.connectionError',
   CONNECTION_TIMEOUT: 'errors.connectionTimeout',
   MODEL_NOT_FOUND: 'errors.modelNotFound',

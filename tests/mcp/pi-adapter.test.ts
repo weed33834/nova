@@ -8,10 +8,11 @@ import type { MCPClientManager } from '@/lib/mcp/client-manager';
  */
 function makeFakeManager(
   tools: MCPDiscoveredTool[],
-): Pick<MCPClientManager, 'getDiscoveredTools' | 'getClient'> {
+): Pick<MCPClientManager, 'getDiscoveredTools' | 'getClient' | 'getAbortSignal'> {
   return {
     getDiscoveredTools: () => tools,
     getClient: () => undefined,
+    getAbortSignal: () => null,
   };
 }
 
@@ -133,6 +134,7 @@ describe('adaptMCPTool execute', () => {
     const fakeManager = {
       getDiscoveredTools: () => [],
       getClient: () => ({ callTool }) as unknown,
+      getAbortSignal: () => null,
     };
     const tool: MCPDiscoveredTool = {
       serverId: 's',
@@ -142,7 +144,7 @@ describe('adaptMCPTool execute', () => {
     };
     const adapted = adaptMCPTool(tool, fakeManager as unknown as MCPClientManager);
     const result = await adapted.execute!('id', { q: 'x' });
-    expect(callTool).toHaveBeenCalledWith({ name: 't', arguments: { q: 'x' } });
+    expect(callTool).toHaveBeenCalledWith({ name: 't', arguments: { q: 'x' } }, undefined, undefined);
     expect(result.content).toHaveLength(3);
     expect(result.content[0]).toEqual({ type: 'text', text: 'hello' });
     expect(result.content[1]).toEqual({
@@ -163,6 +165,7 @@ describe('adaptMCPTool execute', () => {
     const fakeManager = {
       getDiscoveredTools: () => [],
       getClient: () => ({ callTool }) as unknown,
+      getAbortSignal: () => null,
     };
     const tool: MCPDiscoveredTool = {
       serverId: 's',

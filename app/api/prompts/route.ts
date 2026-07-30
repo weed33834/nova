@@ -9,13 +9,12 @@
  * For the rendered content of a specific prompt, use GET /api/prompts/[id].
  */
 import { getPromptRegistry } from '@/lib/prompts';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { apiSuccess, apiError } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
-import { createLogger } from '@/lib/logger';
+import type { NextRequest } from 'next/server';
 
-const log = createLogger('PromptsAPI');
-
-export async function GET() {
+export const GET = withApiHandler(async (_req: NextRequest, ctx) => {
   try {
     const registry = getPromptRegistry();
     return apiSuccess({
@@ -24,7 +23,7 @@ export async function GET() {
     });
   } catch (error) {
     const message = sanitizedErrorDetails(error);
-    log.error('Failed to list prompts:', message);
+    ctx.log.error('Failed to list prompts:', message);
     return apiError('INTERNAL_ERROR', 500, 'Failed to list prompts');
   }
-}
+}, { rateLimit: 'light' });

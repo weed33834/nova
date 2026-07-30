@@ -54,6 +54,8 @@ interface UpdateSkillBody {
   promptTemplate?: unknown;
   parameters?: unknown;
   enabled?: unknown;
+  version?: unknown;
+  dependencies?: unknown;
 }
 
 export const PUT = withApiHandler(async (
@@ -87,6 +89,10 @@ export const PUT = withApiHandler(async (
         ? (body.parameters as CustomSkill['parameters'])
         : existing.parameters,
       enabled: typeof body.enabled === 'boolean' ? body.enabled : existing.enabled,
+      version: typeof body.version === 'string' ? body.version : (existing.version ?? '1.0.0'),
+      dependencies: Array.isArray(body.dependencies)
+        ? (body.dependencies as string[])
+        : (existing.dependencies ?? []),
       updatedAt: new Date().toISOString(),
     };
 

@@ -102,10 +102,8 @@ import {
   normalizeVoxCPMBackend,
   type VoxCPMProviderOptions,
 } from './voxcpm';
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
+import { truncateErrorText } from '@/lib/utils/truncate';
+import { base64ToBlob } from '@/lib/audio/codec';
 
 /**
  * Result of TTS generation
@@ -456,15 +454,6 @@ function getVoxCPMDataAudioUrl(base64: string, mimeType?: string, fileName?: str
             ? 'audio/webm'
             : 'audio/wav');
   return `data:${mediaType};base64,${base64}`;
-}
-
-function base64ToBlob(base64: string, mimeType?: string): Blob {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index++) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return new Blob([bytes], { type: mimeType || 'audio/wav' });
 }
 
 async function postVoxCPMPythonAPI(

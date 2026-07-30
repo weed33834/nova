@@ -2149,6 +2149,7 @@
     "parseFailed": "Failed to parse the response.",
     "providerDisabled": "This provider is currently disabled.",
     "rateLimited": "Rate limit exceeded. Please wait a moment and try again.",
+    "quotaExceeded": "クォータが上限に達しました。サブスクリプションプランを確認するか、サポートにお問い合わせください。",
     "reloadPage": "Reload page",
     "reportIssue": "Report issue",
     "retry": "Retry",

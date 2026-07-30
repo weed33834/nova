@@ -6,7 +6,7 @@ function writeAscii(view: DataView, offset: number, value: string): void {
   }
 }
 
-function audioBufferToMonoWav(audioBuffer: AudioBuffer): ArrayBuffer {
+export function audioBufferToMonoWav(audioBuffer: AudioBuffer): ArrayBuffer {
   const sampleRate = audioBuffer.sampleRate;
   const sampleCount = audioBuffer.length;
   const dataSize = sampleCount * 2;
@@ -50,12 +50,17 @@ export function isWavBlob(blob: Blob, fileName?: string): boolean {
   );
 }
 
-export async function audioBlobToWav(blob: Blob): Promise<Blob> {
-  if (isWavBlob(blob)) return blob;
+/**
+ * Decode an audio Blob into an AudioBuffer using the browser's Web Audio API.
+ *
+ * Throws if called outside a browser or if the browser lacks AudioContext.
+ * The caller is responsible for closing the AudioContext — this function
+ * creates a temporary one and closes it automatically.
+ */
+export async function decodeAudioBlob(blob: Blob): Promise<AudioBuffer> {
   if (typeof window === 'undefined') {
-    throw new Error('Audio conversion requires a browser environment');
+    throw new Error('Audio decoding requires a browser environment');
   }
-
   const AudioContextConstructor =
     window.AudioContext ||
     (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -66,11 +71,16 @@ export async function audioBlobToWav(blob: Blob): Promise<Blob> {
   const audioContext = new AudioContextConstructor();
   try {
     const arrayBuffer = await blob.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-    return new Blob([audioBufferToMonoWav(audioBuffer)], { type: 'audio/wav' });
+    return await audioContext.decodeAudioData(arrayBuffer.slice(0));
   } finally {
     await audioContext.close().catch(() => undefined);
   }
+}
+
+export async function audioBlobToWav(blob: Blob): Promise<Blob> {
+  if (isWavBlob(blob)) return blob;
+  const audioBuffer = await decodeAudioBlob(blob);
+  return new Blob([audioBufferToMonoWav(audioBuffer)], { type: 'audio/wav' });
 }
 
 export async function normalizeASRUploadAudio(

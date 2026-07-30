@@ -18,6 +18,7 @@
  */
 
 import type { PBLAgentThread, PBLChatMessage } from '../types';
+import { truncateText } from '@/lib/utils/truncate';
 
 /** Compress when this many messages are in the live history. */
 export const COMPRESS_THRESHOLD = 30;
@@ -72,7 +73,7 @@ function digestOlderHalf(messages: PBLChatMessage[]): string {
     .map((m) => {
       const role =
         m.roleType === 'user' ? 'Learner' : m.roleType === 'instructor' ? 'Instructor' : m.roleType;
-      return `- ${role}: ${truncate(firstParagraph(m.content), 150)}`;
+      return `- ${role}: ${truncateText(firstParagraph(m.content), 150)}`;
     })
     .join('\n');
 
@@ -120,7 +121,7 @@ function extractLearnerMemory(messages: PBLChatMessage[]): string[] {
     const matches = userMessages
       .filter((m) => bucket.re.test(m.content))
       .slice(-bucket.max)
-      .map((m) => truncate(m.content, 140));
+      .map((m) => truncateText(m.content, 140));
     if (matches.length) {
       notes.push(`${bucket.label}: ${matches.join(' / ')}`);
     }
@@ -136,11 +137,6 @@ function compactSummary(summary: string): string {
     'Older folded memory exceeded the budget; this keeps the newest durable learner context and recent trace.',
     tail.replace(/^\s+/, ''),
   ].join('\n');
-}
-
-function truncate(s: string, max: number): string {
-  if (s.length <= max) return s;
-  return s.slice(0, max - 1) + '…';
 }
 
 function firstParagraph(s: string): string {

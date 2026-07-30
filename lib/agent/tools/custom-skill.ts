@@ -40,8 +40,23 @@ export interface CustomSkill {
   promptTemplate: string;
   parameters: CustomSkillParam[];
   enabled: boolean;
+  /** Semantic version string (e.g. "1.0.0"). Defaults to "1.0.0" on creation. */
+  version: string;
+  /** IDs of other custom skills this skill depends on. Circular deps are rejected at validation. */
+  dependencies?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * A snapshot of a skill at a specific point in time, stored in version history.
+ */
+export interface SkillVersion {
+  version: string;
+  snapshot: Omit<CustomSkill, 'version' | 'dependencies'>;
+  createdAt: string;
+  /** Description of what changed in this version. */
+  changelog?: string;
 }
 
 /**
@@ -149,6 +164,33 @@ export function validateCustomSkill(skill: unknown, opts?: { isNew?: boolean }):
 
   if (typeof s.enabled !== 'boolean') {
     errors.push('enabled must be a boolean');
+  }
+
+  // Version validation (optional — defaults to "1.0.0" on creation)
+  if (s.version !== undefined) {
+    if (typeof s.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(s.version)) {
+      errors.push('version must be in semver format (e.g. "1.0.0")');
+    }
+  }
+
+  // Dependencies validation
+  if (s.dependencies !== undefined) {
+    if (!Array.isArray(s.dependencies)) {
+      errors.push('dependencies must be an array of skill IDs');
+    } else {
+      const seenDeps = new Set<string>();
+      for (const dep of s.dependencies) {
+        if (typeof dep !== 'string' || !CUSTOM_SKILL_ID_PATTERN.test(dep)) {
+          errors.push(`dependency "${String(dep)}" is not a valid skill ID`);
+        } else if (dep === s.id) {
+          errors.push('a skill cannot depend on itself');
+        } else if (seenDeps.has(dep)) {
+          errors.push(`dependency "${dep}" is duplicated`);
+        } else {
+          seenDeps.add(dep);
+        }
+      }
+    }
   }
 
   if (opts?.isNew) {

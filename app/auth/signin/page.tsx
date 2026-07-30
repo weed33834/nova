@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { Github, Mail, Loader2 } from 'lucide-react';
+import { Github, Mail, Loader2, KeyRound } from 'lucide-react';
 
 function SignInForm() {
   const { t } = useI18n();
@@ -46,8 +46,17 @@ function SignInForm() {
     signIn(provider, { callbackUrl });
   };
 
+  const handleSamlLogin = () => {
+    setLoading(true);
+    // The SAML login route is a GET endpoint that redirects the browser
+    // to the Identity Provider. A full-page navigation is required so the
+    // redirect to the (external) IdP is followed correctly.
+    window.location.href = '/api/auth/saml/login';
+  };
+
   const hasGithub = !!process.env.NEXT_PUBLIC_GITHUB_ENABLED;
   const hasGoogle = !!process.env.NEXT_PUBLIC_GOOGLE_ENABLED;
+  const hasSaml = !!process.env.NEXT_PUBLIC_SAML_ENABLED;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4">
@@ -97,7 +106,7 @@ function SignInForm() {
           </Button>
         </form>
 
-        {(hasGithub || hasGoogle) && (
+        {(hasGithub || hasGoogle || hasSaml) && (
           <>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -131,6 +140,17 @@ function SignInForm() {
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   {t('auth.signInWithGoogle', { defaultValue: 'Sign in with Google' })}
+                </Button>
+              )}
+              {hasSaml && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleSamlLogin}
+                  disabled={loading}
+                >
+                  <KeyRound className="h-4 w-4 mr-2" />
+                  {t('auth.signInWithSSO', { defaultValue: 'Sign in with SSO' })}
                 </Button>
               )}
             </div>

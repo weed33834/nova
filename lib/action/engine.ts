@@ -50,6 +50,7 @@ import {
 } from '@/lib/choreography';
 import katex from 'katex';
 import { createLogger } from '@/lib/logger';
+import { delay } from '@/lib/utils/async';
 
 const log = createLogger('ActionEngine');
 
@@ -62,10 +63,6 @@ const SHAPE_PATHS: Record<string, string> = {
 };
 
 // ==================== Helpers ====================
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /** Convert raw code string to CodeLine array with unique IDs */
 function codeToLines(code: string): CodeLine[] {

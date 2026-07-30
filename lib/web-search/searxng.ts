@@ -9,12 +9,9 @@ import { createLogger } from '@/lib/logger';
 import { proxyFetch } from '@/lib/server/proxy-fetch';
 import type { WebSearchResult, WebSearchSource } from '@/lib/types/web-search';
 import { normalizeWebSearchQuery } from './utils';
+import { truncateErrorText } from '@/lib/utils/truncate';
 
 const log = createLogger('SearXNG');
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
 
 const SEARXNG_HEADERS: Record<string, string> = {
   Accept: 'application/json',

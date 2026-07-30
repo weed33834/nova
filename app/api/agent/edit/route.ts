@@ -23,6 +23,8 @@ import { adaptAllMCPTools } from '@/lib/mcp/pi-adapter';
 import type { MCPServersConfig } from '@/lib/mcp/config';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { checkRateLimitPreset, rateLimitedResponse } from '@/lib/server/rate-limit';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/config';
 
 const log = createLogger('Nova Agent');
 
@@ -221,6 +223,9 @@ export async function POST(req: NextRequest) {
   const allTools = [...tools, ...mcpTools, ...customSkillTools];
 
   const abortController = new AbortController();
+  // Propagate the abort signal to the MCP client manager so in-flight
+  // MCP tool calls are cancelled when the user aborts the agent turn.
+  mcpManager.setAbortSignal(abortController.signal);
   const streamFn = createCallLlmStreamFn({
     languageModel: model,
     maxOutputTokens: modelInfo?.outputWindow,
@@ -229,12 +234,18 @@ export async function POST(req: NextRequest) {
     abortSignal: abortController.signal,
   });
 
+  // Resolve user session for quota tracking (optional — quota hook is a
+  // no-op when no session is available, e.g. access-code-only auth).
+  const session = await getServerSession(authOptions).catch(() => null);
+
   const agent = buildAgent({
     streamFn,
     systemPrompt: buildSystemPrompt(body.scene),
     tools: allTools,
     allowlist: combinedAllowlist,
     history: toHistoryMessages(body.history),
+    userId: (session?.user as { id?: string } | undefined)?.id ?? null,
+    userRole: (session?.user as { role?: string } | undefined)?.role,
   });
   log.info(`agent edit turn [model=${modelString}] scene=${body.scene?.id ?? 'none'}`);
 
@@ -258,6 +269,8 @@ export async function POST(req: NextRequest) {
         log.error(`agent run failed: ${err instanceof Error ? err.message : String(err)}`);
       } finally {
         unsubscribe();
+        // Clear the MCP abort signal now that the turn is complete
+        mcpManager.setAbortSignal(null);
         try {
           controller.enqueue(encoder.encode('event: close\ndata: {}\n\n'));
         } catch {

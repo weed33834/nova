@@ -18,6 +18,8 @@ import type { PPTElement } from '@nova/dsl';
 import type { SceneContext } from './regenerate-scene-actions';
 import { ALLOWED_EDIT_PROPS } from './edit-elements-gate';
 import { EXACT_CONTENT_RAW_CAP, isExactContentEditable } from './edit-elements-content-contract';
+import { stripHtml } from '@/lib/utils/html';
+import { truncateText } from '@/lib/utils/truncate';
 
 // ── Deps ─────────────────────────────────────────────────────────────────────
 
@@ -39,17 +41,6 @@ const PROJECTION_CAP = 2000;
 const ELEMENT_TEXT_CAP = 80;
 const SLIDE_PATCH_PROJECTION_CAP = 30000;
 const MANIFEST_PAGE_CAP = 10000;
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function truncate(s: string, max: number): string {
-  return s.length > max ? `${s.slice(0, max)}…` : s;
-}
 
 /**
  * Pull the human-readable text out of a single slide element. Mirrors the
@@ -139,7 +130,7 @@ function projectElementManifest(element: PPTElement, index: number): Record<stri
   }
   if (element.lock !== undefined) manifest.lock = element.lock;
   if (element.groupId !== undefined) manifest.groupId = element.groupId;
-  const summary = truncate(extractElementText(element), ELEMENT_TEXT_CAP);
+  const summary = truncateText(extractElementText(element), ELEMENT_TEXT_CAP);
   if (summary) manifest._textSummary = summary;
   return manifest;
 }
@@ -180,7 +171,7 @@ function projectElementForPatch(element: PPTElement, index: number): Record<stri
       align: element.text.align,
     };
   } else {
-    const summary = truncate(extractElementText(element), ELEMENT_TEXT_CAP);
+    const summary = truncateText(extractElementText(element), ELEMENT_TEXT_CAP);
     if (summary) projected._textSummary = summary;
   }
   return projected;

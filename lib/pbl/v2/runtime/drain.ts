@@ -22,6 +22,7 @@ import { BrowserKVStore, type KVStore, type RuntimeStore } from '@nova/storage';
 
 import { getLearnerKey } from '@/lib/runtime/learner-key';
 import { getRuntimeStore } from '@/lib/runtime/store';
+import { withTimeout } from '@/lib/utils/async';
 import type { PBLEngagementEvent, PBLProjectV2, PBLRuntimeEvent } from '@/lib/pbl/v2/types';
 import { enrichPBLRuntimeEvent, pblEngagementRecordPayload } from './record-payloads';
 
@@ -71,21 +72,6 @@ function createDrainDeadline(ms: number): PBLDrainDeadline {
 
 function isDeadlineExpired(deadline: PBLDrainDeadline): boolean {
   return Date.now() >= deadline.expiresAt;
-}
-
-/** Reject after `ms`, clearing the timer once the raced promise settles. */
-async function withTimeout(work: Promise<void>, ms: number): Promise<void> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    await Promise.race([
-      work,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms);
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 function normalizeWatermark(value: unknown): PBLRuntimeDrainWatermark {

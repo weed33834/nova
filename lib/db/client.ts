@@ -138,6 +138,21 @@ function createSchemaDirectly(sqlite: Database.Database): void {
       updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
     );
 
+    CREATE TABLE IF NOT EXISTS agents (
+      id TEXT PRIMARY KEY,
+      owner_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      system_prompt TEXT NOT NULL,
+      voice TEXT,
+      avatar TEXT,
+      allowed_actions_json TEXT NOT NULL DEFAULT '[]',
+      enabled INTEGER NOT NULL DEFAULT 1,
+      category TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS usage_records (
       id TEXT PRIMARY KEY,
       created_at INTEGER NOT NULL,
@@ -187,6 +202,8 @@ function createSchemaDirectly(sqlite: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_classrooms_deleted ON classrooms(deleted);
     CREATE INDEX IF NOT EXISTS idx_skills_owner ON skills(owner_id);
     CREATE INDEX IF NOT EXISTS idx_skills_category ON skills(category);
+    CREATE INDEX IF NOT EXISTS idx_agents_owner ON agents(owner_id);
+    CREATE INDEX IF NOT EXISTS idx_agents_category ON agents(category);
     CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
     CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
     CREATE INDEX IF NOT EXISTS idx_accounts_provider ON accounts(provider);

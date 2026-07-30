@@ -10,6 +10,7 @@
  * in-flight requests are abruptly terminated.
  */
 import { createLogger } from '@/lib/logger';
+import { delay } from '@/lib/utils/async';
 
 const log = createLogger('Shutdown');
 
@@ -26,7 +27,7 @@ export function registerGracefulShutdown(): void {
     log.info(`Received ${signal}, shutting down gracefully...`);
 
     // Give in-flight requests a brief grace period
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await delay(500);
 
     // Close database connection
     try {

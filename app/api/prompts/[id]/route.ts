@@ -9,13 +9,15 @@
 import type { NextRequest } from 'next/server';
 import { loadPrompt } from '@/lib/prompts';
 import type { PromptId } from '@/lib/prompts';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { apiSuccess, apiError } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
-import { createLogger } from '@/lib/logger';
 
-const log = createLogger('PromptDetailAPI');
-
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withApiHandler(async (
+  _req: NextRequest,
+  ctx,
+  { params }: { params: Promise<{ id: string }> },
+) => {
   try {
     const { id } = await params;
     const prompt = loadPrompt(id as PromptId);
@@ -34,7 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     });
   } catch (error) {
     const message = sanitizedErrorDetails(error);
-    log.error('Failed to load prompt:', message);
+    ctx.log.error('Failed to load prompt:', message);
     return apiError('INTERNAL_ERROR', 500, 'Failed to load prompt');
   }
-}
+}, { rateLimit: 'light' });

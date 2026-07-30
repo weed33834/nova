@@ -201,6 +201,8 @@ export interface StatelessChatRequest {
   config: {
     agentIds: string[];
     sessionType?: 'qa' | 'discussion';
+    /** Session identifier for inter-agent messaging (message bus). Optional — when absent, peer-message injection is skipped. */
+    sessionId?: string;
     /** Discussion topic (for agent-initiated discussions) */
     discussionTopic?: string;
     /** Discussion prompt (for agent-initiated discussions) */

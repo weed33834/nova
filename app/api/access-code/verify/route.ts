@@ -1,9 +1,11 @@
 import { cookies } from 'next/headers';
 import { timingSafeEqual } from 'crypto';
+import type { NextRequest } from 'next/server';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { createAccessToken } from '@/lib/server/access-token';
+import { withApiHandler } from '@/lib/server/api-handler';
 
-export async function POST(request: Request) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
     return apiSuccess({ valid: true });
@@ -11,7 +13,7 @@ export async function POST(request: Request) {
 
   let body: { code?: string };
   try {
-    body = await request.json();
+    body = await req.json();
   } catch {
     return apiError('INVALID_REQUEST', 400, 'Invalid JSON body');
   }
@@ -38,4 +40,4 @@ export async function POST(request: Request) {
   });
 
   return apiSuccess({ valid: true });
-}
+}, { rateLimit: 'auth' });

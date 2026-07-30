@@ -50,6 +50,7 @@ import {
   isValidTextFile,
 } from '@/lib/pbl/v2/operations/file-validation';
 import { uploadBlobToStorage } from '@/lib/storage/client';
+import { blobToDataUrl } from '@/lib/audio/codec';
 import type {
   PBLChatMessage,
   PBLEvaluation,
@@ -81,6 +82,7 @@ import {
   isToleratedReactionStreamError,
   type StreamStatus,
 } from './use-instructor-stream';
+import { delay } from '@/lib/utils/async';
 
 interface Props {
   readonly project: PBLProjectV2;
@@ -136,15 +138,6 @@ const FILE_BYTES_CAP = 5 * 1024 * 1024;
 // image goes to OSS (a small URL) and this cap doesn't apply.
 const IMAGE_BASE64_CAP = 2 * 1024 * 1024;
 
-/** Read a Blob as a base64 data URL (image fallback when OSS is unconfigured). */
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error ?? new Error('read failed'));
-    reader.readAsDataURL(blob);
-  });
-}
 const FOLLOWUP_THINKING_MIN_MS = 800;
 
 function parseSSEFrame(frame: string): PBLSSEEvent | null {
@@ -161,10 +154,6 @@ function parseSSEFrame(frame: string): PBLSSEEvent | null {
   } catch {
     return null;
   }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function newClientMessageId(): string {

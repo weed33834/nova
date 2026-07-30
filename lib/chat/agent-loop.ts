@@ -14,12 +14,9 @@
 import type { StatelessEvent, DirectorState } from '@/lib/types/chat';
 import type { ThinkingConfig } from '@/lib/types/provider';
 import { createLogger } from '@/lib/logger';
+import { truncateErrorText } from '@/lib/utils/truncate';
 
 const log = createLogger('AgentLoop');
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
 
 // ==================== Types ====================
 

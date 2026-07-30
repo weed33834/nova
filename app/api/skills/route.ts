@@ -71,6 +71,8 @@ interface CreateSkillBody {
   promptTemplate?: unknown;
   parameters?: unknown;
   enabled?: unknown;
+  version?: unknown;
+  dependencies?: unknown;
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
@@ -87,6 +89,8 @@ export const POST = withApiHandler(async (req: NextRequest) => {
       promptTemplate: typeof body.promptTemplate === 'string' ? body.promptTemplate : '',
       parameters: Array.isArray(body.parameters) ? (body.parameters as CustomSkill['parameters']) : [],
       enabled: typeof body.enabled === 'boolean' ? body.enabled : true,
+      version: typeof body.version === 'string' ? body.version : '1.0.0',
+      dependencies: Array.isArray(body.dependencies) ? (body.dependencies as string[]) : [],
       createdAt: now,
       updatedAt: now,
     };

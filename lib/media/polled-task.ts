@@ -1,3 +1,5 @@
+import { delay } from '@/lib/utils/async';
+
 export type TerminalResult<T> =
   | { status: 'done'; result: T }
   | { status: 'failed'; message: string };
@@ -22,10 +24,6 @@ export interface RunPolledTaskOptions<T> {
   maxAttempts: number;
   label: string;
   formatTimeout?: (context: PolledTaskTimeoutContext) => string;
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function runPolledTask<T>({

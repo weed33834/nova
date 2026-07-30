@@ -89,6 +89,8 @@ interface SkillListItem {
   description?: string;
   promptTemplate?: string;
   parameters?: CustomSkillParam[];
+  version?: string;
+  dependencies?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -151,6 +153,8 @@ interface SkillForm {
   promptTemplate: string;
   parameters: CustomSkillParam[];
   enabled: boolean;
+  version: string;
+  dependencies: string[];
 }
 
 function emptyForm(): SkillForm {
@@ -163,6 +167,8 @@ function emptyForm(): SkillForm {
     promptTemplate: '',
     parameters: [],
     enabled: true,
+    version: '1.0.0',
+    dependencies: [],
   };
 }
 
@@ -176,6 +182,8 @@ function skillToForm(s: SkillListItem): SkillForm {
     promptTemplate: s.promptTemplate ?? '',
     parameters: Array.isArray(s.parameters) ? s.parameters.map((p) => ({ ...p })) : [],
     enabled: s.enabled,
+    version: s.version ?? '1.0.0',
+    dependencies: Array.isArray(s.dependencies) ? s.dependencies : [],
   };
 }
 
@@ -196,6 +204,8 @@ function formToCustomSkill(f: SkillForm, now: string): CustomSkill {
         required: p.required,
       })),
     enabled: f.enabled,
+    version: f.version || '1.0.0',
+    dependencies: f.dependencies || [],
     createdAt: now,
     updatedAt: now,
   };
@@ -427,6 +437,8 @@ export function SkillSettings() {
         promptTemplate: typeof gen.promptTemplate === 'string' ? gen.promptTemplate : '',
         parameters: Array.isArray(gen.parameters) ? gen.parameters.map((p) => ({ ...p })) : [],
         enabled: true,
+        version: typeof gen.version === 'string' ? gen.version : '1.0.0',
+        dependencies: Array.isArray(gen.dependencies) ? gen.dependencies : [],
       });
       setEditingIsNew(true);
       setShowGenerate(false);

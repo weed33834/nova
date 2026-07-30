@@ -15,8 +15,10 @@
  * message so the UI can surface it without a thrown toast.
  */
 import type { NextRequest } from 'next/server';
-import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { NextResponse } from 'next/server';
+import { apiError } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { getMCPClientManager } from '@/lib/mcp/client-manager';
 import type { MCPServerConfig } from '@/lib/mcp/config';
 import { createLogger } from '@/lib/logger';
@@ -33,7 +35,23 @@ interface TestBody {
   server: MCPServerConfig;
 }
 
-export async function POST(req: NextRequest) {
+interface TestResult {
+  success: boolean;
+  connected: boolean;
+  toolCount: number;
+  tools: string[];
+  error?: string;
+}
+
+function testResult(data: TestResult): NextResponse {
+  // Use NextResponse.json directly instead of apiSuccess because test
+  // results may contain success:false — apiSuccess always sets the outer
+  // success:true, which creates a misleading envelope when the inner
+  // success is false. A flat response is clearer for test results.
+  return NextResponse.json(data);
+}
+
+export const POST = withApiHandler(async (req: NextRequest) => {
   let body: TestBody;
   try {
     body = (await req.json()) as TestBody;
@@ -74,23 +92,23 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const message = sanitizedErrorDetails(error);
     log.warn(`MCP test threw for "${server.name}": ${message}`);
-    return apiSuccess({
+    return testResult({
       success: false,
       connected: false,
       error: message,
       toolCount: 0,
-      tools: [] as string[],
+      tools: [],
     });
   }
 
   const status = manager.getStatus(server.id);
   if (status.status !== 'connected') {
-    return apiSuccess({
+    return testResult({
       success: false,
       connected: false,
       error: status.message ?? 'Connection failed',
       toolCount: 0,
-      tools: [] as string[],
+      tools: [],
     });
   }
 
@@ -98,10 +116,10 @@ export async function POST(req: NextRequest) {
   log.info(
     `MCP test OK for "${server.name}" (${server.id}, ${server.transport}): ${discovered.length} tool(s)`,
   );
-  return apiSuccess({
+  return testResult({
     success: true,
     connected: true,
     toolCount: discovered.length,
     tools: discovered.map((t) => t.name),
   });
-}
+}, { rateLimit: 'moderate' });

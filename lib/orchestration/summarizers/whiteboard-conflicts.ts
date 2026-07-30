@@ -10,6 +10,8 @@
  * model can act on them instead of inferring them.
  */
 
+import { stripHtml } from '@/lib/utils/html';
+
 const CANVAS_WIDTH = 1000;
 const CANVAS_HEIGHT = 563;
 const OVERLAP_THRESHOLD = 0.3; // intersection / min-area; flag if >= 30%
@@ -31,10 +33,6 @@ interface LineSeg {
   y1: number;
   x2: number;
   y2: number;
-}
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '').trim();
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- PPTElement variants have heterogeneous shapes

@@ -44,10 +44,14 @@ async function captureInjectedRequestBody(
       getStore: () => thinkingConfig,
     };
 
+    // Pass the canonical OpenAI base URL so the provider does not set up a
+    // undici-based baseFetch (which bypasses globalThis.fetch mocks). The
+    // thinking-param injection being tested depends on providerId, not baseUrl.
     getModel({
       providerId,
       modelId,
       apiKey: 'sk-test',
+      baseUrl: 'https://api.openai.com/v1',
     });
 
     const lastCall = openAiMock.createOpenAI.mock.calls.at(-1);
@@ -431,6 +435,7 @@ describe('OpenAI provider defaults', () => {
         providerId: 'lemonade',
         modelId: 'Gemma-4-26B-A4B-it-GGUF',
         apiKey: '',
+        baseUrl: 'https://api.openai.com/v1',
       });
 
       const lastCall = openAiMock.createOpenAI.mock.calls.at(-1);

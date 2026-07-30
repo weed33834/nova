@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createLogger } from '@/lib/logger';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import {
@@ -8,8 +8,6 @@ import {
   type UsageKind,
   type UsageUnit,
 } from '@/lib/server/usage-storage';
-
-const log = createLogger('UsageAPI');
 
 interface Bucket {
   key: string;
@@ -69,7 +67,7 @@ function dayKey(createdAt: number): string {
  * Aggregates the deployment-wide usage log (data/usage/*.jsonl) by model, by
  * day, and by modality. Pure usage — no cost. Optional `?months=YYYY-MM,...`.
  */
-export async function GET(req: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest, ctx) => {
   try {
     const monthsParam = req.nextUrl.searchParams.get('months');
     const months = monthsParam ? monthsParam.split(',').map((s) => s.trim()) : undefined;
@@ -107,7 +105,7 @@ export async function GET(req: NextRequest) {
       byKind: [...byKind.values()],
     });
   } catch (error) {
-    log.error('Usage aggregation failed:', error);
+    ctx.log.error('Usage aggregation failed:', error);
     return apiError(
       'INTERNAL_ERROR',
       500,
@@ -115,4 +113,4 @@ export async function GET(req: NextRequest) {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'light' });

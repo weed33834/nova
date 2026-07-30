@@ -66,10 +66,17 @@ export function adaptMCPTool(
       if (!client) {
         throw new Error(`MCP server "${tool.serverId}" is not connected`);
       }
-      const result = await client.callTool({
-        name: tool.name,
-        arguments: params as Record<string, unknown>,
-      });
+      // Pass the per-request AbortSignal so in-flight MCP calls are cancelled
+      // when the user aborts the agent turn.
+      const signal = manager.getAbortSignal() ?? undefined;
+      const result = await client.callTool(
+        {
+          name: tool.name,
+          arguments: params as Record<string, unknown>,
+        },
+        undefined,
+        signal ? { signal } : undefined,
+      );
       // `callTool`'s return type narrows `content` to `{}` under some overloads;
       // at runtime it is always an array of typed content blocks. Coerce via a
       // minimal local type so we map text/image and stringify everything else.

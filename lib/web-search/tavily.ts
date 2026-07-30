@@ -8,12 +8,9 @@
 import { proxyFetch } from '@/lib/server/proxy-fetch';
 import type { WebSearchResult, WebSearchSource } from '@/lib/types/web-search';
 export { formatSearchResultsAsContext } from './format';
+import { truncateErrorText } from '@/lib/utils/truncate';
 
 const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com';
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
 
 const TAVILY_MAX_QUERY_LENGTH = 400;
 

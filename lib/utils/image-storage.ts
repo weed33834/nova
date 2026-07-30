@@ -8,6 +8,7 @@
 import { db, type ImageFileRecord } from './database';
 import { nanoid } from 'nanoid';
 import { createLogger } from '@/lib/logger';
+import { blobToDataUrl } from '@/lib/audio/codec';
 
 const log = createLogger('ImageStorage');
 const SESSION_ID_LENGTH = 10;
@@ -43,18 +44,6 @@ function storedBinaryToBlob(value: Blob | ArrayBuffer, mimeType: string): Blob {
   }
 
   return value.type ? value : new Blob([value], { type: mimeType });
-}
-
-/**
- * Convert Blob to base64 data URL
- */
-async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
 }
 
 /**
@@ -113,7 +102,7 @@ export async function loadImageMapping(imageIds: string[]): Promise<Record<strin
       const record = await db.imageFiles.get(storageId);
       if (record) {
         const blob = storedBinaryToBlob(record.blob, record.mimeType);
-        const base64 = await blobToBase64(blob);
+        const base64 = await blobToDataUrl(blob);
         const originalId = extractOriginalImageId(storageId);
         if (!originalId) {
           log.warn(`Skipping image with malformed storage ID: ${storageId}`);

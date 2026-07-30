@@ -12,10 +12,7 @@
 
 import { proxyFetch } from '@/lib/server/proxy-fetch';
 import type { WebSearchResult, WebSearchSource } from '@/lib/types/web-search';
-
-function truncateErrorText(text: string, max = 300): string {
-  return text.length > max ? `${text.slice(0, max)}... (${text.length} chars)` : text;
-}
+import { truncateErrorText } from '@/lib/utils/truncate';
 
 const DOUBAO_DEFAULT_BASE_URL = 'https://open.feedcoopapi.com';
 const DOUBAO_SEARCH_PATH = '/search_api/web_search';

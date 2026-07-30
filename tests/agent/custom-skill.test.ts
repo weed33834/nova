@@ -16,6 +16,7 @@ function validSkill(overrides: Partial<CustomSkill> = {}): CustomSkill {
     promptTemplate: 'Summarize: {{text}}',
     parameters: [{ name: 'text', type: 'string', description: 'input', required: true }],
     enabled: true,
+    version: '1.0.0',
     createdAt: now,
     updatedAt: now,
     ...overrides,

@@ -31,7 +31,7 @@ import {
   replaceMediaPlaceholders,
   generateTTSForClassroom,
 } from '@/lib/server/classroom-media-generation';
-import { withGenerationRetry } from '@/lib/generation/generation-retry';
+import { withGenerationRetry, isRetryableGenerationError } from '@/lib/generation/generation-retry';
 import { buildVideoManifestFromOutlines } from '@/lib/media/video-manifest';
 import { checkGeneratedContent } from '@/lib/guardrails/pipeline-check';
 import { GuardrailBlockError } from '@/lib/guardrails/types';
@@ -525,7 +525,15 @@ export async function generateClassroom(
         },
       );
     } catch (actionsErr) {
-      // Action generation failed after all retries — skip this scene
+      // Non-retryable errors (e.g. 401 Unauthorized, 403 Forbidden) indicate
+      // systemic failures that will affect every subsequent scene too.
+      // Re-throw them so the caller sees the real error instead of a confusing
+      // "No scenes were generated" message.
+      if (!isRetryableGenerationError(actionsErr)) {
+        throw actionsErr;
+      }
+
+      // Retryable action generation failed after all retries — skip this scene
       // instead of aborting the entire classroom generation. This mirrors
       // the content-generation fallback above and ensures a single scene's
       // failure doesn't waste the work already done on preceding scenes.

@@ -24,13 +24,30 @@ vi.mock('@/lib/server/ssrf-guard', () => ({
   validateUrlForSSRF: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
+// Mock logger to support withApiHandler's runWithRequestId + createLogger().child()
+vi.mock('@/lib/logger', () => {
+  const stub = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
-  }),
+    child: () => stub,
+  };
+  return {
+    createLogger: () => stub,
+    runWithRequestId: (_id: string, fn: () => Promise<unknown>) => fn(),
+  };
+});
+
+// Mock rate-limit so withApiHandler doesn't try to read headers/cookies
+vi.mock('@/lib/server/rate-limit', () => ({
+  checkRateLimitPreset: vi.fn().mockResolvedValue({ limited: false }),
+  rateLimitedResponse: vi.fn(),
+}));
+
+// Mock metrics so withApiHandler doesn't try to record anything
+vi.mock('@/lib/server/metrics', () => ({
+  recordHttpRequest: vi.fn(),
 }));
 
 async function postMcpTest(body: unknown) {

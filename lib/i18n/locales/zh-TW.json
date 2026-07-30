@@ -2149,6 +2149,7 @@
     "parseFailed": "Failed to parse the response.",
     "providerDisabled": "This provider is currently disabled.",
     "rateLimited": "Rate limit exceeded. Please wait a moment and try again.",
+    "quotaExceeded": "配額已用盡，請檢查您的訂閱計劃或聯繫管理員。",
     "reloadPage": "Reload page",
     "reportIssue": "Report issue",
     "retry": "Retry",

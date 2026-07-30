@@ -249,7 +249,7 @@ export function useCanvasOperations() {
 
   // Lock selected elements and clear selection state
   const lockElement = () => {
-    const newElementList: PPTElement[] = JSON.parse(JSON.stringify(currentSlide.elements));
+    const newElementList: PPTElement[] = structuredClone(currentSlide.elements);
 
     for (const element of newElementList) {
       if (activeElementIdList.includes(element.id)) element.lock = true;
@@ -264,7 +264,7 @@ export function useCanvasOperations() {
    * @param handleElement The element to unlock
    */
   const unlockElement = (handleElement: PPTElement) => {
-    const newElementList: PPTElement[] = JSON.parse(JSON.stringify(currentSlide.elements));
+    const newElementList: PPTElement[] = structuredClone(currentSlide.elements);
 
     if (handleElement.groupId) {
       const groupElementIdList = [];
@@ -318,7 +318,7 @@ export function useCanvasOperations() {
     const viewportHeight = viewportSize * viewportRatio;
     const { minX, maxX, minY, maxY } = getElementListRange(activeElementList);
 
-    const newElementList: PPTElement[] = JSON.parse(JSON.stringify(currentSlide.elements));
+    const newElementList: PPTElement[] = structuredClone(currentSlide.elements);
     for (const element of newElementList) {
       if (!activeElementIdList.includes(element.id)) continue;
 
@@ -414,7 +414,7 @@ export function useCanvasOperations() {
     if (!activeElementList.length) return;
 
     // Create a new element list for subsequent operations
-    let newElementList: PPTElement[] = JSON.parse(JSON.stringify(currentSlide.elements));
+    let newElementList: PPTElement[] = structuredClone(currentSlide.elements);
 
     // Generate group ID
     const groupId = nanoid(10);
@@ -454,7 +454,7 @@ export function useCanvasOperations() {
     const hasElementInGroup = activeElementList.some((item) => item.groupId);
     if (!hasElementInGroup) return;
 
-    const newElementList: PPTElement[] = JSON.parse(JSON.stringify(currentSlide.elements));
+    const newElementList: PPTElement[] = structuredClone(currentSlide.elements);
     for (const element of newElementList) {
       if (activeElementIdList.includes(element.id) && element.groupId) delete element.groupId;
     }

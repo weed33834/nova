@@ -2,6 +2,10 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import type { NextRequest } from 'next/server';
 import type { Scene, Stage } from '@/lib/types/stage';
+import { createVersion, deleteAllVersions } from '@/lib/server/content-versioning';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('ClassroomStorage');
 
 export const CLASSROOMS_DIR = path.join(process.cwd(), 'data', 'classrooms');
 export const CLASSROOM_JOBS_DIR = path.join(process.cwd(), 'data', 'classroom-jobs');
@@ -97,6 +101,19 @@ export async function persistClassroom(
   if (!isValidClassroomId(data.id)) {
     throw new Error('Invalid classroom id');
   }
+
+  // Create a version snapshot of the existing content before overwriting.
+  // Wrapped in try-catch so versioning failures never block the save —
+  // the version history is a best-effort safety net, not a critical path.
+  try {
+    const existing = await readClassroom(data.id);
+    if (existing) {
+      await createVersion(data.id, existing, 'pre-save');
+    }
+  } catch (err) {
+    log.warn('Failed to create version snapshot', { classroomId: data.id, err });
+  }
+
   const classroomData: PersistedClassroomData = {
     id: data.id,
     stage: data.stage,
@@ -113,4 +130,32 @@ export async function persistClassroom(
     ...classroomData,
     url: `${baseUrl}/classroom/${data.id}`,
   };
+}
+
+/**
+ * Delete a classroom and all its version snapshots.
+ *
+ * @returns `true` if the classroom file existed and was deleted, `false` if
+ *   it was already absent. Version snapshots are always cleaned up regardless.
+ */
+export async function deleteClassroom(id: string): Promise<boolean> {
+  if (!isValidClassroomId(id)) {
+    throw new Error('Invalid classroom id');
+  }
+
+  const filePath = path.join(CLASSROOMS_DIR, `${id}.json`);
+  let existed = false;
+  try {
+    await fs.unlink(filePath);
+    existed = true;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw err;
+    }
+  }
+
+  // Clean up version snapshots regardless of whether the classroom file existed.
+  await deleteAllVersions(id);
+
+  return existed;
 }

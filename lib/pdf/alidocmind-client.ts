@@ -13,14 +13,13 @@ import Client, * as $Docmind from '@alicloud/docmind-api20220711';
 import { Config } from '@alicloud/openapi-client';
 import { RuntimeOptions } from '@alicloud/tea-util';
 import { createLogger } from '@/lib/logger';
+import { sleep } from '@/lib/utils/async';
 import { ALIDOCMIND_DEFAULT_BASE } from '@/lib/pdf/constants';
 
 const log = createLogger('AliDocMind');
 
 const POLL_INTERVAL_MS = 3_000;
 const POLL_MAX_MS = 15 * 60 * 1_000;
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export interface AliDocMindCredentials {
   accessKeyId: string;

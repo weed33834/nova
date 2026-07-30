@@ -12,6 +12,7 @@ import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
 import { exportUserData } from '@/lib/server/gdpr';
 import { recordAuditLog } from '@/lib/db/audit';
+import { requirePermission } from '@/lib/auth/rbac';
 
 export const GET = withApiHandler(async (req: NextRequest) => {
   const userId = req.nextUrl.searchParams.get('userId');
@@ -20,9 +21,8 @@ export const GET = withApiHandler(async (req: NextRequest) => {
     return apiError('MISSING_REQUIRED_FIELD', 400, 'userId query parameter is required');
   }
 
-  // TODO: Add admin role check here once RBAC middleware is wired to
-  // the API handler. For now, this route is protected by the ACCESS_CODE gate
-  // in proxy.ts and should only be callable by authenticated admins.
+  // Require admin role — GDPR export is a privileged operation
+  await requirePermission('user:manage');
 
   const data = exportUserData(userId);
 

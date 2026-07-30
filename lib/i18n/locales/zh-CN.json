@@ -60,6 +60,7 @@
     "contentSensitive": "内容被服务商标记为敏感内容。",
     "upstreamError": "模型服务商暂时不可用，请稍后重试。",
     "rateLimited": "请求频率超限，请稍等后重试。",
+    "quotaExceeded": "配额已用尽，请检查您的订阅计划或联系管理员。",
     "connectionError": "无法连接到 API 服务器。请检查 Base URL 和网络连接。",
     "connectionTimeout": "连接超时。请检查网络或尝试更换 Base URL。",
     "modelNotFound": "模型未找到。请检查模型名称或 API 端点地址。",

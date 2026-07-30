@@ -60,6 +60,7 @@
     "contentSensitive": "Content was flagged as sensitive by the provider.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "rateLimited": "Rate limit exceeded. Please wait a moment and try again.",
+    "quotaExceeded": "Quota exceeded. Please check your subscription plan or contact support.",
     "connectionError": "Cannot connect to the API server. Please check the Base URL and your network.",
     "connectionTimeout": "Connection timed out. Please check your network or try a different Base URL.",
     "modelNotFound": "Model not found. Please check the model name or API endpoint URL.",

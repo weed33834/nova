@@ -11,14 +11,21 @@ vi.mock('@/lib/prompts', () => ({
   loadPrompt: mocks.loadPrompt,
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
+vi.mock('@/lib/logger', () => {
+  const stubLogger = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
-  }),
-}));
+    child: vi.fn(() => stubLogger),
+    raw: vi.fn(),
+  };
+  return {
+    createLogger: vi.fn(() => stubLogger),
+    runWithRequestId: vi.fn((_id: string, fn: () => unknown) => fn()),
+    getRequestId: vi.fn(() => undefined),
+  };
+});
 
 function asNextRequest(url: string): NextRequest {
   return new Request(url) as unknown as NextRequest;
@@ -51,7 +58,7 @@ describe('GET /api/prompts', () => {
       },
     ]);
     const { GET } = await import('@/app/api/prompts/route');
-    const res = await GET();
+    const res = await GET(asNextRequest('http://localhost/api/prompts'));
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.success).toBe(true);
@@ -66,7 +73,7 @@ describe('GET /api/prompts', () => {
       throw new Error('fs read failed');
     });
     const { GET } = await import('@/app/api/prompts/route');
-    const res = await GET();
+    const res = await GET(asNextRequest('http://localhost/api/prompts'));
     expect(res.status).toBe(500);
     const json = await res.json();
     expect(json.success).toBe(false);

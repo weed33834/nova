@@ -44,7 +44,7 @@ export function useDragElement(
       const sorptionRange = 5;
 
       // Save original element list for computing multi-select offsets
-      const originElementList: PPTElement[] = JSON.parse(JSON.stringify(elementListRef.current));
+      const originElementList: PPTElement[] = structuredClone(elementListRef.current);
       const originActiveElementList = originElementList.filter((el) =>
         activeElementIdList.includes(el.id),
       );

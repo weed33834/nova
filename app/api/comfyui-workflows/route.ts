@@ -10,18 +10,16 @@
  * Response: { workflows: Array<{ id: string; name: string }> }
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { listComfyuiWorkflows } from '@/lib/media/comfyui-workflows';
-import { createLogger } from '@/lib/logger';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { apiError } from '@/lib/server/api-response';
 
-const log = createLogger('ComfyUI Workflows API');
-
-export async function GET() {
+export const GET = withApiHandler(async (_req: NextRequest, ctx) => {
   try {
     return NextResponse.json({ workflows: await listComfyuiWorkflows() });
   } catch (err) {
-    log.error('Failed to list workflows:', err);
+    ctx.log.error('Failed to list workflows:', err);
     return apiError(
       'INTERNAL_ERROR',
       500,
@@ -29,4 +27,4 @@ export async function GET() {
       err instanceof Error ? err.message : String(err),
     );
   }
-}
+}, { rateLimit: 'light' });

@@ -23,6 +23,8 @@ import type { StatelessChatRequest, StatelessEvent, ParsedAction } from '@/lib/t
 import type { ThinkingConfig } from '@/lib/types/provider';
 import type { WhiteboardActionRecord } from './types';
 import { createOrchestrationGraph, buildInitialState } from './director-graph';
+import { isCheckpointingEnabled } from './checkpointer';
+import { createThreadId } from './thread-id';
 import { parse as parsePartialJson, Allow } from 'partial-json';
 import { jsonrepair } from 'jsonrepair';
 import { createLogger } from '@/lib/logger';
@@ -331,10 +333,24 @@ export async function* statelessGenerate(
     const graph = createOrchestrationGraph();
     const initialState = buildInitialState(request, languageModel, thinkingConfig);
 
+    // When checkpointing is enabled, LangGraph requires a `thread_id` in
+    // `configurable` at invocation (a checkpointer with no thread_id throws).
+    //
+    // We mint a FRESH thread_id per request rather than reusing a per-session
+    // one. This graph's client re-sends the full accumulated `directorState`
+    // (agentResponses / whiteboardLedger) on every request, and those channels
+    // use append reducers. Reusing a thread_id would load the prior checkpoint
+    // and append the re-sent values again — compounding duplication that
+    // inflates turn counts and trips max_turns early. A per-request thread_id
+    // keeps each run independent (no double-accumulation) while still letting
+    // the checkpointer snapshot in-flight state for inspection / resume-by-id.
+    // Per-session resumption (thread-id.ts `getThreadId`) is reserved for a
+    // future migration to server-managed incremental state.
     const stream = await graph.stream(initialState, {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       streamMode: 'custom' as any,
       signal: abortSignal,
+      ...(isCheckpointingEnabled() ? { configurable: { thread_id: createThreadId() } } : {}),
     });
 
     let totalActions = 0;

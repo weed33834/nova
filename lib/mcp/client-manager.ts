@@ -40,6 +40,23 @@ interface ManagedServer {
  */
 export class MCPClientManager {
   private servers = new Map<string, ManagedServer>();
+  /**
+   * Per-request AbortSignal. When set, all in-flight MCP tool calls
+   * receive this signal so they can be cancelled when the user aborts
+   * the agent turn. Set by the agent route before invoking the agent,
+   * cleared after the turn completes.
+   */
+  private currentAbortSignal: AbortSignal | null = null;
+
+  /** Set the AbortSignal for the current agent turn (enables MCP tool cancellation). */
+  setAbortSignal(signal: AbortSignal | null): void {
+    this.currentAbortSignal = signal;
+  }
+
+  /** Get the current AbortSignal (or undefined if none is set). */
+  getAbortSignal(): AbortSignal | null {
+    return this.currentAbortSignal;
+  }
 
   /** Connect (or reconnect) every enabled server; drop disabled/removed ones. */
   async connectAll(config: MCPServersConfig): Promise<void> {

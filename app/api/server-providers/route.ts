@@ -8,13 +8,12 @@ import {
   getServerWebSearchProviders,
   getParallelSceneConcurrency,
 } from '@/lib/server/provider-config';
+import { withApiHandler } from '@/lib/server/api-handler';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
-import { createLogger } from '@/lib/logger';
+import type { NextRequest } from 'next/server';
 
-const log = createLogger('ServerProviders');
-
-export async function GET() {
+export const GET = withApiHandler(async (_req: NextRequest, ctx) => {
   try {
     return apiSuccess({
       providers: getServerProviders(),
@@ -29,7 +28,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    log.error('Error fetching server providers:', error);
+    ctx.log.error('Error fetching server providers:', error);
     return apiError(
       'INTERNAL_ERROR',
       500,
@@ -37,4 +36,4 @@ export async function GET() {
       sanitizedErrorDetails(error),
     );
   }
-}
+}, { rateLimit: 'light' });

@@ -16,6 +16,7 @@ import {
   MINERU_IMAGE_MIMES,
 } from '@/lib/document/mime';
 import { createLogger } from '@/lib/logger';
+import { sleep } from '@/lib/utils/async';
 
 const log = createLogger('MinerUCloud');
 
@@ -45,8 +46,6 @@ const MIME_MAP: Record<string, string> = (() => {
 // Match every image extension MinerU may include as an asset in the result
 // zip. Kept in lockstep with MIME_MAP by deriving from the same source.
 const IMAGE_EXTENSION_RE = new RegExp(`\\.(${Object.keys(MIME_MAP).join('|')})$`, 'i');
-
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function extToMime(ext: string): string {
   return MIME_MAP[ext.toLowerCase()] ?? 'application/octet-stream';

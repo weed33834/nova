@@ -12,6 +12,7 @@ import { useWhiteboardHistoryStore } from '@/lib/store/whiteboard-history';
 import { createStageAPI } from '@/lib/api/stage-api';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { delay } from '@/lib/utils/async';
 
 interface WhiteboardProps {
   readonly isOpen: boolean;
@@ -51,7 +52,7 @@ export function Whiteboard({ isOpen, onClose }: WhiteboardProps) {
 
     // Wait for cascade: base 380ms + 55ms per element, capped at 1400ms
     const animMs = Math.min(380 + elementCount * 55, 1400);
-    await new Promise((resolve) => setTimeout(resolve, animMs));
+    await delay(animMs);
 
     // Actually remove elements
     const result = stageAPI.whiteboard.delete(whiteboard.id);

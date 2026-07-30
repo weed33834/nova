@@ -5,6 +5,7 @@ import type {
   PPTTextElement,
   Slide,
 } from '@nova/dsl';
+import { escapeHtml } from '@/lib/utils/html';
 
 export interface ShapeSpec {
   viewBox: [number, number];
@@ -92,13 +93,4 @@ export function createDefaultImageElement(id: string, src: string): PPTImageElem
     fixedRatio: true,
     src,
   };
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }

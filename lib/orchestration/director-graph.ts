@@ -37,9 +37,11 @@ import { summarizeConversation } from './summarizers/conversation-summary';
 import { convertMessagesToOpenAI } from './summarizers/message-converter';
 import { buildDirectorPrompt, parseDirectorDecision } from './director-prompt';
 import { getEffectiveActions } from './tool-schemas';
-import { getMaxActions, hasExceededMaxTurns } from './role-constraints';
+import { injectPeerMessages } from './message-integration';
+import { getMaxActions, hasExceededMaxTurns, isInCooldown, requiresApproval } from './role-constraints';
 import type { AgentTurnSummary, WhiteboardActionRecord } from './types';
 import { parseStructuredChunk, createParserState, finalizeParser } from './stateless-generate';
+import { getCheckpointer, isCheckpointingEnabled } from './checkpointer';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('DirectorGraph');
@@ -59,6 +61,8 @@ const OrchestratorState = Annotation.Root({
   discussionContext: Annotation<{ topic: string; prompt?: string } | null>,
   triggerAgentId: Annotation<string | null>,
   userProfile: Annotation<{ nickname?: string; bio?: string } | null>,
+  /** Session ID for inter-agent messaging (optional — enables peer-message injection) */
+  sessionId: Annotation<string | null>,
   /** Request-scoped agent configs for generated agents (not in the default registry) */
   agentConfigOverrides: Annotation<Record<string, AgentConfig>>,
 
@@ -223,6 +227,21 @@ async function directorNode(
         );
         return { shouldEnd: true };
       }
+
+      // Enforce per-role cooldown constraint — skip agents still in their
+      // cooldown window (e.g. evaluator: 30s between turns) by ending the
+      // discussion rather than dispatching too soon.
+      const lastTurnTimestamp = state.agentResponses
+        .filter((r) => r.agentId === decision.nextAgentId)
+        .map((r) => r.timestamp)
+        .filter((t): t is number => t !== undefined)
+        .sort((a, b) => b - a)[0];
+      if (isInCooldown(selectedAgent.role, lastTurnTimestamp)) {
+        log.info(
+          `[Director] Agent "${selectedAgent.name}" (role: ${selectedAgent.role}) is in cooldown, ending discussion`,
+        );
+        return { shouldEnd: true };
+      }
     }
 
     write({
@@ -340,11 +359,19 @@ async function runAgentGeneration(
     state.userProfile || undefined,
     state.agentResponses,
   );
+
+  // Inject unread peer messages from the inter-agent message bus (if a
+  // sessionId is available). This lets agents see what other agents have
+  // told them, enabling explicit handoffs and broadcasts.
+  const effectiveSystemPrompt = state.sessionId
+    ? injectPeerMessages(systemPrompt, agentConfig.id, state.sessionId)
+    : systemPrompt;
+
   const openaiMessages = convertMessagesToOpenAI(state.messages, agentId);
   const adapter = new AISdkLangGraphAdapter(state.languageModel, state.thinkingConfig ?? undefined);
 
   const lcMessages = [
-    new SystemMessage(systemPrompt),
+    new SystemMessage(effectiveSystemPrompt),
     ...openaiMessages.map((m) =>
       m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content),
     ),
@@ -418,6 +445,8 @@ async function runAgentGeneration(
               continue;
             }
             actionCount++;
+            // Check if this agent's role requires approval before action execution
+            const approvalRequired = requiresApproval(agentConfig.role);
             // Record whiteboard actions to the ledger
             if (ac.actionName.startsWith('wb_')) {
               whiteboardActions.push({
@@ -435,6 +464,7 @@ async function runAgentGeneration(
                 params: ac.params,
                 agentId,
                 messageId,
+                ...(approvalRequired ? { approvalRequired: true } : {}),
               },
             });
           }
@@ -524,6 +554,7 @@ async function agentGenerateNode(
         contentPreview: result.contentPreview,
         actionCount: result.actionCount,
         whiteboardActions: result.whiteboardActions,
+        timestamp: Date.now(),
       },
     ],
     whiteboardLedger: result.whiteboardActions,
@@ -557,6 +588,16 @@ export function createOrchestrationGraph() {
     })
     .addEdge('agent_generate', END);
 
+  // Attach a checkpointer so in-flight state survives a dropped connection
+  // and can be resumed/inspected by `thread_id`. Conditional: off in
+  // production until a durable saver (SqliteSaver / PostgresSaver) is wired
+  // in — see ./checkpointer.ts. When a checkpointer is attached, every
+  // invocation MUST pass `config.configurable.thread_id` (handled in
+  // stateless-generate.ts); otherwise LangGraph throws.
+  if (isCheckpointingEnabled()) {
+    log.info('[DirectorGraph] Compiling graph with MemorySaver checkpointer');
+    return graph.compile({ checkpointer: getCheckpointer() });
+  }
   return graph.compile();
 }
 
@@ -602,6 +643,7 @@ export function buildInitialState(
     discussionContext,
     triggerAgentId: request.config.triggerAgentId || null,
     userProfile: request.userProfile || null,
+    sessionId: request.config.sessionId || null,
     agentConfigOverrides,
     currentAgentId: null,
     turnCount,

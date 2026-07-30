@@ -12,31 +12,12 @@
 
 import { db } from '@/lib/utils/database';
 import { getDeterministicVoiceId, type VoiceDesign } from '@/lib/audio/voice-design';
+import { blobToBase64, base64ToBlob } from '@/lib/audio/codec';
 
 export interface VoiceRegistrationRequestConfig {
   ttsApiKey?: string;
   ttsBaseUrl?: string;
   ttsModelId?: string;
-}
-
-function base64ToBlob(base64: string, mimeType?: string): Blob {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mimeType || 'audio/wav' });
-}
-
-async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error || new Error('Failed to read reference audio'));
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      const commaIndex = result.indexOf(',');
-      resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
-    };
-    reader.readAsDataURL(blob);
-  });
 }
 
 // Confirmed-registered + in-flight memos, keyed by (voiceId, backend, credential).

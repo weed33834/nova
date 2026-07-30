@@ -141,7 +141,36 @@ export const skills = sqliteTable('skills', {
 }, (table) => ({
   ownerIdx: index('skills_owner_id_idx').on(table.ownerId),
   categoryIdx: index('skills_category_idx').on(table.category),
-})); 
+}));
+
+// ---------------------------------------------------------------------------
+// Agents — server-side persistence for custom agents.
+//
+// Custom agents (persona/role, system prompt, voice, avatar, allowed actions)
+// were previously stored only in browser localStorage/IndexedDB. This table
+// mirrors the `skills` pattern so agents are DB-backed and queryable, surviving
+// across devices and sessions. Timestamps are epoch ms (integer) to match the
+// `usage_records` convention; `allowedActions` is a JSON-serialized string[].
+// ---------------------------------------------------------------------------
+
+export const agents = sqliteTable('agents', {
+  id: text('id').primaryKey(),
+  ownerId: text('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  role: text('role').notNull(),
+  systemPrompt: text('system_prompt').notNull(),
+  voice: text('voice'),
+  avatar: text('avatar'),
+  // string[] serialized as JSON (mirrors `skills.parameters_json`).
+  allowedActionsJson: text('allowed_actions_json').notNull().default('[]'),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  category: text('category'),
+  createdAt: integer('created_at').notNull(), // epoch ms
+  updatedAt: integer('updated_at').notNull(), // epoch ms
+}, (table) => ({
+  ownerIdx: index('agents_owner_id_idx').on(table.ownerId),
+  categoryIdx: index('agents_category_idx').on(table.category),
+}));
 
 // ---------------------------------------------------------------------------
 // Usage records — migrated from data/usage/<YYYY-MM>.jsonl
@@ -305,6 +334,8 @@ export type Account = typeof accounts.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Classroom = typeof classrooms.$inferSelect;
 export type Skill = typeof skills.$inferSelect;
+export type Agent = typeof agents.$inferSelect;
+export type NewAgent = typeof agents.$inferInsert;
 export type UsageRecord = typeof usageRecords.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;

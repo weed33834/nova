@@ -70,6 +70,7 @@ describe('GET /api/skills', () => {
         promptTemplate: 'pt',
         parameters: [],
         enabled: true,
+        version: '1.0.0',
         createdAt: '2024-01-01T00:00:00.000Z',
         updatedAt: '2024-01-01T00:00:00.000Z',
       } satisfies CustomSkill,

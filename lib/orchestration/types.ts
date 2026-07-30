@@ -37,4 +37,6 @@ export interface AgentTurnSummary {
   contentPreview: string;
   actionCount: number;
   whiteboardActions: WhiteboardActionRecord[];
+  /** Epoch-ms timestamp of when this turn was recorded. Used by cooldown enforcement. */
+  timestamp?: number;
 }

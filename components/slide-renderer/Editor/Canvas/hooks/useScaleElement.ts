@@ -578,7 +578,7 @@ export function useScaleElement(
       const startPageX = e.pageX;
       const startPageY = e.pageY;
 
-      const originElementList: PPTElement[] = JSON.parse(JSON.stringify(elementListRef.current));
+      const originElementList: PPTElement[] = structuredClone(elementListRef.current);
 
       const handleMouseMove = (e: MouseEvent) => {
         if (!isMouseDown) return;

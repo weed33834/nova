@@ -2149,6 +2149,7 @@
     "parseFailed": "Failed to parse the response.",
     "providerDisabled": "This provider is currently disabled.",
     "rateLimited": "Rate limit exceeded. Please wait a moment and try again.",
+    "quotaExceeded": "Cota excedida. Verifique seu plano de assinatura ou entre em contato com o suporte.",
     "reloadPage": "Reload page",
     "reportIssue": "Report issue",
     "retry": "Retry",
