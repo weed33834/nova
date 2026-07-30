@@ -123,7 +123,7 @@ Two version numbers live in this package and do **not** track each other:
 - **`DSL_VERSION`** — the version of the *serialized* slide contract (the
   on-disk document shape). It bumps only when a persisted document's shape
   changes, independent of package releases. (A third, finer axis —
-  `SlideContent.schemaVersion` — versions the PPTist canvas *inside* a slide and
+  `SlideContent.schemaVersion` — versions the Nova canvas *inside* a slide and
   is migrated app-side; it is orthogonal to `DSL_VERSION`.)
 
 `version.ts` owns the document-level migration mechanism, zero-dependency and

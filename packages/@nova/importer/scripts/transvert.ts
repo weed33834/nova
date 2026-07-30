@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * 测试 pptxtojson-pro（本库）：直接 import src 源码，无需打包。
+ * 测试 @nova/importer（本库）：直接 import src 源码，无需打包。
  * 用法: npx tsx scripts/transvert.ts <path-to.pptx> [output.json]
  * 或:   pnpm run transvert:pro <path-to.pptx> [output.json]
  */

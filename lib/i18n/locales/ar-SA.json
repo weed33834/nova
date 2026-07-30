@@ -3,7 +3,14 @@
     "you": "أنت",
     "confirm": "تأكيد",
     "cancel": "إلغاء",
-    "loading": "جارٍ التحميل..."
+    "loading": "جارٍ التحميل...",
+    "level": "مستوى",
+    "minutesShort": "د",
+    "delete": "حذف",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "prev": "السابق",
+    "next": "التالي"
   },
   "auth": {
     "signIn": "تسجيل الدخول",
@@ -27,6 +34,7 @@
   "home": {
     "slogan": "نجم جديد للتعلّم متعدد الوكلاء الشخصي.",
     "greetingWithName": "مرحبًا، {{name}}",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — A new star for personalized learning.",
     "vocationalTestBadge": "Beta",
     "vocationalTestLabel": "Vocational Tasks",
@@ -87,7 +95,14 @@
     "exporting": "جارٍ التصدير...",
     "exportSuccess": "تم التصدير بنجاح",
     "exportFailed": "فشل التصدير",
-    "inlinePartial": "تعذّر تضمين {{count}} من الموارد الخارجية؛ قد لا يتم عرض الدورة بشكل صحيح دون اتصال بالإنترنت."
+    "inlinePartial": "تعذّر تضمين {{count}} من الموارد الخارجية؛ قد لا يتم عرض الدورة بشكل صحيح دون اتصال بالإنترنت.",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineSuccess": "Video timeline exported",
+    "timelineWithWarnings": "Timeline exported",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering"
   },
   "import": {
     "classroom": "استيراد فصل",
@@ -120,7 +135,8 @@
     "endQA": "إنهاء الأسئلة والأجوبة",
     "error": {
       "emptyAgentResponses": "أعاد الوكلاء استجابات فارغة; توقف النقاش. حاول مرة أخرى أو راجع إعدادات النموذج.",
-      "streamInterrupted": "انتهى تدفق البيانات بشكل غير متوقع; لم يكتمل النقاش. يرجى المحاولة مرة أخرى."
+      "streamInterrupted": "انتهى تدفق البيانات بشكل غير متوقع; لم يكتمل النقاش. يرجى المحاولة مرة أخرى.",
+      "maxTurnsReached": "وصل النقاش إلى الحد الأقصى من الأدوار. تم إنهاء المحادثة."
     },
     "tabs": {
       "lecture": "الملاحظات",
@@ -202,7 +218,14 @@
     "exitFullscreen": "الخروج من ملء الشاشة",
     "editCourse": "تحرير الدورة",
     "doneEditing": "إنهاء التحرير",
-    "proModeDisabledHint": "التحرير غير متاح في هذه الصفحة — افتح شريحة من الدورة للتحرير باستخدام وضع Pro."
+    "proModeDisabledHint": "التحرير غير متاح في هذه الصفحة — افتح شريحة من الدورة للتحرير باستخدام وضع Pro.",
+    "scenes": "المشاهد",
+    "previousScene": "المشهد السابق",
+    "nextScene": "المشهد التالي",
+    "toggleChat": "تبديل الدردشة",
+    "moreControls": "خيارات أخرى",
+    "play": "تشغيل",
+    "pause": "إيقاف مؤقت"
   },
   "edit": {
     "proMode": "احترافي",
@@ -874,7 +897,9 @@
     "errorTitle": "Failed to load classroom",
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "الوضع المهني",
+    "searchEmptyHint": "جرّب كلمة مفتاحية مختلفة، أو امسح البحث لعرض جميع الفصول."
   },
   "upload": {
     "courseMaterialSizeLimit": "المستندات والعروض التقديمية وجداول البيانات والصور والنصوص العادية — حتى 50 ميغابايت (تعتمد الصيغ المقبولة على المستخرج المحدد)",
@@ -1844,7 +1869,14 @@
     "mcpTransportStdioHint": "stdio transport spawns a child process and is only available in standalone deployments. Stateless environments like Vercel cannot use it.",
     "mcpUrl": "Server URL",
     "mcpUrlPlaceholder": "e.g. https://mcp.example.com/mcp",
-    "duplicateId": "Duplicate ID"
+    "duplicateId": "Duplicate ID",
+    "teachingSystem": "التعليم",
+    "sidebar": {
+      "agents": "أدوار الوكلاء",
+      "knowledgeGraph": "الرسم البياني",
+      "guardrails": "الحواجز",
+      "tracing": "تتبع المعرفة"
+    }
   },
   "profile": {
     "buildProfile": "Build your learning profile for personalized recommendations",
@@ -1937,7 +1969,25 @@
     "totalHours": "Total Hours",
     "totalHoursLabel": "Total Hours",
     "weeklyHours": "Weekly Hours",
-    "weeklyHoursLabel": "Weekly Hours"
+    "weeklyHoursLabel": "Weekly Hours",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "أساس المعرفة",
+          "cognitiveStyle": "الأسلوب المعرفي",
+          "learningGoals": "أهداف التعلم",
+          "modalityPreference": "تفضيل النموذج",
+          "timeBudget": "ميزانية الوقت",
+          "errorPatterns": "أنماط الأخطاء"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "المجالات والمواضيع التي تعرفها بالفعل",
+    "cognitiveStyleDesc": "كيف تستوعب المعلومات الجديدة بأفضل شكل",
+    "learningGoalsDesc": "ما الذي تريد تحقيقه",
+    "modalityPreferenceDesc": "التنسيقات التي تتعلم منها بشكل أفضل",
+    "timeBudgetDesc": "الوقت الذي يمكنك استثماره",
+    "errorPatternsDesc": "الأخطاء الشائعة التي يجب الانتباه إليها"
   },
   "media": {
     "imageCapability": "توليد الصور",
@@ -2049,7 +2099,9 @@
     "welcomeDesc": "Your personal AI multi-agent interactive classroom. Tell Nova what you want to learn, and it generates a complete personalized course.",
     "welcomeTitle": "Welcome to Nova ✨",
     "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations.",
-    "whiteboardTitle": "Interactive Whiteboard"
+    "whiteboardTitle": "Interactive Whiteboard",
+    "showHelp": "عرض جولة المساعدة",
+    "help": "مساعدة"
   },
   "userProfile": {
     "title": "الملف الشخصي",
@@ -2110,6 +2162,121 @@
     "unknown": "An unexpected error occurred.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "withContext": "{{message}} ({{context}})",
-    "withDetails": "{{message}} — {{details}}"
+    "withDetails": "{{message}} — {{details}}",
+    "emailTaken": "This email is already registered.",
+    "validationError": "The provided input is invalid."
+  },
+  "audio": {
+    "mute": "كتم الصوت",
+    "unmute": "إلغاء الكتم"
+  },
+  "adaptive": {
+    "knowledgeGraph": "الرسم البياني للمعرفة",
+    "demo": {
+      "concept1Label": "أساسيات بايثون",
+      "concept1Desc": "المتغيرات والأنواع",
+      "concept2Label": "هياكل البيانات",
+      "concept2Desc": "القوائم والقواميس",
+      "concept3Label": "الدوال والوحدات",
+      "concept3Desc": "تعريفات الدوال والوسائط",
+      "concept4Label": "البرمجة الكائنية",
+      "concept4Desc": "الفئات والوراثة",
+      "concept5Label": "مشروع تطبيقي",
+      "concept5Desc": "ممارسة مشروع شامل"
+    },
+    "learningPath": {
+      "title": "مسار التعلم الموصى به",
+      "emptyDesc": "أكمل ملفك التعليمي للحصول على مسار مخصص",
+      "summary": "{{count}} نقطة · ~{{minutes}} دقيقة",
+      "minutes": "{{n}} دقيقة",
+      "footer": "تم التوليد من ملفك ({{hours}} ساعة)",
+      "viewDetail": "عرض التفاصيل",
+      "detailDialog": "تفاصيل المسار — {{minutes}} دقيقة\n\n{{summary}}\n\nالرسم: {{name}} ({{count}} مفهوم)"
+    },
+    "depth": {
+      "surface": "نظرة عامة",
+      "normal": "قياسي",
+      "deep": "متعمق"
+    },
+    "category": {
+      "prerequisite": "أساسي",
+      "core": "أساسي",
+      "advanced": "متقدم",
+      "application": "تطبيقي",
+      "assessment": "تقييم"
+    },
+    "strategy": {
+      "prerequisite_first": "الأساسيات أولاً",
+      "balanced": "متوازن",
+      "deep_first": "التعمق أولاً"
+    }
+  },
+  "tracing": {
+    "title": "تتبع المعرفة",
+    "simulateLearning": "محاكاة التعلم",
+    "simulateMastery": "محاكاة الإتقان",
+    "overallMastery": "الإتقان الشامل",
+    "mastered": "متقن",
+    "weakConcepts": "مفاهيم ضعيفة",
+    "needReview": "تحتاج مراجعة",
+    "conceptMastery": "إتقان المفهوم",
+    "attempts": "المحاولات: {{n}}",
+    "correct": "صحيح: {{n}}",
+    "confidence": "الثقة: {{pct}}%",
+    "performancePrediction": "توقع الأداء",
+    "predictedCorrectness": "الدقة المتوقعة",
+    "predictedConfidence": "الثقة المتوقعة",
+    "nextReviewInterval": "فترة المراجعة التالية",
+    "nextReviewIntervalValue": "{{n}} ساعة",
+    "forgettingCurve": "منحنى النسيان (7 أيام)",
+    "now": "الآن",
+    "sevenDays": "7 أيام",
+    "selectConcept": "اختر مفهومًا لعرض التنبؤات ومنحنى النسيان",
+    "demoConcept1": "الأساسيات",
+    "demoConcept2": "المفاهيم الأساسية",
+    "demoConcept3": "تطبيقات متقدمة"
+  },
+  "agentRoles": {
+    "subtitle": "إدارة أدوار الوكيل وتكوينات الأذونات",
+    "resetAll": "إعادة تعيين الكل",
+    "description": "الوصف",
+    "interactionMode": "وضع التفاعل",
+    "permissions": "الأذونات ({{n}})",
+    "priority": "الأولوية",
+    "modified": "معدل",
+    "resetToDefault": "إعادة التعيين إلى الافتراضي",
+    "interactions": {
+      "direct": "التعليم المباشر",
+      "scaffold": "مؤقت",
+      "socratic": "سقراطي",
+      "collaborative": "تعاوني"
+    }
+  },
+  "permissions": {
+    "speak": "التحدث",
+    "whiteboardDraw": "الرسم على السبورة",
+    "whiteboardErase": "مسح السبورة",
+    "whiteboardManage": "إدارة السبورة",
+    "slideControl": "التحكم في الشريحة",
+    "slideSpotlight": "الأضواء",
+    "slideLaser": "مؤشر الليزر",
+    "quizCreate": "إنشاء اختبار",
+    "quizGrade": "تصحيح الاختبار",
+    "mediaControl": "التحكم في الوسائط",
+    "discussionModerate": "إدارة المناقشة",
+    "evaluate": "تقييم",
+    "summarize": "تلخيص",
+    "manageAgents": "إدارة الوكلاء"
+  },
+  "demoSeed": {
+    "launchingDemo": "جارٍ التشغيل...",
+    "launchDemo": "إنشاء دورة تجريبية في الوقت الفعلي",
+    "loading": "جارٍ التحميل...",
+    "loadCached": "افتح الدورة المخزنة فورًا",
+    "requirement": "أنشئ لي دورة تفاعلية قصيرة عن {{topic}}"
+  },
+  "greeting": {
+    "hi": "مرحبا، {{name}}",
+    "readyToLearn": "هل أنت مستعد للتعلم معًا؟"
   }
 }

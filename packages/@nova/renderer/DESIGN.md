@@ -35,7 +35,7 @@
 import { SlideCanvas, type SlideCanvasProps } from 'nova-renderer';
 
 interface SlideCanvasProps {
-  /** 单页幻灯片数据（PPTist 风格） */
+  /** 单页幻灯片数据 */
   slide: Slide;
   /** 画布缩放，默认 1 */
   scale?: number;

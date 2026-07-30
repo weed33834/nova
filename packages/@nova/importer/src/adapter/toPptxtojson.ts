@@ -1,5 +1,5 @@
 /**
- * Adapter: PresentationData + PptxFiles → pptxtojson/PPTist output format.
+ * Adapter: PresentationData + PptxFiles → pptxtojson 兼容的输出格式。
  * All dimensions in output are in pt (px * 0.75).
  * Delegates slide serialization to the serializer layer (slideToSlide).
  */

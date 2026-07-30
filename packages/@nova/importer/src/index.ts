@@ -1,5 +1,5 @@
 /**
- * pptxtojson — Parse .pptx to JSON for PPTist
+ * @nova/importer — Parse .pptx to JSON for the Nova canvas.
  * New TypeScript implementation; src1 is reference for data format.
  */
 
@@ -18,7 +18,7 @@ export interface ParseOptions {
 }
 
 /**
- * Parse a .pptx file (ArrayBuffer) and return pptxtojson/PPTist format.
+ * Parse a .pptx file (ArrayBuffer) and return the pptxtojson-compatible Output.
  * All dimensions in output are in pt.
  */
 export async function parse(buffer: ArrayBuffer, options?: ParseOptions): Promise<Output> {

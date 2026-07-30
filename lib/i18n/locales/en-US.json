@@ -3,7 +3,14 @@
     "you": "You",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "level": "Lv.",
+    "minutesShort": "min",
+    "delete": "Delete",
+    "back": "Back",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next"
   },
   "auth": {
     "signIn": "Sign In",
@@ -79,6 +86,7 @@
   "home": {
     "slogan": "A new star for personalized multi-agent learning.",
     "greetingWithName": "Hi, {{name}}",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — A new star for personalized learning.",
     "vocationalTestBadge": "Beta",
     "vocationalTestLabel": "Vocational Tasks",
@@ -179,7 +187,8 @@
     "endQA": "End Q&A",
     "error": {
       "emptyAgentResponses": "Agents returned empty responses; discussion stopped. Try again or check your model settings.",
-      "streamInterrupted": "Stream ended unexpectedly; discussion didn't complete. Please try again."
+      "streamInterrupted": "Stream ended unexpectedly; discussion didn't complete. Please try again.",
+      "maxTurnsReached": "Discussion reached the maximum turn limit. The conversation has been concluded."
     },
     "tabs": {
       "lecture": "Notes",
@@ -261,7 +270,14 @@
     "exitFullscreen": "Exit Fullscreen",
     "editCourse": "Edit course",
     "doneEditing": "Done editing",
-    "proModeDisabledHint": "Editing isn't available on this page — open a course slide to edit with Pro mode."
+    "proModeDisabledHint": "Editing isn't available on this page — open a course slide to edit with Pro mode.",
+    "scenes": "Scenes",
+    "previousScene": "Previous scene",
+    "nextScene": "Next scene",
+    "toggleChat": "Toggle chat",
+    "moreControls": "More controls",
+    "play": "Play",
+    "pause": "Pause"
   },
   "edit": {
     "proMode": "Pro",
@@ -947,7 +963,9 @@
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
     "errorTitle": "Failed to load classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "Vocational Mode",
+    "searchEmptyHint": "Try a different keyword, or clear the search to see all classrooms."
   },
   "upload": {
     "courseMaterialSizeLimit": "Documents, slides, spreadsheets, images, and plain text — up to 50MB (accepted formats depend on the selected extractor)",
@@ -1161,7 +1179,25 @@
     "weeklyHoursLabel": "Weekly Hours",
     "totalHoursLabel": "Total Hours",
     "deadlineLabel": "Deadline",
-    "buildProfile": "Build your learning profile for personalized recommendations"
+    "buildProfile": "Build your learning profile for personalized recommendations",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "Knowledge foundation",
+          "cognitiveStyle": "Cognitive style",
+          "learningGoals": "Learning goals",
+          "modalityPreference": "Modality preference",
+          "timeBudget": "Time budget",
+          "errorPatterns": "Error patterns"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "Domains and topics you already know",
+    "cognitiveStyleDesc": "How you best absorb new information",
+    "learningGoalsDesc": "What you want to achieve",
+    "modalityPreferenceDesc": "The formats you learn from best",
+    "timeBudgetDesc": "How much time you can invest",
+    "errorPatternsDesc": "Common pitfalls to watch out for"
   },
   "intro": {
     "title": "Nova",
@@ -1229,7 +1265,9 @@
     "agentBarTitle": "Role Configuration",
     "agentBarDesc": "Click to expand and configure AI roles. Adjust persona, voice, priority. Auto-mode generates roles from course content.",
     "whiteboardTitle": "Interactive Whiteboard",
-    "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations."
+    "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations.",
+    "showHelp": "Show help tour",
+    "help": "Help"
   },
   "settings": {
     "title": "Settings",
@@ -2078,7 +2116,14 @@
     },
     "ttsBrowserNativeTimelineNotice": "Browser-native TTS doesn't support the editor timeline's audio features (preview, regenerate, and bulk voiceover). Switch to a managed TTS provider to generate and manage per-line audio.",
     "alidocmindAccessKeyId": "AccessKey ID",
-    "alidocmindAccessKeySecret": "AccessKey Secret"
+    "alidocmindAccessKeySecret": "AccessKey Secret",
+    "teachingSystem": "Teaching",
+    "sidebar": {
+      "agents": "Agent Roles",
+      "knowledgeGraph": "Knowledge Graph",
+      "guardrails": "Guardrails",
+      "tracing": "Knowledge Tracing"
+    }
   },
   "media": {
     "imageCapability": "Image Generation",
@@ -2120,5 +2165,118 @@
     "fileTooLarge": "Image too large — please choose one under 5 MB",
     "invalidFileType": "Please select an image file",
     "editTooltip": "Click to edit profile"
+  },
+  "audio": {
+    "mute": "Mute",
+    "unmute": "Unmute"
+  },
+  "adaptive": {
+    "knowledgeGraph": "Knowledge Graph",
+    "demo": {
+      "concept1Label": "Python Basics",
+      "concept1Desc": "Variables, data types, control flow",
+      "concept2Label": "Data Structures",
+      "concept2Desc": "Lists, dicts, tuples, sets",
+      "concept3Label": "Functions & Modules",
+      "concept3Desc": "Function definitions, parameters, imports",
+      "concept4Label": "Object-Oriented",
+      "concept4Desc": "Classes, inheritance, polymorphism",
+      "concept5Label": "Hands-on Project",
+      "concept5Desc": "Integrated project practice"
+    },
+    "learningPath": {
+      "title": "Recommended Learning Path",
+      "emptyDesc": "Complete your learning profile to get a personalized path",
+      "summary": "{{count}} knowledge points · about {{minutes}} min",
+      "minutes": "{{n}} min",
+      "footer": "Generated from your profile ({{hours}}h of study time)",
+      "viewDetail": "View details",
+      "detailDialog": "Learning path details — {{minutes}} min\n\n{{summary}}\n\nGraph: {{name}} ({{count}} concepts)"
+    },
+    "depth": {
+      "surface": "Overview",
+      "normal": "Standard",
+      "deep": "Deep dive"
+    },
+    "category": {
+      "prerequisite": "Prereq",
+      "core": "Core",
+      "advanced": "Advanced",
+      "application": "Applied",
+      "assessment": "Assessment"
+    },
+    "strategy": {
+      "prerequisite_first": "Prereq-first",
+      "balanced": "Balanced",
+      "deep_first": "Deep-first"
+    }
+  },
+  "tracing": {
+    "title": "Knowledge Tracing",
+    "simulateLearning": "Simulate learning",
+    "simulateMastery": "Simulate mastery",
+    "overallMastery": "Overall mastery",
+    "mastered": "Mastered",
+    "weakConcepts": "Weak concepts",
+    "needReview": "Need review",
+    "conceptMastery": "Concept mastery",
+    "attempts": "Attempts: {{n}}",
+    "correct": "Correct: {{n}}",
+    "confidence": "Confidence: {{pct}}%",
+    "performancePrediction": "Performance prediction",
+    "predictedCorrectness": "Predicted correctness",
+    "predictedConfidence": "Predicted confidence",
+    "nextReviewInterval": "Next review interval",
+    "nextReviewIntervalValue": "{{n}} hours",
+    "forgettingCurve": "Forgetting curve (7 days)",
+    "now": "Now",
+    "sevenDays": "7 days",
+    "selectConcept": "Select a concept to view predictions and forgetting curve",
+    "demoConcept1": "Fundamentals",
+    "demoConcept2": "Core concepts",
+    "demoConcept3": "Advanced applications"
+  },
+  "agentRoles": {
+    "subtitle": "Manage agent roles and their permission configurations",
+    "resetAll": "Reset all",
+    "description": "Description",
+    "interactionMode": "Interaction mode",
+    "permissions": "Permissions ({{n}})",
+    "priority": "Priority",
+    "modified": "Modified",
+    "resetToDefault": "Reset to default",
+    "interactions": {
+      "direct": "Direct teaching",
+      "scaffold": "Scaffolded",
+      "socratic": "Socratic",
+      "collaborative": "Collaborative"
+    }
+  },
+  "permissions": {
+    "speak": "Speak",
+    "whiteboardDraw": "Draw on whiteboard",
+    "whiteboardErase": "Erase whiteboard",
+    "whiteboardManage": "Manage whiteboard",
+    "slideControl": "Slide control",
+    "slideSpotlight": "Spotlight",
+    "slideLaser": "Laser pointer",
+    "quizCreate": "Create quiz",
+    "quizGrade": "Grade quiz",
+    "mediaControl": "Media control",
+    "discussionModerate": "Moderate discussion",
+    "evaluate": "Evaluate",
+    "summarize": "Summarize",
+    "manageAgents": "Manage agents"
+  },
+  "demoSeed": {
+    "launchingDemo": "Launching...",
+    "launchDemo": "Generate demo course in real-time",
+    "loading": "Loading...",
+    "loadCached": "Open cached demo course instantly",
+    "requirement": "Build me a short interactive course on {{topic}}"
+  },
+  "greeting": {
+    "hi": "Hi, {{name}}",
+    "readyToLearn": "Ready to learn together?"
   }
 }

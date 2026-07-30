@@ -10,7 +10,7 @@ interface StaticTableProps {
 }
 
 /**
- * Static table rendering component, ported from PPTist StaticTable.vue.
+ * Static table rendering component.
  * Renders table data with theme colors, outline borders, and merged cells.
  */
 export function StaticTable({ elementInfo }: StaticTableProps) {

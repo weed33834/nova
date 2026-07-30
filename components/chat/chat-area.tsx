@@ -20,6 +20,8 @@ interface ChatAreaProps {
   onWidthChange?: (width: number) => void;
   collapsed?: boolean;
   onCollapseChange?: (collapsed: boolean) => void;
+  /** When true, fills the parent container (for mobile drawer mode). */
+  fillContainer?: boolean;
   activeBubbleId?: string | null;
   onActiveBubble?: (messageId: string | null) => void;
   onLiveSpeech?: (text: string | null, agentId?: string | null) => void;
@@ -74,6 +76,7 @@ export const ChatArea = forwardRef<ChatAreaRef, ChatAreaProps>(
       onWidthChange,
       collapsed = false,
       onCollapseChange,
+      fillContainer = false,
       activeBubbleId,
       onActiveBubble,
       onLiveSpeech,
@@ -207,21 +210,21 @@ export const ChatArea = forwardRef<ChatAreaRef, ChatAreaProps>(
       [width, onWidthChange],
     );
 
-    const displayWidth = collapsed ? 0 : width;
+    const displayWidth = fillContainer ? '100%' : collapsed ? 0 : width;
 
     return (
       <div
         style={{
           width: displayWidth,
-          transition: isDragging ? 'none' : 'width 0.3s ease',
+          transition: fillContainer || isDragging ? 'none' : 'width 0.3s ease',
         }}
         className={cn(
           'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-l border-gray-100 dark:border-gray-800 shadow-[-2px_0_24px_rgba(0,0,0,0.02)] flex flex-col shrink-0 z-20 relative overflow-visible',
           className,
         )}
       >
-        {/* Drag handle */}
-        {!collapsed && (
+        {/* Drag handle — hidden in fillContainer (mobile drawer) mode */}
+        {!collapsed && !fillContainer && (
           <div
             onMouseDown={handleDragStart}
             className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize z-50 group hover:bg-pink-400/30 dark:hover:bg-pink-600/30 active:bg-pink-500/40 dark:active:bg-pink-500/40 transition-colors"

@@ -34,6 +34,7 @@ export const API_ERROR_CODES = {
   // ── Other business failures ───────────────────────────────────────────
   TRANSCRIPTION_FAILED: 'TRANSCRIPTION_FAILED',
   PARSE_FAILED: 'PARSE_FAILED',
+  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 
   // ── Auth ───────────────────────────────────────────────────────────────

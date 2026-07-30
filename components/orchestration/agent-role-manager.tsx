@@ -46,21 +46,21 @@ const ROLE_ICONS: Record<string, React.ReactNode> = {
   facilitator: <MessageSquare className="h-4 w-4" />,
 };
 
-const PERMISSION_LABELS: Record<Permission, string> = {
-  speak: '发言',
-  'whiteboard:draw': '白板绘制',
-  'whiteboard:erase': '白板擦除',
-  'whiteboard:manage': '白板管理',
-  'slide:control': '幻灯片控制',
-  'slide:spotlight': '聚光灯',
-  'slide:laser': '激光笔',
-  'quiz:create': '创建测验',
-  'quiz:grade': '批改测验',
-  'media:control': '媒体控制',
-  'discussion:moderate': '讨论主持',
-  evaluate: '评估',
-  summarize: '总结',
-  manage_agents: '管理智能体',
+const PERMISSION_KEY_MAP: Record<Permission, string> = {
+  speak: 'permissions.speak',
+  'whiteboard:draw': 'permissions.whiteboardDraw',
+  'whiteboard:erase': 'permissions.whiteboardErase',
+  'whiteboard:manage': 'permissions.whiteboardManage',
+  'slide:control': 'permissions.slideControl',
+  'slide:spotlight': 'permissions.slideSpotlight',
+  'slide:laser': 'permissions.slideLaser',
+  'quiz:create': 'permissions.quizCreate',
+  'quiz:grade': 'permissions.quizGrade',
+  'media:control': 'permissions.mediaControl',
+  'discussion:moderate': 'permissions.discussionModerate',
+  evaluate: 'permissions.evaluate',
+  summarize: 'permissions.summarize',
+  manage_agents: 'permissions.manageAgents',
 };
 
 export function AgentRoleManager() {
@@ -115,12 +115,12 @@ export function AgentRoleManager() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">{t('settings.agentRoles.title')}</h3>
-          <p className="text-sm text-muted-foreground">管理智能体角色及其权限配置</p>
+          <p className="text-sm text-muted-foreground">{t('agentRoles.subtitle')}</p>
         </div>
         {hasOverrides && (
           <Button variant="outline" size="sm" onClick={resetAll}>
             <RotateCcw className="h-3.5 w-3.5 mr-1" />
-            重置全部
+            {t('agentRoles.resetAll')}
           </Button>
         )}
       </div>
@@ -161,7 +161,7 @@ export function AgentRoleManager() {
                   </div>
 
                   <div>
-                    <Label className="text-xs">描述</Label>
+                    <Label className="text-xs">{t('agentRoles.description')}</Label>
                     <Input
                       value={editForm.description ?? ''}
                       onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
@@ -170,7 +170,7 @@ export function AgentRoleManager() {
                   </div>
 
                   <div>
-                    <Label className="text-xs">交互模式</Label>
+                    <Label className="text-xs">{t('agentRoles.interactionMode')}</Label>
                     <Select
                       value={editForm.interactionPattern ?? 'direct'}
                       onValueChange={(v) =>
@@ -184,32 +184,34 @@ export function AgentRoleManager() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="direct">直接教学</SelectItem>
-                        <SelectItem value="scaffold">支架式</SelectItem>
-                        <SelectItem value="socratic">苏格拉底式</SelectItem>
-                        <SelectItem value="collaborative">协作式</SelectItem>
+                        <SelectItem value="direct">{t('agentRoles.interactions.direct')}</SelectItem>
+                        <SelectItem value="scaffold">{t('agentRoles.interactions.scaffold')}</SelectItem>
+                        <SelectItem value="socratic">{t('agentRoles.interactions.socratic')}</SelectItem>
+                        <SelectItem value="collaborative">{t('agentRoles.interactions.collaborative')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label className="text-xs">权限 ({editForm.permissions?.length ?? 0})</Label>
+                    <Label className="text-xs">
+                      {t('agentRoles.permissions', { n: editForm.permissions?.length ?? 0 })}
+                    </Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                      {(Object.keys(PERMISSION_LABELS) as Permission[]).map((perm) => (
+                      {(Object.keys(PERMISSION_KEY_MAP) as Permission[]).map((perm) => (
                         <Badge
                           key={perm}
                           variant={editForm.permissions?.includes(perm) ? 'default' : 'outline'}
                           className="cursor-pointer text-xs"
                           onClick={() => togglePermission(perm)}
                         >
-                          {PERMISSION_LABELS[perm]}
+                          {t(PERMISSION_KEY_MAP[perm])}
                         </Badge>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-xs">优先级</Label>
+                    <Label className="text-xs">{t('agentRoles.priority')}</Label>
                     <Input
                       type="number"
                       min={1}
@@ -235,7 +237,7 @@ export function AgentRoleManager() {
                       </Badge>
                       {overrides[role.role] && (
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-amber-500">
-                          已修改
+                          {t('agentRoles.modified')}
                         </Badge>
                       )}
                     </div>
@@ -243,7 +245,7 @@ export function AgentRoleManager() {
                     <div className="flex flex-wrap gap-1 mt-2">
                       {role.permissions.slice(0, 5).map((perm) => (
                         <Badge key={perm} variant="outline" className="text-[10px] px-1.5 py-0">
-                          {PERMISSION_LABELS[perm] || perm}
+                          {t(PERMISSION_KEY_MAP[perm] ?? 'permissions.speak')}
                         </Badge>
                       ))}
                       {role.permissions.length > 5 && (
@@ -268,7 +270,7 @@ export function AgentRoleManager() {
                         variant="ghost"
                         className="h-7 w-7 shrink-0"
                         onClick={() => resetRole(role.role)}
-                        title="重置为默认"
+                        title={t('agentRoles.resetToDefault')}
                       >
                         <RotateCcw className="h-3 w-3" />
                       </Button>

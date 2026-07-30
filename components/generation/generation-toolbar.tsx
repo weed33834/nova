@@ -261,7 +261,7 @@ export function GenerationToolbar({
             {courseMaterials.length > 0 ? (
               <button className={pillActive} data-tour="course-materials">
                 <Paperclip className="size-3.5" />
-                <span className="max-w-[140px] truncate">
+                <span className="max-w-[100px] sm:max-w-[140px] truncate">
                   {courseMaterials.length === 1
                     ? courseMaterials[0].name
                     : t('toolbar.courseMaterialsSelected', { n: courseMaterials.length })}
@@ -416,7 +416,7 @@ export function GenerationToolbar({
               <button className={webSearch ? pillActive : pillMuted} data-tour="web-search">
                 <Globe2 className={cn('size-3.5', webSearch && 'animate-pulse')} />
                 {webSearch && (
-                  <span>
+                  <span className="hidden sm:inline">
                     {WEB_SEARCH_PROVIDERS[webSearchProviderId]
                       ? getWebSearchProviderDisplayName(webSearchProviderId, t)
                       : 'Search'}
@@ -884,7 +884,7 @@ function ModelSettingsPopover({
         collisionPadding={12}
         className="w-[640px] max-w-[calc(100vw-2rem)] overflow-hidden p-0"
       >
-        <div className="grid h-[430px] grid-cols-[128px_minmax(0,1fr)] sm:grid-cols-[160px_minmax(0,1fr)]">
+        <div className="grid h-[60vh] max-h-[430px] grid-cols-[120px_minmax(0,1fr)] sm:h-[430px] sm:grid-cols-[160px_minmax(0,1fr)]">
           <div className="min-h-0 border-r bg-muted/20">
             <div className="px-3 py-2 text-[10px] font-semibold uppercase text-muted-foreground">
               {t('toolbar.selectProvider')}

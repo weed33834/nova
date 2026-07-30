@@ -1,6 +1,6 @@
 # @nova/renderer
 
-React component for rendering PPTist-style `Slide` JSON.
+React component for rendering Nova `Slide` JSON.
 
 > **v1 = read-only canvas.** Editing (selection, drag/resize, ProseMirror inline editor) is planned for v2.
 

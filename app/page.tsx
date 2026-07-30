@@ -82,6 +82,8 @@ import { LearningPathPanel } from '@/components/adaptive/learning-path-panel';
 import { useProfileStore } from '@/lib/store/profile';
 import { TipsCarousel } from '@/components/ui/tips-carousel';
 import { SkeletonClassroomGrid } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { IconButton } from '@/components/ui/icon-button';
 import { DemoSeedButton } from '@/components/demo-seed-button';
 import { preloadData } from '@/lib/utils/preloader';
 import { cacheFetch } from '@/lib/utils/cache';
@@ -609,7 +611,7 @@ function HomePage() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex flex-col items-center p-4 pt-16 md:p-8 md:pt-16 overflow-x-hidden">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex flex-col items-center px-4 pt-[max(0.75rem,var(--safe-area-top))] pb-6 sm:px-8 sm:pt-16 sm:pb-8 overflow-x-hidden">
       {/* Intro splash — rendered on top of the main UI until the user completes it */}
       {showIntro && <IntroScreen onComplete={handleIntroComplete} />}
       <input
@@ -626,102 +628,83 @@ function HomePage() {
         onChange={handlePptxFileChange}
         className="hidden"
       />
-      {/* ═══ Top-right pill (unchanged) ═══ */}
+      {/* ═══ Top-right pill (desktop only — on mobile it folds into the hero header) ═══ */}
       <div
         ref={toolbarRef}
-        className="fixed top-4 right-4 z-50 flex items-center gap-1 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-100/50 dark:border-gray-700/50 shadow-sm"
+        className="hidden sm:flex fixed top-4 right-4 z-50 items-center gap-0.5 sm:gap-0.5 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md px-1.5 py-1.5 rounded-full border border-gray-200/60 dark:border-gray-700/60 shadow-sm shadow-black/[0.04] dark:shadow-black/30"
+        style={{ paddingTop: 'max(0.5rem, var(--safe-area-top))' }}
       >
         {/* Language Selector */}
         <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
 
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
+        <div className="w-px h-4 bg-gray-200/80 dark:bg-gray-700/80 mx-0.5" />
 
         {/* Theme Selector */}
         <div className="relative">
-          <button
-            onClick={() => {
-              setThemeOpen(!themeOpen);
-            }}
+          <IconButton
+            size="compact"
+            variant="ghost"
+            onClick={() => setThemeOpen(!themeOpen)}
             aria-label={t('settings.theme')}
-            className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all"
+            title={t('settings.theme')}
           >
             {theme === 'light' && <Sun className="w-4 h-4" />}
             {theme === 'dark' && <Moon className="w-4 h-4" />}
             {theme === 'system' && <Monitor className="w-4 h-4" />}
-          </button>
+          </IconButton>
           {themeOpen && (
-            <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 min-w-[140px]">
-              <button
-                onClick={() => {
-                  setTheme('light');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'light' &&
-                    'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
-                )}
-              >
-                <Sun className="w-4 h-4" />
-                {t('settings.themeOptions.light')}
-              </button>
-              <button
-                onClick={() => {
-                  setTheme('dark');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'dark' &&
-                    'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
-                )}
-              >
-                <Moon className="w-4 h-4" />
-                {t('settings.themeOptions.dark')}
-              </button>
-              <button
-                onClick={() => {
-                  setTheme('system');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'system' &&
-                    'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
-                )}
-              >
-                <Monitor className="w-4 h-4" />
-                {t('settings.themeOptions.system')}
-              </button>
+            <div className="absolute top-full mt-2 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-gray-200/80 dark:border-gray-700/80 rounded-xl shadow-lg overflow-hidden z-50 min-w-[160px] py-1">
+              {(['light', 'dark', 'system'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    setTheme(opt);
+                    setThemeOpen(false);
+                  }}
+                  className={cn(
+                    'w-full px-3.5 py-2 text-left text-[13px] transition-colors flex items-center gap-2.5',
+                    'hover:bg-gray-100/80 dark:hover:bg-gray-700/80',
+                    theme === opt &&
+                      'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 font-medium',
+                  )}
+                >
+                  {opt === 'light' && <Sun className="w-3.5 h-3.5" />}
+                  {opt === 'dark' && <Moon className="w-3.5 h-3.5" />}
+                  {opt === 'system' && <Monitor className="w-3.5 h-3.5" />}
+                  {t(`settings.themeOptions.${opt}`)}
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
+        <div className="w-px h-4 bg-gray-200/80 dark:bg-gray-700/80 mx-0.5" />
 
         {/* Profile Button */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              onClick={() => {
-                setShowProfileBuilder(true);
-              }}
-              className={cn(
-                'p-2 rounded-full transition-all group',
-                profileCompleteness >= 100
-                  ? 'text-green-500 dark:text-green-400'
-                  : 'text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm',
-              )}
+            <IconButton
+              size="compact"
+              variant="ghost"
+              onClick={() => setShowProfileBuilder(true)}
               aria-label={
                 profileCompleteness >= 100 ? t('profile.complete') : t('profile.buildProfile')
               }
+              title={
+                profileCompleteness >= 100
+                  ? t('profile.complete')
+                  : `${t('profile.buildProfile')} (${profileCompleteness}%)`
+              }
+              className={cn(
+                profileCompleteness >= 100 && 'text-green-500 dark:text-green-400',
+              )}
             >
               {profileCompleteness >= 100 ? (
                 <CheckCircle2 className="w-4 h-4" />
               ) : (
                 <Brain className="w-4 h-4 group-hover:rotate-12 transition-transform" />
               )}
-            </button>
+            </IconButton>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">
             {profileCompleteness >= 100
@@ -730,16 +713,19 @@ function HomePage() {
           </TooltipContent>
         </Tooltip>
 
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
+        <div className="w-px h-4 bg-gray-200/80 dark:bg-gray-700/80 mx-0.5" />
 
         {/* Settings Button */}
-        <div className="relative" data-tour="settings">
-          <button
+        <div data-tour="settings">
+          <IconButton
+            size="compact"
+            variant="ghost"
             onClick={() => setSettingsOpen(true)}
-            className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
+            aria-label={t('settings.title')}
+            title={t('settings.title')}
           >
             <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
-          </button>
+          </IconButton>
         </div>
       </div>
       <SettingsDialog
@@ -751,29 +737,37 @@ function HomePage() {
         initialSection={settingsSection}
       />
 
-      {/* ═══ Background Decor ═══ */}
+      {/* ═══ Background Decor — soft, layered glow that doesn't crowd the hero.
+          Pulled back to subtle, off-center, slow gentle pulse so it reads
+          as ambient color rather than a glitch. Pushed further off-canvas so
+          they never bleed into the input card. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute top-0 left-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDuration: '4s' }}
+          className="absolute -top-32 -right-24 w-[420px] h-[420px] bg-rose-400/[0.08] dark:bg-rose-500/[0.08] rounded-full blur-3xl"
+          style={{ animation: 'pulse 7s ease-in-out infinite' }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDuration: '6s' }}
+          className="absolute -bottom-40 -left-24 w-[420px] h-[420px] bg-amber-300/[0.08] dark:bg-amber-500/[0.06] rounded-full blur-3xl"
+          style={{ animation: 'pulse 9s ease-in-out infinite 1.5s' }}
         />
       </div>
 
-      {/* ═══ Hero section: title + input (centered, wider) ═══ */}
+      {/* ═══ Hero section: title + input (centered, wider) ═══
+          Tighter top margin on desktop (mt-6 instead of mt-[10vh]) so the
+          first paint lands on the input card, not on a wall of empty space. */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className={cn(
           'relative z-20 w-full max-w-[800px] flex flex-col items-center',
-          classrooms.length === 0 ? 'justify-center min-h-[calc(100dvh-8rem)]' : 'mt-[10vh]',
+          classrooms.length === 0
+            ? 'justify-center min-h-[calc(100dvh-7rem)]'
+            : 'mt-4 sm:mt-6',
         )}
       >
-        {/* ── Logo ── */}
+        {/* ── Logo ── — smaller on mobile (h-10) so it doesn't dwarf the
+            input card; full h-16 on desktop. */}
         <motion.h1
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -783,23 +777,24 @@ function HomePage() {
             stiffness: 200,
             damping: 20,
           }}
-          className="mb-2 -ml-2 md:-ml-3"
+          className="mb-1.5 sm:mb-2 -ml-2 md:-ml-3"
         >
           <img
             src="/logo-horizontal.svg"
             alt="Nova"
             loading="eager"
             decoding="async"
-            className="h-12 md:h-16 w-auto"
+            className="h-10 sm:h-16 w-auto"
           />
         </motion.h1>
 
-        {/* ── Slogan ── */}
+        {/* ── Slogan ── — closer to the logo on mobile (mb-4) so the
+            hero reads as a single unit. */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25 }}
-          className="text-sm text-muted-foreground/60 mb-8"
+          className="text-[11.5px] sm:text-sm text-muted-foreground/60 mb-4 sm:mb-7 px-2 sm:px-0 line-clamp-2 sm:line-clamp-none"
         >
           {t('home.slogan')}
         </motion.p>
@@ -846,30 +841,63 @@ function HomePage() {
           transition={{ delay: 0.35 }}
           className="w-full"
         >
-          <div className="w-full rounded-2xl border border-border/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-black/[0.03] dark:shadow-black/20 transition-shadow focus-within:shadow-2xl focus-within:shadow-pink-500/[0.06]">
-            {/* ── Greeting + Profile + Agents ── */}
-            <div className="relative z-20 flex items-start justify-between gap-2">
+          <div className="w-full rounded-2xl border border-border/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-xl shadow-black/[0.03] dark:shadow-black/20 transition-shadow focus-within:shadow-2xl focus-within:shadow-pink-500/[0.06] overflow-hidden">
+            {/* ── Mobile compact header: avatar+name (left) + lang/theme/settings (right) ──
+                Tight 8px top padding + 6px bottom + hairline divider — the
+                hero card now reads as one compact, intentional surface with
+                three clearly delineated bands (header / textarea / toolbar). */}
+            <div className="flex sm:hidden items-center justify-between gap-2 px-3 pt-2 pb-1.5 border-b border-border/30">
+              <GreetingBar compact />
+              <MobileTopRightInline
+                onSettingsOpen={() => setSettingsOpen(true)}
+                onProfileOpen={() => setShowProfileBuilder(true)}
+                profileCompleteness={profileCompleteness}
+                theme={theme}
+                onThemeChange={setTheme}
+              />
+            </div>
+            {/* ── Desktop: Greeting + Profile + Agents ── */}
+            <div className="relative z-20 hidden sm:flex items-start justify-between gap-2 flex-row px-1">
               <GreetingBar />
-              <div className="pr-3 pt-3.5 shrink min-w-0 max-w-[60%]">
+              <div className="pr-3 pt-3.5 shrink min-w-0 w-full sm:w-auto sm:max-w-[60%]">
                 <AgentBar />
               </div>
             </div>
+            {/* ── Mobile: AgentBar under the header line — tighter so the
+                textarea gets more room and the hero feels less stacked. ── */}
+            <div className="sm:hidden px-3 pt-1.5 pb-1.5">
+              <AgentBar />
+            </div>
 
-            {/* Textarea */}
+            {/* Textarea — slightly larger mobile tap target padding
+                (pt-2 / pb-2) so the cursor doesn't sit on the hairline
+                border above and so the placeholder doesn't crowd the
+                hairline border below. Desktop stays 140px min so
+                multi-line prompts feel intentional, not cramped. */}
             <textarea
               ref={textareaRef}
               placeholder={t('upload.requirementPlaceholder')}
-              className="w-full resize-none border-0 bg-transparent px-4 pt-1 pb-2 text-[13px] leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none min-h-[140px] max-h-[300px]"
+              className="w-full resize-none border-0 bg-transparent px-4 sm:px-5 py-3 sm:py-2.5 text-[15px] sm:text-[13.5px] leading-relaxed placeholder:text-muted-foreground/45 focus:outline-none min-h-[96px] sm:min-h-[140px] max-h-[200px] sm:max-h-[300px]"
               value={form.requirement}
               onChange={(e) => updateForm('requirement', e.target.value)}
               onKeyDown={handleKeyDown}
-              rows={4}
+              rows={3}
               data-tour="hero-input"
             />
 
-            {/* Toolbar row */}
-            <div className="px-3 pb-3 flex items-end gap-2">
-              <div className="flex-1 min-w-0">
+            {/* Toolbar row — restructured for visual clarity on both
+                mobile and desktop:
+                  • Mobile: vertical stack with a 1px hairline above the
+                    toolbar so the textarea/toolbar split is unmistakable;
+                    send button stays full-width below for an obvious primary
+                    action. The "Enter Classroom" label is shown on mobile
+                    too so the CTA is unambiguous (was previously icon-only
+                    in a small floating button, which read as "send" not
+                    "start lesson").
+                  • Desktop: side-by-side, same as before, with the wider
+                    send button. */}
+            <div className="px-3 sm:px-4 pt-1.5 pb-3 sm:pb-3.5 flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-2 border-t border-border/30">
+              <div className="w-full sm:flex-1 sm:min-w-[180px]">
                 <GenerationToolbar
                   webSearch={form.webSearch}
                   onWebSearchChange={(v) => updateForm('webSearch', v)}
@@ -884,62 +912,75 @@ function HomePage() {
                 />
               </div>
 
-              {/* Interactive mode toggle */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <InteractiveModeButton
-                    pressed={form.interactiveMode}
-                    label={t('toolbar.interactiveModeLabel')}
-                    onPressedChange={(pressed) => updateForm('interactiveMode', pressed)}
-                    data-tour="interactive-mode"
+              {/* Action row: tool toggles (left) + primary send (right).
+                  On mobile, send is full-width to feel like the dominant
+                  CTA. On desktop it stays compact (icon + label). */}
+              <div className="flex items-center justify-between sm:justify-end gap-1.5 w-full sm:w-auto sm:shrink-0">
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  {/* Interactive mode toggle */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InteractiveModeButton
+                        pressed={form.interactiveMode}
+                        label={t('toolbar.interactiveModeLabel')}
+                        onPressedChange={(pressed) => updateForm('interactiveMode', pressed)}
+                        data-tour="interactive-mode"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {t('toolbar.interactiveModeHint')}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Course format selector (video / ppt+audio / text-only) */}
+                  <CourseFormatSelector
+                    value={form.courseFormat}
+                    onChange={(value) => updateForm('courseFormat', value)}
+                    title={t('toolbar.courseFormatHint')}
+                    data-tour="course-format"
                   />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {t('toolbar.interactiveModeHint')}
-                </TooltipContent>
-              </Tooltip>
 
-              {/* Course format selector (video / ppt+audio / text-only) */}
-              <CourseFormatSelector
-                value={form.courseFormat}
-                onChange={(value) => updateForm('courseFormat', value)}
-                title={t('toolbar.courseFormatHint')}
-                data-tour="course-format"
-              />
+                  {/* Voice input */}
+                  <SpeechButton
+                    size="md"
+                    onTranscription={(text) => {
+                      setForm((prev) => {
+                        const next = prev.requirement + (prev.requirement ? ' ' : '') + text;
+                        updateRequirementCache(next);
+                        return { ...prev, requirement: next };
+                      });
+                    }}
+                  />
+                </div>
 
-              {/* Voice input */}
-              <SpeechButton
-                size="md"
-                onTranscription={(text) => {
-                  setForm((prev) => {
-                    const next = prev.requirement + (prev.requirement ? ' ' : '') + text;
-                    updateRequirementCache(next);
-                    return { ...prev, requirement: next };
-                  });
-                }}
-              />
-
-              {/* Send button */}
-              <button
-                onClick={handleGenerate}
-                disabled={!canGenerate || isPreparing}
-                aria-label={isPreparing ? t('toolbar.enterClassroom') : undefined}
-                className={cn(
-                  'shrink-0 h-8 rounded-lg flex items-center justify-center gap-1.5 transition-all px-3',
-                  canGenerate && !isPreparing
-                    ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-sm cursor-pointer'
-                    : 'bg-muted text-muted-foreground/40 cursor-not-allowed',
-                )}
-              >
-                {isPreparing ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <span className="text-xs font-medium">{t('toolbar.enterClassroom')}</span>
-                    <ArrowUp className="size-3.5" />
-                  </>
-                )}
-              </button>
+                {/* Send button — full width on mobile, compact on desktop.
+                    On mobile we keep the label visible so the primary action
+                    reads as "start the lesson" rather than an ambiguous
+                    paper-plane icon. */}
+                <button
+                  onClick={handleGenerate}
+                  disabled={!canGenerate || isPreparing}
+                  aria-label={t('toolbar.enterClassroom')}
+                  className={cn(
+                    'shrink-0 h-10 sm:h-9 rounded-xl flex items-center justify-center gap-1.5 transition-all px-3 sm:px-3',
+                    'flex-1 sm:flex-initial',
+                    canGenerate && !isPreparing
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-95 shadow-sm shadow-rose-500/20 active:scale-[0.98] cursor-pointer'
+                      : 'bg-muted text-muted-foreground/50 cursor-not-allowed',
+                  )}
+                >
+                  {isPreparing ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span className="text-[13px] font-semibold">
+                        {t('toolbar.enterClassroom')}
+                      </span>
+                      <ArrowUp className="size-4" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -1006,59 +1047,68 @@ function HomePage() {
           )}
         </AnimatePresence>
 
-        {/* ── Tips Carousel (empty state) ── */}
+        {/* ── Tips Carousel (empty state) ── — wrapped in a soft tinted
+            card with a single border so the carousel reads as one widget
+            (rather than floating text in a void). Import and PPTX buttons
+            sit on a single row, with stronger contrast than before
+            (text-muted-foreground/55 was too faint). */}
         {classrooms.length === 0 && (
-          <div className="relative z-10 mt-6 w-full max-w-md">
-            <div className="rounded-xl border border-border/30 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm px-3 py-2.5">
+          <div className="relative z-10 mt-5 w-full max-w-md">
+            <div className="rounded-2xl border border-border/40 bg-white/55 dark:bg-slate-900/45 backdrop-blur-sm px-3.5 py-3 shadow-sm">
               <TipsCarousel />
             </div>
-            <div className="mt-3 flex items-center justify-center gap-4">
+            <div className="mt-3 flex items-center justify-center gap-2">
               <button
                 onClick={triggerFileSelect}
                 disabled={importing}
                 aria-label={t('import.classroom')}
-                className="flex items-center gap-1.5 text-[12px] text-muted-foreground/40 hover:text-foreground/60 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-white/60 dark:bg-slate-900/50 backdrop-blur-sm px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-white/80 dark:hover:bg-slate-800/70 transition-colors"
               >
                 <Upload className="size-3.5" />
                 <span>{t('import.classroom')}</span>
               </button>
               <button
-                  onClick={triggerPptxFileSelect}
-                  disabled={pptxImporting}
-                  aria-label={t('import.pptx')}
-                  className="flex items-center gap-1.5 text-[12px] text-muted-foreground/40 hover:text-foreground/60 transition-colors"
-                >
-                  <Presentation className="size-3.5" />
-                  <span>{t('import.pptx')}</span>
-                </button>
+                onClick={triggerPptxFileSelect}
+                disabled={pptxImporting}
+                aria-label={t('import.pptx')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-white/60 dark:bg-slate-900/50 backdrop-blur-sm px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-white/80 dark:hover:bg-slate-800/70 transition-colors"
+              >
+                <Presentation className="size-3.5" />
+                <span>{t('import.pptx')}</span>
+              </button>
             </div>
-            <div className="mt-2 flex items-center justify-center gap-4">
+            <div className="mt-2.5 flex items-center justify-center">
               <DemoSeedButton />
             </div>
           </div>
         )}
       </motion.div>
 
-      {/* ═══ Recent classrooms — collapsible ═══ */}
+      {/* ═══ Recent classrooms — collapsible ═══ — Tighter top margin on
+          mobile (mt-6) so the section doesn't feel detached from the hero. */}
       {(classrooms.length > 0 || classroomsLoading) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="relative z-10 mt-10 w-full max-w-6xl flex flex-col items-center"
+          className="relative z-10 mt-6 sm:mt-8 w-full max-w-6xl flex flex-col items-center"
           data-tour="recent-classrooms"
         >
-          {/* Trigger — divider-line with centered text */}
-          <div className="group w-full flex items-center gap-4 py-2">
-            <div className="flex-1 h-px bg-border/40 group-hover:bg-border/70 transition-colors" />
-            <div className="shrink-0 flex items-center gap-3 text-[13px] text-muted-foreground/60 select-none">
+          {/* Trigger — divider-line with centered text. Tighter gap
+              (gap-1.5) and slightly stronger label color so the section
+              header reads as a real section break, not a faded whisper. */}
+          <div className="group w-full flex items-center gap-2 sm:gap-3 py-2">
+            <div className="flex-1 h-px bg-border/50 group-hover:bg-border/80 transition-colors" />
+            <div className="shrink-0 flex items-center gap-1.5 sm:gap-2 text-[12.5px] sm:text-[13px] text-muted-foreground/80 select-none flex-wrap justify-center">
               <button
                 onClick={() => persistRecentOpen(!recentOpen)}
-                className="flex items-center gap-2 hover:text-foreground/70 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
               >
                 <Clock className="size-3.5" />
-                {t('classroom.recentClassrooms')}
-                <span className="text-[11px] tabular-nums opacity-60">{classrooms.length}</span>
+                <span className="font-medium">{t('classroom.recentClassrooms')}</span>
+                <span className="text-[11px] tabular-nums text-muted-foreground/60">
+                  {classrooms.length}
+                </span>
                 <motion.div
                   animate={{ rotate: recentOpen ? 180 : 0 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -1152,25 +1202,25 @@ function HomePage() {
               <button
                 onClick={triggerFileSelect}
                 disabled={importing}
-                className="group/import grid grid-cols-[auto_0fr] hover:grid-cols-[auto_1fr] items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] text-muted-foreground/35 hover:text-muted-foreground/70 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+                className="group/import grid grid-cols-[auto_1fr] sm:grid-cols-[auto_0fr] sm:hover:grid-cols-[auto_1fr] items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] text-muted-foreground/70 sm:text-muted-foreground/45 hover:text-muted-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer"
               >
                 <Upload className="size-3" />
-                <span className="overflow-hidden opacity-0 group-hover/import:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                <span className="overflow-hidden opacity-100 sm:opacity-0 sm:group-hover/import:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                   {t('import.classroom')}
                 </span>
               </button>
               <button
-                  onClick={triggerPptxFileSelect}
-                  disabled={pptxImporting}
-                  className="group/import-pptx grid grid-cols-[auto_0fr] hover:grid-cols-[auto_1fr] items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] text-muted-foreground/35 hover:text-muted-foreground/70 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
-                >
-                  <Presentation className="size-3" />
-                  <span className="overflow-hidden opacity-0 group-hover/import-pptx:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                    {t('import.pptx')}
-                  </span>
-                </button>
+                onClick={triggerPptxFileSelect}
+                disabled={pptxImporting}
+                className="group/import-pptx grid grid-cols-[auto_1fr] sm:grid-cols-[auto_0fr] sm:hover:grid-cols-[auto_1fr] items-center gap-1 rounded-full px-1.5 py-0.5 text-[12px] text-muted-foreground/70 sm:text-muted-foreground/45 hover:text-muted-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+              >
+                <Presentation className="size-3" />
+                <span className="overflow-hidden opacity-100 sm:opacity-0 sm:group-hover/import-pptx:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  {t('import.pptx')}
+                </span>
+              </button>
             </div>
-            <div className="flex-1 h-px bg-border/40 group-hover:bg-border/70 transition-colors" />
+            <div className="flex-1 h-px bg-border/50 group-hover:bg-border/80 transition-colors" />
           </div>
 
           {/* Expandable content */}
@@ -1184,15 +1234,20 @@ function HomePage() {
                 className="w-full overflow-hidden"
               >
                 {classroomsLoading ? (
-                  <div className="pt-8">
+                  <div className="pt-6 sm:pt-6">
                     <SkeletonClassroomGrid />
                   </div>
                 ) : searchQuery.trim() && filteredClassrooms.length === 0 ? (
-                  <div className="pt-8 pb-2 text-center text-[13px] text-muted-foreground/60">
-                    {t('classroom.searchEmpty')}
+                  <div className="pt-6 sm:pt-10 pb-2">
+                    <EmptyState
+                      icon={Search}
+                      size="sm"
+                      title={t('classroom.searchEmpty')}
+                      description={t('classroom.searchEmptyHint') || ''}
+                    />
                   </div>
                 ) : (
-                  <div className="pt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-8">
+                  <div className="pt-4 sm:pt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-x-5 sm:gap-y-7">
                     {filteredClassrooms.map((classroom, i) => (
                       <motion.div
                         key={classroom.id}
@@ -1225,8 +1280,10 @@ function HomePage() {
         </motion.div>
       )}
 
-      {/* Footer */}
-      <div className="mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
+      {/* Footer — stronger color and tighter line-height so the bottom of
+          the page reads as a deliberate attribution, not a footer stuck on
+          as an afterthought. Tighter top padding on mobile. */}
+      <div className="mt-auto pt-6 sm:pt-10 pb-[max(1rem,var(--safe-area-bottom))] text-center text-[10.5px] sm:text-[11px] tracking-wide text-muted-foreground/55 px-4">
         {t('home.footer')}
       </div>
     </div>
@@ -1240,7 +1297,7 @@ function isCustomAvatar(src: string) {
   return src.startsWith('data:');
 }
 
-function GreetingBar() {
+function GreetingBar({ compact = false }: { compact?: boolean }) {
   const { t } = useI18n();
   const avatar = useUserProfileStore((s) => s.avatar);
   const nickname = useUserProfileStore((s) => s.nickname);
@@ -1316,7 +1373,13 @@ function GreetingBar() {
   };
 
   return (
-    <div ref={containerRef} className="relative pl-4 pr-2 pt-3.5 pb-1 w-auto">
+    <div
+      ref={containerRef}
+      className={cn(
+        'relative w-full sm:w-auto',
+        compact ? 'pl-0 pr-0 pt-0 pb-0' : 'pl-4 pr-2 pt-3.5 pb-1',
+      )}
+    >
       <input
         ref={avatarInputRef}
         type="file"
@@ -1328,11 +1391,26 @@ function GreetingBar() {
       {/* ── Collapsed pill (always in flow) ── */}
       {!open && (
         <div
-          className="flex items-center gap-2.5 cursor-pointer transition-all duration-200 group rounded-full px-2.5 py-1.5 border border-border/50 text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 active:scale-[0.97]"
+          className={cn(
+            // Compact (mobile hero strip): remove the border + background —
+            // the row already sits on a card surface, so the pill is pure
+            // avatar+name. Adds back the avatar's hover halo + tap-press so
+            // the affordance still reads as a button even without a pill.
+            'flex items-center cursor-pointer transition-all duration-200 group rounded-full min-w-0',
+            compact
+              ? 'gap-1.5 px-1 py-1 border-transparent bg-transparent active:scale-[0.97]'
+              : 'gap-2.5 px-2.5 py-1.5 border border-border/50 text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 active:scale-[0.97]',
+          )}
           onClick={() => setOpen(true)}
         >
           <div className="shrink-0 relative">
-            <div className="size-8 rounded-full overflow-hidden ring-[1.5px] ring-border/30 group-hover:ring-pink-400/60 dark:group-hover:ring-pink-400/40 transition-all duration-300">
+            <div
+              className={cn(
+                'rounded-full overflow-hidden ring-[1.5px] transition-all duration-300',
+                compact ? 'size-7 ring-border/30' : 'size-8 ring-border/30',
+                'group-hover:ring-pink-400/60 dark:group-hover:ring-pink-400/40',
+              )}
+            >
               <img
                 src={avatar}
                 alt=""
@@ -1341,25 +1419,37 @@ function GreetingBar() {
                 className="size-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-white dark:bg-slate-800 border border-border/40 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
-              <Pencil className="size-[7px] text-muted-foreground/70" />
-            </div>
+            {!compact && (
+              <div className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-white dark:bg-slate-800 border border-border/40 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
+                <Pencil className="size-[7px] text-muted-foreground/70" />
+              </div>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="leading-none select-none flex items-center gap-1">
-                  <span className="text-[13px] font-semibold text-foreground/85 group-hover:text-foreground transition-colors">
-                    {t('home.greetingWithName', { name: displayName })}
+          {!compact && (
+            <div className="flex-1 min-w-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="leading-none select-none flex items-center gap-1 min-w-0">
+                    <span className="text-[13px] font-semibold text-foreground/85 group-hover:text-foreground transition-colors truncate min-w-0">
+                      {t('home.greetingWithName', { name: displayName })}
+                    </span>
+                    <ChevronDown className="size-3 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors shrink-0" />
                   </span>
-                  <ChevronDown className="size-3 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors shrink-0" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={4}>
-                {t('userProfile.editTooltip')}
-              </TooltipContent>
-            </Tooltip>
-          </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={4}>
+                  {t('userProfile.editTooltip')}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+          {compact && (
+            <div className="flex items-center gap-0.5 min-w-0">
+              <span className="text-[13px] font-semibold text-foreground/85 truncate max-w-[140px]">
+                {displayName}
+              </span>
+              <ChevronDown className="size-3 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors shrink-0" />
+            </div>
+          )}
         </div>
       )}
 
@@ -1371,7 +1461,12 @@ function GreetingBar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            className="absolute left-4 top-3.5 z-50 w-64"
+            className={cn(
+              'absolute z-50',
+              compact
+                ? 'left-0 right-0 top-full mt-2 w-full'
+                : 'left-2 right-2 sm:left-4 sm:right-auto top-3.5 w-auto sm:w-64',
+            )}
           >
             <div className="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-[0_1px_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_8px_-2px_rgba(0,0,0,0.3)] px-2.5 py-2">
               {/* ── Row: avatar + name ── */}
@@ -1536,6 +1631,109 @@ function GreetingBar() {
   );
 }
 
+// ─── MobileTopRightInline — compact icon row used inside the hero card on mobile ──
+function MobileTopRightInline({
+  onSettingsOpen,
+  onProfileOpen,
+  profileCompleteness,
+  theme,
+  onThemeChange,
+}: {
+  onSettingsOpen: () => void;
+  onProfileOpen: () => void;
+  profileCompleteness: number;
+  theme: string;
+  onThemeChange: (theme: 'light' | 'dark' | 'system') => void;
+}) {
+  const { t } = useI18n();
+  const [themeOpen, setThemeOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!themeOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setThemeOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [themeOpen]);
+
+  return (
+    <div ref={ref} className="flex items-center gap-0.5 shrink-0">
+      {/* Language */}
+      <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
+
+      {/* Theme toggle */}
+      <div className="relative">
+        <IconButton
+          size="sm"
+          variant="ghost"
+          onClick={() => setThemeOpen(!themeOpen)}
+          aria-label={t('settings.theme')}
+          title={t('settings.theme')}
+        >
+          {theme === 'light' && <Sun className="w-4 h-4" />}
+          {theme === 'dark' && <Moon className="w-4 h-4" />}
+          {theme === 'system' && <Monitor className="w-4 h-4" />}
+        </IconButton>
+        {themeOpen && (
+          <div className="absolute top-full right-0 mt-1.5 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-border/60 rounded-xl shadow-lg overflow-hidden z-50 min-w-[140px] py-1">
+            {(['light', 'dark', 'system'] as const).map((opt) => (
+              <button
+                key={opt}
+                onClick={() => {
+                  onThemeChange(opt);
+                  setThemeOpen(false);
+                }}
+                className={cn(
+                  'w-full px-3 py-2 text-left text-[12.5px] transition-colors flex items-center gap-2 active:scale-[0.98]',
+                  'hover:bg-muted',
+                  theme === opt &&
+                    'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 font-medium',
+                )}
+              >
+                {opt === 'light' && <Sun className="w-3.5 h-3.5" />}
+                {opt === 'dark' && <Moon className="w-3.5 h-3.5" />}
+                {opt === 'system' && <Monitor className="w-3.5 h-3.5" />}
+                {t(`settings.themeOptions.${opt}`)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Profile */}
+      <IconButton
+        size="sm"
+        variant="ghost"
+        onClick={onProfileOpen}
+        aria-label={profileCompleteness >= 100 ? t('profile.complete') : t('profile.buildProfile')}
+        title={t('profile.buildProfile')}
+        className={cn(
+          profileCompleteness >= 100 && 'text-green-500 dark:text-green-400',
+        )}
+      >
+        {profileCompleteness >= 100 ? (
+          <CheckCircle2 className="w-4 h-4" />
+        ) : (
+          <Brain className="w-4 h-4" />
+        )}
+      </IconButton>
+
+      {/* Settings */}
+      <IconButton
+        size="sm"
+        variant="ghost"
+        onClick={onSettingsOpen}
+        aria-label={t('settings.title')}
+        title={t('settings.title')}
+      >
+        <Settings className="w-4 h-4" />
+      </IconButton>
+    </div>
+  );
+}
+
 // ─── Classroom Card — clean, minimal style ──────────────────────
 function ClassroomCard({
   classroom,
@@ -1582,7 +1780,7 @@ function ClassroomCard({
   const isTaskEngineMode = classroom.taskEngineMode === true;
   const showModeBadge = classroom.interactiveMode || isTaskEngineMode;
   const ModeBadgeIcon = isTaskEngineMode ? Sparkles : Atom;
-  const modeBadgeLabel = isTaskEngineMode ? 'Vocational Mode' : t('toolbar.interactiveModeLabel');
+  const modeBadgeLabel = isTaskEngineMode ? t('classroom.vocationalMode') : t('toolbar.interactiveModeLabel');
 
   // courseFormat badge: only show for non-default formats (ppt-audio / text-only)
   const courseFormat = classroom.courseFormat;
@@ -1612,7 +1810,17 @@ function ClassroomCard({
 
   return (
     <div
-      className="group cursor-pointer"
+      className={cn(
+        'group cursor-pointer flex sm:block gap-3 sm:gap-0 items-stretch',
+        // Mobile: subtle hairline + soft bg so the horizontal card reads
+        // as one surface rather than two adjacent blocks floating in
+        // space. Desktop keeps the unadorned vertical card (the
+        // thumbnail does the framing work there). The transition on
+        // hover/active gives a subtle press feedback on touch.
+        'sm:bg-transparent sm:ring-0 sm:px-0 sm:py-0',
+        'rounded-2xl ring-1 ring-border/40 bg-white/65 dark:bg-slate-900/45 px-2.5 py-2.5',
+        'transition-all duration-200 active:scale-[0.99] hover:ring-border/70 hover:bg-white/80 dark:hover:bg-slate-900/55',
+      )}
       role={confirmingDelete ? undefined : 'button'}
       tabIndex={confirmingDelete ? -1 : 0}
       onClick={confirmingDelete ? undefined : onClick}
@@ -1627,10 +1835,14 @@ function ClassroomCard({
             }
       }
     >
-      {/* Thumbnail — large radius, no border, subtle bg */}
+      {/* Thumbnail — large radius, no border, subtle bg.
+          Mobile uses w-[120px] (16:9 → 67.5px tall) so the right column
+          gets enough horizontal room for the classroom name to fit
+          on one line. Anything smaller than 120 and titles truncate
+          immediately on 360-390px viewports. */}
       <div
         ref={thumbRef}
-        className="relative w-full aspect-[16/9] rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-hidden transition-transform duration-200 group-hover:scale-[1.02]"
+        className="relative w-[120px] sm:w-full shrink-0 sm:shrink aspect-[16/9] rounded-lg sm:rounded-2xl bg-slate-100 dark:bg-slate-800/80 overflow-hidden transition-transform duration-200 group-hover:scale-[1.02]"
       >
         {slide && thumbWidth > 0 ? (
           <SlideThumbnail
@@ -1706,7 +1918,7 @@ function ClassroomCard({
           </Tooltip>
         )}
 
-        {/* Delete — top-right, only on hover */}
+        {/* Delete — top-right, always visible on mobile, hover on desktop */}
         <AnimatePresence>
           {!confirmingDelete && (
             <motion.div
@@ -1714,13 +1926,14 @@ function ClassroomCard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
+              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
             >
               <Button
                 size="icon"
                 variant="ghost"
                 aria-label={t('classroom.delete')}
                 title={t('classroom.delete')}
-                className="absolute top-2 right-2 size-7 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 hover:bg-destructive/80 text-white hover:text-white backdrop-blur-sm rounded-full"
+                className="absolute top-2 right-2 size-7 bg-black/30 hover:bg-destructive/80 text-white hover:text-white backdrop-blur-sm rounded-full"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete(classroom.id, e);
@@ -1733,7 +1946,7 @@ function ClassroomCard({
                 variant="ghost"
                 aria-label={t('classroom.rename')}
                 title={t('classroom.rename')}
-                className="absolute top-2 right-11 size-7 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 hover:bg-black/50 text-white hover:text-white backdrop-blur-sm rounded-full"
+                className="absolute top-2 right-11 size-7 bg-black/30 hover:bg-black/50 text-white hover:text-white backdrop-blur-sm rounded-full"
                 onClick={startRename}
               >
                 <Pencil className="size-3.5" aria-hidden="true" />
@@ -1775,58 +1988,90 @@ function ClassroomCard({
         </AnimatePresence>
       </div>
 
-      {/* Info — outside the thumbnail */}
-      <div className="mt-2.5 px-1 flex items-center gap-2">
-        <span className="shrink-0 inline-flex items-center rounded-full bg-pink-100 dark:bg-pink-900/30 px-2 py-0.5 text-[11px] font-medium text-pink-600 dark:text-pink-400">
-          {classroom.sceneCount} {t('classroom.slides')} · {formatDate(classroom.updatedAt)}
-        </span>
-        {editing ? (
-          <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
-            <input
-              ref={nameInputRef}
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commitRename();
-                if (e.key === 'Escape') setEditing(false);
-              }}
-              onBlur={commitRename}
-              maxLength={100}
-              placeholder={t('classroom.renamePlaceholder')}
-              className="w-full bg-transparent border-b border-pink-400/60 text-[15px] font-medium text-foreground/90 outline-none placeholder:text-muted-foreground/40"
-            />
-          </div>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <p
-                className="font-medium text-[15px] truncate text-foreground/90 min-w-0 cursor-text"
-                onDoubleClick={startRename}
-              >
-                {classroom.name}
-              </p>
-            </TooltipTrigger>
-            <TooltipContent
-              side="bottom"
-              sideOffset={4}
-              className="!max-w-[min(90vw,32rem)] break-words whitespace-normal"
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="break-all">{classroom.name}</span>
-                <button
-                  className="shrink-0 p-0.5 rounded hover:bg-foreground/10 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(classroom.name);
-                    toast.success(t('classroom.nameCopied'));
-                  }}
+      {/* Info — outside the thumbnail (on mobile, sits to the right; on desktop, below) */}
+      <div className="flex-1 sm:flex-none min-w-0 flex flex-col justify-center gap-1 sm:gap-1.5 sm:mt-0">
+        <div className="px-0 sm:px-1 flex items-center gap-1.5 flex-wrap">
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-100/80 to-rose-100/80 dark:from-pink-900/30 dark:to-rose-900/30 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-pink-600 dark:text-pink-300 ring-1 ring-pink-200/40 dark:ring-pink-800/40">
+            <span className="tabular-nums">{classroom.sceneCount}</span>
+            <span className="opacity-70">·</span>
+            <span>{t('classroom.slides')}</span>
+            <span className="opacity-50">·</span>
+            <span className="opacity-80">{formatDate(classroom.updatedAt)}</span>
+          </span>
+        </div>
+        <div className="px-0 sm:px-1 flex items-center gap-2 mt-0 sm:mt-0">
+          {editing ? (
+            <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+              <input
+                ref={nameInputRef}
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitRename();
+                  if (e.key === 'Escape') setEditing(false);
+                }}
+                onBlur={commitRename}
+                maxLength={100}
+                placeholder={t('classroom.renamePlaceholder')}
+                className="w-full bg-transparent border-b border-pink-400/60 text-[15px] font-medium text-foreground/90 outline-none placeholder:text-muted-foreground/40"
+              />
+            </div>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p
+                  className="font-medium text-[15px] truncate text-foreground/90 min-w-0 cursor-text"
+                  onDoubleClick={startRename}
                 >
-                  <Copy className="size-3 opacity-60" />
-                </button>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        )}
+                  {classroom.name}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                sideOffset={4}
+                className="!max-w-[min(90vw,32rem)] break-words whitespace-normal"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="break-all">{classroom.name}</span>
+                  <button
+                    className="shrink-0 p-0.5 rounded hover:bg-foreground/10 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(classroom.name);
+                      toast.success(t('classroom.nameCopied'));
+                    }}
+                  >
+                    <Copy className="size-3 opacity-60" />
+                  </button>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        {/* Mobile-only action row (rename + delete) */}
+        <div className="sm:hidden flex items-center gap-1 mt-0.5">
+          <button
+            type="button"
+            aria-label={t('classroom.rename')}
+            onClick={startRename}
+            className="shrink-0 flex items-center gap-1 px-2 h-7 rounded-full text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors"
+          >
+            <Pencil className="size-3" />
+            <span>{t('classroom.rename')}</span>
+          </button>
+          <button
+            type="button"
+            aria-label={t('classroom.delete')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(classroom.id, e);
+            }}
+            className="shrink-0 flex items-center gap-1 px-2 h-7 rounded-full text-[11px] text-muted-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="size-3" />
+            <span>{t('classroom.delete')}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

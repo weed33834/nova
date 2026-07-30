@@ -24,6 +24,12 @@ export async function register() {
 
   // Register graceful shutdown handlers (Node.js runtime only)
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Run startup environment validation (catches missing env vars, invalid
+    // model configs, missing API keys — issues that would otherwise surface
+    // as runtime errors during generation).
+    const { runStartupValidation } = await import('@/lib/server/startup-validation');
+    runStartupValidation();
+
     const { registerGracefulShutdown } = await import('@/lib/server/shutdown');
     registerGracefulShutdown();
 

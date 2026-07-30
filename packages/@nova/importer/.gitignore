@@ -20,7 +20,6 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-pptx-renderer-main
 *.pptx
 .pnpm-store
 dist

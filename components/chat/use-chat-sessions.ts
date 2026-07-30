@@ -668,6 +668,10 @@ export function useChatSessions(options: UseChatSessionsOptions = {}) {
             clearLiveSessionAfterError(sessionId, t('chat.error.streamInterrupted'));
             onStopSessionRef.current?.();
             break;
+          case 'max_turns':
+            clearLiveSessionAfterError(sessionId, t('chat.error.maxTurnsReached'));
+            onStopSessionRef.current?.();
+            break;
           case 'aborted':
             // Already handled elsewhere via abort signal.
             break;

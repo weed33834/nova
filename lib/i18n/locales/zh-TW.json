@@ -3,7 +3,14 @@
     "you": "你",
     "confirm": "確定",
     "cancel": "取消",
-    "loading": "加載中..."
+    "loading": "加載中...",
+    "level": "Lv.",
+    "minutesShort": "分鐘",
+    "delete": "刪除",
+    "back": "返回",
+    "close": "關閉",
+    "prev": "上一個",
+    "next": "下一個"
   },
   "auth": {
     "signIn": "登入",
@@ -27,6 +34,7 @@
   "home": {
     "slogan": "個性化多智能體學習的新星。",
     "greetingWithName": "嗨，{{name}}",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — 個性化學習的新星。",
     "vocationalTestBadge": "測試功能",
     "vocationalTestLabel": "職教任務",
@@ -87,7 +95,14 @@
     "exportFailed": "導出失敗",
     "classroomZip": "導出課堂 ZIP",
     "classroomZipDesc": "課程結構 + 媒體文件",
-    "inlinePartial": "{{count}} 個外部資源未能打包，離線時課程可能無法正常顯示。"
+    "inlinePartial": "{{count}} 個外部資源未能打包，離線時課程可能無法正常顯示。",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineSuccess": "Video timeline exported",
+    "timelineWithWarnings": "Timeline exported",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering"
   },
   "import": {
     "classroom": "導入課堂",
@@ -120,7 +135,8 @@
     "endQA": "結束問答",
     "error": {
       "emptyAgentResponses": "智能體連續無響應,討論已停止。請重新嘗試或檢查模型配置。",
-      "streamInterrupted": "數據流意外中斷,討論未能完成。請重新嘗試。"
+      "streamInterrupted": "數據流意外中斷,討論未能完成。請重新嘗試。",
+      "maxTurnsReached": "討論已達到最大輪次上限,對話已結束。"
     },
     "tabs": {
       "lecture": "筆記",
@@ -202,7 +218,14 @@
     "exitFullscreen": "退出全屏",
     "editCourse": "編輯課程",
     "doneEditing": "完成編輯",
-    "proModeDisabledHint": "本頁不支持編輯——打開任意課程頁即可使用 Pro 模式編輯。"
+    "proModeDisabledHint": "本頁不支持編輯——打開任意課程頁即可使用 Pro 模式編輯。",
+    "scenes": "場景",
+    "previousScene": "上一個場景",
+    "nextScene": "下一個場景",
+    "toggleChat": "切換對話",
+    "moreControls": "更多操作",
+    "play": "播放",
+    "pause": "暫停"
   },
   "edit": {
     "proMode": "專業模式",
@@ -888,7 +911,9 @@
     "errorTitle": "Failed to load classroom",
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "職業模式",
+    "searchEmptyHint": "換個關鍵字試試,或清空搜尋查看所有課堂。"
   },
   "upload": {
     "courseMaterialSizeLimit": "支持文檔、演示、表格、圖像、純文本，最大 50MB（具體支持格式隨所選解析器而定）",
@@ -1102,7 +1127,25 @@
     "totalHours": "Total Hours",
     "totalHoursLabel": "Total Hours",
     "weeklyHours": "Weekly Hours",
-    "weeklyHoursLabel": "Weekly Hours"
+    "weeklyHoursLabel": "Weekly Hours",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "知識基礎",
+          "cognitiveStyle": "認知風格",
+          "learningGoals": "學習目標",
+          "modalityPreference": "模態偏好",
+          "timeBudget": "時間預算",
+          "errorPatterns": "錯誤模式"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "你已掌握的領域與主題",
+    "cognitiveStyleDesc": "你最容易吸收新知的方式",
+    "learningGoalsDesc": "你希望達成的目標",
+    "modalityPreferenceDesc": "最適合你的學習形式",
+    "timeBudgetDesc": "你願意投入的時間",
+    "errorPatternsDesc": "需要特別留意的常見誤區"
   },
   "intro": {
     "title": "Nova",
@@ -1170,7 +1213,9 @@
     "agentBarTitle": "角色配置",
     "agentBarDesc": "點擊展開配置 AI 角色。可調整人設、音色、優先級。自動模式下 AI 會根據課程生成角色。",
     "whiteboardTitle": "互動白板",
-    "whiteboardDesc": "隨時打開白板進行板書、繪圖、公式推導。AI 也會在講解時自動添加板書內容。"
+    "whiteboardDesc": "隨時打開白板進行板書、繪圖、公式推導。AI 也會在講解時自動添加板書內容。",
+    "showHelp": "顯示幫助導覽",
+    "help": "幫助"
   },
   "settings": {
     "title": "設置",
@@ -2019,7 +2064,14 @@
     "ttsBrowserNativeTimelineNotice": "瀏覽器內置 TTS 不支持編輯器時間軸的音頻功能（試聽、重新生成、全部配音）。切換到託管 TTS 提供方即可逐句生成和管理音頻。",
     "alidocmindAccessKeyId": "AccessKey ID",
     "alidocmindAccessKeySecret": "AccessKey Secret",
-    "duplicateId": "Duplicate ID"
+    "duplicateId": "Duplicate ID",
+    "teachingSystem": "教學系統",
+    "sidebar": {
+      "agents": "智能體角色",
+      "knowledgeGraph": "知識圖譜",
+      "guardrails": "安全護欄",
+      "tracing": "知識追蹤"
+    }
   },
   "media": {
     "imageCapability": "圖像生成",
@@ -2110,6 +2162,121 @@
     "unknown": "An unexpected error occurred.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "withContext": "{{message}} ({{context}})",
-    "withDetails": "{{message}} — {{details}}"
+    "withDetails": "{{message}} — {{details}}",
+    "emailTaken": "This email is already registered.",
+    "validationError": "The provided input is invalid."
+  },
+  "audio": {
+    "mute": "靜音",
+    "unmute": "取消靜音"
+  },
+  "adaptive": {
+    "knowledgeGraph": "學習知識圖譜",
+    "demo": {
+      "concept1Label": "Python基礎語法",
+      "concept1Desc": "變量、資料型別、控制流",
+      "concept2Label": "資料結構",
+      "concept2Desc": "列表、字典、元組、集合",
+      "concept3Label": "函式與模組",
+      "concept3Desc": "函式定義、參數、模組匯入",
+      "concept4Label": "物件導向程式設計",
+      "concept4Desc": "類別、繼承、多型",
+      "concept5Label": "實戰專案",
+      "concept5Desc": "綜合專案實踐"
+    },
+    "learningPath": {
+      "title": "推薦學習路徑",
+      "emptyDesc": "完成學習畫像後，將為你生成個性化學習路徑",
+      "summary": "{{count}} 個知識點 · 約 {{minutes}} 分鐘",
+      "minutes": "{{n}} 分鐘",
+      "footer": "根據你的學習畫像 ({{hours}}h 學習時間) 生成",
+      "viewDetail": "查看詳情",
+      "detailDialog": "學習路徑詳情 — {{minutes}} 分鐘\n\n{{summary}}\n\n知識點圖: {{name}} ({{count}} 個概念)"
+    },
+    "depth": {
+      "surface": "概覽",
+      "normal": "標準",
+      "deep": "深入"
+    },
+    "category": {
+      "prerequisite": "前置",
+      "core": "核心",
+      "advanced": "進階",
+      "application": "應用",
+      "assessment": "評估"
+    },
+    "strategy": {
+      "prerequisite_first": "前置優先",
+      "balanced": "均衡",
+      "deep_first": "深入優先"
+    }
+  },
+  "tracing": {
+    "title": "知識追蹤",
+    "simulateLearning": "模擬學習",
+    "simulateMastery": "模擬掌握",
+    "overallMastery": "整體掌握度",
+    "mastered": "已掌握",
+    "weakConcepts": "薄弱概念",
+    "needReview": "需複習",
+    "conceptMastery": "概念掌握度",
+    "attempts": "嘗試: {{n}}",
+    "correct": "正確: {{n}}",
+    "confidence": "自信: {{pct}}%",
+    "performancePrediction": "表現預測",
+    "predictedCorrectness": "預測正確率",
+    "predictedConfidence": "預測置信度",
+    "nextReviewInterval": "下次複習間隔",
+    "nextReviewIntervalValue": "{{n}} 小時",
+    "forgettingCurve": "遺忘曲線 (7天)",
+    "now": "現在",
+    "sevenDays": "7天",
+    "selectConcept": "選擇一個概念查看預測和遺忘曲線",
+    "demoConcept1": "基礎知識",
+    "demoConcept2": "核心概念",
+    "demoConcept3": "進階應用"
+  },
+  "agentRoles": {
+    "subtitle": "管理智能體角色及其權限配置",
+    "resetAll": "重置全部",
+    "description": "描述",
+    "interactionMode": "交互模式",
+    "permissions": "權限 ({{n}})",
+    "priority": "優先級",
+    "modified": "已修改",
+    "resetToDefault": "重置為默認",
+    "interactions": {
+      "direct": "直接教學",
+      "scaffold": "支架式",
+      "socratic": "蘇格拉底式",
+      "collaborative": "協作式"
+    }
+  },
+  "permissions": {
+    "speak": "發言",
+    "whiteboardDraw": "白板繪製",
+    "whiteboardErase": "白板擦除",
+    "whiteboardManage": "白板管理",
+    "slideControl": "幻燈片控制",
+    "slideSpotlight": "聚光燈",
+    "slideLaser": "雷射筆",
+    "quizCreate": "創建測驗",
+    "quizGrade": "批改測驗",
+    "mediaControl": "媒體控制",
+    "discussionModerate": "討論主持",
+    "evaluate": "評估",
+    "summarize": "總結",
+    "manageAgents": "管理智能體"
+  },
+  "demoSeed": {
+    "launchingDemo": "正在啟動...",
+    "launchDemo": "AI 即時生成演示課程",
+    "loading": "加載中...",
+    "loadCached": "秒開緩存演示課程",
+    "requirement": "为我创建一个关于{{topic}}的简短互动课程"
+  },
+  "greeting": {
+    "hi": "你好，{{name}}",
+    "readyToLearn": "準備好一起學習了嗎？"
   }
 }

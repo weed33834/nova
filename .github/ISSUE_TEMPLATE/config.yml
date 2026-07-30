@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security Report
-    url: https://github.com/weed33834/nova/security/advisories/new
+    url: https://gitcode.com/badhope/nova/security/advisories/new
     about: Report security vulnerabilities privately
   - name: Discussions
-    url: https://github.com/weed33834/nova/discussions
+    url: https://gitcode.com/badhope/nova/discussions
     about: Ask questions and share ideas in Discussions

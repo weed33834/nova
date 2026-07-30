@@ -29,7 +29,7 @@ const createConfig = (output) => ({
 });
 
 const config = [
-  createConfig({ file: 'dist/index.umd.js', format: 'umd', name: 'pptxtojsonPro' }),
+  createConfig({ file: 'dist/index.umd.js', format: 'umd', name: 'NovaImporter' }),
   createConfig({ file: 'dist/index.cjs', format: 'cjs' }),
   createConfig({ file: 'dist/index.js', format: 'es' }),
 ];

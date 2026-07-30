@@ -1,6 +1,6 @@
 /**
  * Text serializer — maps TextBody to HTML for pptxtojson `content` (Shape.content / Text.content).
- * Migration of pptx-renderer `TextRenderer.renderTextBody`: same inheritance and merge logic;
+ * Ported from a reference renderer's `TextRenderer.renderTextBody`: same inheritance and merge logic;
  * output is an HTML string instead of a DOM container. See textSerializer.md (this folder).
  */
 
@@ -1441,7 +1441,7 @@ export function renderTextBody(
       }
 
       // Merge consecutive runs with identical style strings into a single <span>,
-      // matching pptxtojson's compact HTML output for better pptist compatibility.
+      // matching pptxtojson's compact HTML output for better downstream compatibility.
       let prevStyleStr: string | null = null;
       let prevIsLink = false;
       let accumulatedText = '';

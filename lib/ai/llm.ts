@@ -54,11 +54,23 @@ function getModelId(params: GenerateTextParams | StreamTextParams): string {
 // doesn't block calls to others. Breakers are created lazily on first use and
 // persist for the process lifetime (visible in /api/health/ready).
 //
-// Breaker config: 30s timeout, 50% error threshold, 10s reset, min 10 calls
-// before evaluating — tuned for LLM API latency characteristics.
+// Breaker config: 120s timeout (configurable via LLM_TIMEOUT_MS env), 50% error
+// threshold, 10s reset, min 10 calls before evaluating — tuned for LLM API
+// latency characteristics.
+// Timeout increased from 30s to 120s to accommodate slower API endpoints.
+// Made configurable so operators can adjust without code changes.
+
+function getLlmBreakerTimeout(): number {
+  const envTimeout = process.env.LLM_TIMEOUT_MS;
+  if (envTimeout) {
+    const parsed = parseInt(envTimeout, 10);
+    if (!Number.isNaN(parsed) && parsed >= 5000) return parsed;
+  }
+  return 120_000;
+}
 
 const LLM_BREAKER_OPTIONS = {
-  timeout: 30_000,
+  timeout: getLlmBreakerTimeout(),
   errorThresholdPercentage: 50,
   resetTimeout: 10_000,
   volumeThreshold: 10,

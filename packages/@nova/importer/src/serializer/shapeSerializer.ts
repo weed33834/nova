@@ -1,5 +1,5 @@
 /**
- * Shape serializer — mirrors `pptx-renderer-main/src/renderer/ShapeRenderer.renderShape` control flow
+ * Shape serializer — mirrors the reference renderer's `ShapeRenderer.renderShape` control flow
  * and naming, but emits pptxtojson `Shape` / `Text` objects (`adapter/types.ts`) instead of DOM.
  */
 
@@ -1122,7 +1122,7 @@ export async function renderShape(
 
   const pathOut: string | undefined = pathD || undefined;
 
-  // PPTist expects keypoints normalized by /50000 (OOXML raw value / 50000).
+  // Downstream expects keypoints normalized by /50000 (OOXML raw value / 50000).
   let keypoints: Record<string, number> | undefined;
   if (node.adjustments.size > 0) {
     keypoints = {};

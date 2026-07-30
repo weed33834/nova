@@ -16,8 +16,8 @@
   <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript" alt="TypeScript" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" /></a>
   <a href="#"><img src="https://img.shields.io/badge/License-MIT-green" alt="License" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/Tests-2768%20passed-success" alt="Tests" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/LLM-20%2B%20providers-8b5cf6" alt="LLM Providers" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Tests-3160%20passed-success" alt="Tests" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/LLM-17%20providers-8b5cf6" alt="LLM Providers" /></a>
   <a href="#"><img src="https://img.shields.io/badge/i18n-8%20languages-pink" alt="i18n" /></a>
 </p>
 
@@ -72,20 +72,25 @@ Nova 是一个基于多智能体的智能教学平台。输入任意学习主题
 ### 基础设施
 
 <details>
-<summary><strong>20+ LLM 提供商</strong></summary>
+<summary><strong>17 个 LLM 提供商</strong></summary>
 
 | 提供商 | 代表模型 |
 |--------|---------|
-| OpenAI | GPT-4o, GPT-4o-mini |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
-| Google | Gemini 2.0 Flash, Gemini 1.5 Pro |
+| OpenAI | GPT-5.6, GPT-5.4 |
+| Azure OpenAI | 用户自定义部署 |
+| Anthropic | Claude Opus 4.8, Claude Sonnet 4.6 |
+| Google | Gemini 3.5 Flash, Gemini 2.5 Pro |
 | DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash |
-| 通义千问 | Qwen3.5-397B, Qwen3.6-35B |
-| 智谱 GLM | GLM-5.2, GLM-5.1 |
-| Kimi | Kimi-K2.6 |
+| 通义千问 | Qwen3.7 Plus, Qwen3.6 Flash |
+| 智谱 GLM | GLM-5.2, GLM-4.6 |
+| Kimi | Kimi-K2.7, Kimi-K2.6 |
 | MiniMax | MiniMax-M3 |
 | 硅基流动 | 全系列模型聚合 |
-| 豆包 | Doubao 全系列 |
+| 豆包 | Doubao Seed 全系列 |
+| OpenRouter | DeepSeek 等多模型 |
+| Grok | Grok 4.20, Grok 4.1 |
+| 腾讯混元 | Hy3 Preview |
+| 小米 MiMo | MiMo V2.5 Pro, MiMo V2 |
 | Ollama | 本地模型 |
 | Lemonade | 本地 AMD 模型 |
 
@@ -98,6 +103,17 @@ Nova 是一个基于多智能体的智能教学平台。输入任意学习主题
 - **MCP 工具** — 通过 Model Context Protocol 接入外部工具
 - **国际化** — 英语、简体中文、繁体中文、日语、韩语、阿拉伯语、葡萄牙语、俄语
 - **暗色模式** — 全站支持
+
+### 企业级功能
+
+- **配额管理** — 按用户的生成配额控制，超限时返回 `QUOTA_EXCEEDED`（402）
+- **输入校验** — 所有生成 API 路由校验输入长度、主题、需求内容
+- **审计日志** — 所有 API 操作记录日志，支持保留策略（默认 90 天）
+- **速率限制** — 可配置的按端点速率限制
+- **SSRF 防护** — 出站请求的 URL 白名单/黑名单
+- **内容审核** — PII 检测、毒性过滤、幻觉识别三重扫描
+- **角色权限** — 10 种可配置智能体角色，细粒度权限控制
+- **知识追踪** — 贝叶斯知识追踪，跟踪学生学习进度
 
 ## 架构
 
@@ -128,12 +144,22 @@ pnpm install
 
 ```bash
 # 方式一：直接配置 API 密钥
-SILICONFLOW_API_KEY=你的密钥
-SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+OPENAI_API_KEY=你的密钥
+OPENAI_BASE_URL=https://api.openai.com/v1
 
 # 方式二：服务端托管配置（推荐）
-cp server-providers.example.yml server-providers.yml
+cp server-providers.yml.example server-providers.yml
 # 编辑 server-providers.yml 填入凭证，密钥不会暴露给客户端
+```
+
+可选环境变量：
+
+```bash
+DEFAULT_MODEL=openai:你的模型        # 默认 LLM 模型（格式：提供商:模型）
+LLM_TIMEOUT_MS=300000                # LLM 请求超时（毫秒）
+FALLBACK_MODELS=openai:模型2,openai:模型3  # 逗号分隔的备用模型
+LLM_THINKING_DISABLED=true           # 禁用思考/推理 token
+SKIP_TS_CHECK=true                   # 构建时跳过 TypeScript 检查
 ```
 
 ### 运行
@@ -144,6 +170,15 @@ pnpm dev
 
 打开 [http://localhost:3000](http://localhost:3000)，输入你想学的主题即可开始。
 
+### 生产部署
+
+```bash
+pnpm build            # 构建生产版本
+pnpm start            # 启动生产服务器
+```
+
+> **注意：** 如果构建时 TypeScript 检查因内存不足失败，可使用 `SKIP_TS_CHECK=true pnpm build`。
+
 ### 免密钥体验
 
 点击首页的 **「秒开缓存演示课程」** 按钮，无需 API 密钥即可加载预置的「人工智能导论」课程，立即体验课堂 UI。
@@ -151,7 +186,7 @@ pnpm dev
 ## 测试
 
 ```bash
-pnpm test          # 单元和组件测试（312 个文件 / 2768 个用例）
+pnpm test          # 单元和组件测试（340 个文件 / 3155 个用例）
 pnpm test:e2e      # 端到端测试（Playwright）
 pnpm test:e2e:ui   # 带交互界面的端到端测试
 pnpm lint          # ESLint 代码检查

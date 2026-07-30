@@ -3,7 +3,14 @@
     "you": "나",
     "confirm": "확인",
     "cancel": "취소",
-    "loading": "로딩 중..."
+    "loading": "로딩 중...",
+    "level": "Lv.",
+    "minutesShort": "분",
+    "delete": "삭제",
+    "back": "뒤로",
+    "close": "닫기",
+    "prev": "이전",
+    "next": "다음"
   },
   "auth": {
     "signIn": "로그인",
@@ -27,6 +34,7 @@
   "home": {
     "slogan": "개인화 멀티 에이전트 학습의 새로운 별.",
     "greetingWithName": "안녕하세요, {{name}}!",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — A new star for personalized learning.",
     "vocationalTestBadge": "Beta",
     "vocationalTestLabel": "Vocational Tasks",
@@ -87,7 +95,14 @@
     "exportFailed": "내보내기 실패",
     "classroomZip": "교실 ZIP 내보내기",
     "classroomZipDesc": "강좌 구조 + 미디어 파일",
-    "inlinePartial": "{{count}}개의 외부 에셋을 번들에 포함할 수 없어 오프라인에서 강좌가 올바르게 표시되지 않을 수 있습니다."
+    "inlinePartial": "{{count}}개의 외부 에셋을 번들에 포함할 수 없어 오프라인에서 강좌가 올바르게 표시되지 않을 수 있습니다.",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineSuccess": "Video timeline exported",
+    "timelineWithWarnings": "Timeline exported",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering"
   },
   "import": {
     "classroom": "교실 가져오기",
@@ -120,7 +135,8 @@
     "endQA": "Q&A 종료",
     "error": {
       "emptyAgentResponses": "에이전트가 빈 응답을 반환하여 토론이 중단되었습니다. 다시 시도하거나 모델 설정을 확인하세요.",
-      "streamInterrupted": "스트림이 예기치 않게 종료되어 토론이 완료되지 않았습니다. 다시 시도해 주세요."
+      "streamInterrupted": "스트림이 예기치 않게 종료되어 토론이 완료되지 않았습니다. 다시 시도해 주세요.",
+      "maxTurnsReached": "토론이 최대 턴 제한에 도달했습니다. 대화가 종료되었습니다."
     },
     "tabs": {
       "lecture": "노트",
@@ -202,7 +218,14 @@
     "exitFullscreen": "전체화면 종료",
     "editCourse": "강좌 편집",
     "doneEditing": "편집 완료",
-    "proModeDisabledHint": "이 페이지에서는 편집할 수 없습니다 — 코스 슬라이드를 열면 Pro 모드로 편집할 수 있습니다."
+    "proModeDisabledHint": "이 페이지에서는 편집할 수 없습니다 — 코스 슬라이드를 열면 Pro 모드로 편집할 수 있습니다.",
+    "scenes": "장면",
+    "previousScene": "이전 장면",
+    "nextScene": "다음 장면",
+    "toggleChat": "채팅 전환",
+    "moreControls": "더 많은 컨트롤",
+    "play": "재생",
+    "pause": "일시정지"
   },
   "edit": {
     "proMode": "프로 모드",
@@ -874,7 +897,9 @@
     "errorTitle": "Failed to load classroom",
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "직업 모드",
+    "searchEmptyHint": "다른 키워드를 시도하거나 검색을 지워 모든 클래스를 확인하세요."
   },
   "upload": {
     "courseMaterialSizeLimit": "문서, 슬라이드, 스프레드시트, 이미지, 텍스트 — 최대 50MB (지원 형식은 선택한 파서에 따라 다름)",
@@ -1844,7 +1869,14 @@
     "mcpTransportStdioHint": "stdio transport spawns a child process and is only available in standalone deployments. Stateless environments like Vercel cannot use it.",
     "mcpUrl": "Server URL",
     "mcpUrlPlaceholder": "e.g. https://mcp.example.com/mcp",
-    "duplicateId": "Duplicate ID"
+    "duplicateId": "Duplicate ID",
+    "teachingSystem": "교학 시스템",
+    "sidebar": {
+      "agents": "에이전트 역할",
+      "knowledgeGraph": "지식 그래프",
+      "guardrails": "가드레일",
+      "tracing": "지식 추적"
+    }
   },
   "profile": {
     "buildProfile": "Build your learning profile for personalized recommendations",
@@ -1937,7 +1969,25 @@
     "totalHours": "Total Hours",
     "totalHoursLabel": "Total Hours",
     "weeklyHours": "Weekly Hours",
-    "weeklyHoursLabel": "Weekly Hours"
+    "weeklyHoursLabel": "Weekly Hours",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "지식 기반",
+          "cognitiveStyle": "인지 스타일",
+          "learningGoals": "학습 목표",
+          "modalityPreference": "양식 선호",
+          "timeBudget": "시간 예산",
+          "errorPatterns": "오류 패턴"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "이미 습득한 분야와 주제",
+    "cognitiveStyleDesc": "새로운 지식을 가장 잘 흡수하는 방법",
+    "learningGoalsDesc": "달성하고 싶은 목표",
+    "modalityPreferenceDesc": "가장 효과적인 학습 형식",
+    "timeBudgetDesc": "투자할 수 있는 시간",
+    "errorPatternsDesc": "주의해야 할 흔한 함정"
   },
   "media": {
     "imageCapability": "이미지 생성",
@@ -2049,7 +2099,9 @@
     "welcomeDesc": "Your personal AI multi-agent interactive classroom. Tell Nova what you want to learn, and it generates a complete personalized course.",
     "welcomeTitle": "Welcome to Nova ✨",
     "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations.",
-    "whiteboardTitle": "Interactive Whiteboard"
+    "whiteboardTitle": "Interactive Whiteboard",
+    "showHelp": "도움말 투어 표시",
+    "help": "도움말"
   },
   "userProfile": {
     "title": "프로필",
@@ -2110,6 +2162,121 @@
     "unknown": "An unexpected error occurred.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "withContext": "{{message}} ({{context}})",
-    "withDetails": "{{message}} — {{details}}"
+    "withDetails": "{{message}} — {{details}}",
+    "emailTaken": "This email is already registered.",
+    "validationError": "The provided input is invalid."
+  },
+  "audio": {
+    "mute": "음소거",
+    "unmute": "음소거 해제"
+  },
+  "adaptive": {
+    "knowledgeGraph": "지식 그래프",
+    "demo": {
+      "concept1Label": "Python 기초",
+      "concept1Desc": "변수, 데이터 타입, 제어 흐름",
+      "concept2Label": "자료 구조",
+      "concept2Desc": "리스트, 딕셔너리, 튜플, 집합",
+      "concept3Label": "함수와 모듈",
+      "concept3Desc": "함수 정의, 매개변수, 모듈",
+      "concept4Label": "객체 지향",
+      "concept4Desc": "클래스, 상속, 다형성",
+      "concept5Label": "실전 프로젝트",
+      "concept5Desc": "종합 프로젝트 실습"
+    },
+    "learningPath": {
+      "title": "추천 학습 경로",
+      "emptyDesc": "학습 프로필을 완성하면 맞춤 경로가 생성됩니다",
+      "summary": "{{count}} 지식 포인트 · 약 {{minutes}}분",
+      "minutes": "{{n}}분",
+      "footer": "프로필에서 생성 ({{hours}}h 학습 시간)",
+      "viewDetail": "상세 보기",
+      "detailDialog": "학습 경로 상세 — {{minutes}}분\n\n{{summary}}\n\n그래프: {{name}} ({{count}} 개념)"
+    },
+    "depth": {
+      "surface": "개요",
+      "normal": "표준",
+      "deep": "심화"
+    },
+    "category": {
+      "prerequisite": "선수",
+      "core": "핵심",
+      "advanced": "심화",
+      "application": "응용",
+      "assessment": "평가"
+    },
+    "strategy": {
+      "prerequisite_first": "선수 우선",
+      "balanced": "균형",
+      "deep_first": "심화 우선"
+    }
+  },
+  "tracing": {
+    "title": "지식 추적",
+    "simulateLearning": "학습 시뮬레이션",
+    "simulateMastery": "숙달 시뮬레이션",
+    "overallMastery": "전반적 숙달도",
+    "mastered": "습득함",
+    "weakConcepts": "취약 개념",
+    "needReview": "복습 필요",
+    "conceptMastery": "개념 숙달도",
+    "attempts": "시도: {{n}}",
+    "correct": "정답: {{n}}",
+    "confidence": "자신감: {{pct}}%",
+    "performancePrediction": "성과 예측",
+    "predictedCorrectness": "예측 정답률",
+    "predictedConfidence": "예측 신뢰도",
+    "nextReviewInterval": "다음 복습 간격",
+    "nextReviewIntervalValue": "{{n}} 시간",
+    "forgettingCurve": "망각 곡선 (7일)",
+    "now": "지금",
+    "sevenDays": "7일",
+    "selectConcept": "예측 및 망각 곡선을 보려면 개념 선택",
+    "demoConcept1": "기초 지식",
+    "demoConcept2": "핵심 개념",
+    "demoConcept3": "고급 응용"
+  },
+  "agentRoles": {
+    "subtitle": "에이전트 역할 및 권한 구성 관리",
+    "resetAll": "모두 재설정",
+    "description": "설명",
+    "interactionMode": "상호작용 모드",
+    "permissions": "권한 ({{n}})",
+    "priority": "우선순위",
+    "modified": "수정됨",
+    "resetToDefault": "기본값으로 재설정",
+    "interactions": {
+      "direct": "직접 교수",
+      "scaffold": "스캐폴드",
+      "socratic": "소크라테스식",
+      "collaborative": "협업"
+    }
+  },
+  "permissions": {
+    "speak": "발언",
+    "whiteboardDraw": "화이트보드 그리기",
+    "whiteboardErase": "화이트보드 지우기",
+    "whiteboardManage": "화이트보드 관리",
+    "slideControl": "슬라이드 제어",
+    "slideSpotlight": "스포트라이트",
+    "slideLaser": "레이저 포인터",
+    "quizCreate": "퀴즈 만들기",
+    "quizGrade": "퀴즈 채점",
+    "mediaControl": "미디어 제어",
+    "discussionModerate": "토론 중재",
+    "evaluate": "평가",
+    "summarize": "요약",
+    "manageAgents": "에이전트 관리"
+  },
+  "demoSeed": {
+    "launchingDemo": "시작 중...",
+    "launchDemo": "AI 실시간 데모 코스 생성",
+    "loading": "로드 중...",
+    "loadCached": "캐시된 데모 코스 즉시 열기",
+    "requirement": "{{topic}}에 대한 짧은 대화형 강의를 만들어주세요"
+  },
+  "greeting": {
+    "hi": "안녕하세요, {{name}}",
+    "readyToLearn": "함께 배울 준비가 되셨나요?"
   }
 }

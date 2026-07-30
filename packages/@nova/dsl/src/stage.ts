@@ -130,7 +130,7 @@ export interface Stage {
 }
 
 /**
- * Slide content - PPTist Canvas data.
+ * Slide content - Nova Canvas data.
  *
  * `schemaVersion` tags the on-disk shape of this content so future schema
  * changes can ship behind a migration step (see the app's `migrateSlideContent`).
@@ -140,7 +140,7 @@ export interface Stage {
 export interface SlideContent {
   type: 'slide';
   schemaVersion?: number;
-  // PPTist slide data structure
+  // Nova slide data structure
   canvas: Slide;
 }
 

@@ -16,8 +16,8 @@
   <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript" alt="TypeScript" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" /></a>
   <a href="#"><img src="https://img.shields.io/badge/License-MIT-green" alt="License" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/Tests-2768%20passed-success" alt="Tests" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/LLM-20%2B%20providers-8b5cf6" alt="LLM Providers" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Tests-3160%20passed-success" alt="Tests" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/LLM-17%20providers-8b5cf6" alt="LLM Providers" /></a>
   <a href="#"><img src="https://img.shields.io/badge/i18n-8%20languages-pink" alt="i18n" /></a>
 </p>
 
@@ -72,20 +72,25 @@ The core idea: not just a slide generator, but a complete teaching system with r
 ### Infrastructure
 
 <details>
-<summary><strong>20+ LLM Providers</strong></summary>
+<summary><strong>17 LLM Providers</strong></summary>
 
 | Provider | Example Models |
 |----------|---------------|
-| OpenAI | GPT-4o, GPT-4o-mini |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
-| Google | Gemini 2.0 Flash, Gemini 1.5 Pro |
+| OpenAI | GPT-5.6, GPT-5.4 |
+| Azure OpenAI | User-defined deployments |
+| Anthropic | Claude Opus 4.8, Claude Sonnet 4.6 |
+| Google | Gemini 3.5 Flash, Gemini 2.5 Pro |
 | DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash |
-| Qwen | Qwen3.5-397B, Qwen3.6-35B |
-| GLM | GLM-5.2, GLM-5.1 |
-| Kimi | Kimi-K2.6 |
+| Qwen | Qwen3.7 Plus, Qwen3.6 Flash |
+| GLM | GLM-5.2, GLM-4.6 |
+| Kimi | Kimi-K2.7, Kimi-K2.6 |
 | MiniMax | MiniMax-M3 |
 | SiliconFlow | Full model aggregation |
-| Doubao | Doubao series |
+| Doubao | Doubao Seed series |
+| OpenRouter | DeepSeek, and more |
+| Grok | Grok 4.20, Grok 4.1 |
+| Tencent Hunyuan | Hy3 Preview |
+| Xiaomi MiMo | MiMo V2.5 Pro, MiMo V2 |
 | Ollama | Local models |
 | Lemonade | Local AMD models |
 
@@ -98,6 +103,17 @@ The core idea: not just a slide generator, but a complete teaching system with r
 - **MCP Tools** — Connect external tools via Model Context Protocol
 - **i18n** — English, Simplified Chinese, Traditional Chinese, Japanese, Korean, Arabic, Portuguese, Russian
 - **Dark Mode** — Site-wide support
+
+### Enterprise Features
+
+- **Quota Management** — Per-user generation quotas with `QUOTA_EXCEEDED` (402) responses
+- **Input Validation** — All generation API routes validate input length, topic, and requirements
+- **Audit Logging** — All API actions logged with retention policies (90-day default)
+- **Rate Limiting** — Configurable per-endpoint rate limits
+- **SSRF Protection** — URL allowlist/denylist for outbound requests
+- **Content Moderation** — PII detection, toxicity filtering, and hallucination scanning
+- **Role-Based Access** — 10 configurable agent roles with fine-grained permissions
+- **Knowledge Tracing** — Bayesian knowledge tracing for student progress tracking
 
 ## Architecture
 
@@ -128,12 +144,22 @@ Create a `.env.local` file with at least one LLM provider:
 
 ```bash
 # Option A: direct API key
-SILICONFLOW_API_KEY=your-key
-SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+OPENAI_API_KEY=your-key
+OPENAI_BASE_URL=https://api.openai.com/v1
 
 # Option B: server-side managed config (recommended)
-cp server-providers.example.yml server-providers.yml
+cp server-providers.yml.example server-providers.yml
 # Edit server-providers.yml with your credentials — keys stay server-side
+```
+
+Optional environment variables:
+
+```bash
+DEFAULT_MODEL=openai:your-model       # Default LLM model (provider:model format)
+LLM_TIMEOUT_MS=300000                 # LLM request timeout in milliseconds
+FALLBACK_MODELS=openai:model2,openai:model3  # Comma-separated fallback models
+LLM_THINKING_DISABLED=true            # Disable thinking/reasoning tokens
+SKIP_TS_CHECK=true                    # Skip TypeScript checking during build
 ```
 
 ### Run
@@ -144,6 +170,15 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) and enter a topic to start.
 
+### Production
+
+```bash
+pnpm build            # Build for production
+pnpm start            # Start production server
+```
+
+> **Note:** If the build runs out of memory during TypeScript checking, use `SKIP_TS_CHECK=true pnpm build`.
+
 ### No API Key? Try the Demo
 
 Click **"Open Cached Demo Course"** on the home page to load a pre-built Introduction to AI course — no API key required.
@@ -151,7 +186,7 @@ Click **"Open Cached Demo Course"** on the home page to load a pre-built Introdu
 ## Testing
 
 ```bash
-pnpm test          # Unit & component tests (312 files / 2768 cases)
+pnpm test          # Unit & component tests (340 files / 3155 cases)
 pnpm test:e2e      # End-to-end tests (Playwright)
 pnpm test:e2e:ui   # E2E with interactive UI
 pnpm lint          # ESLint

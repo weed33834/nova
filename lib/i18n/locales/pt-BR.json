@@ -3,7 +3,14 @@
     "you": "Você",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "loading": "Carregando..."
+    "loading": "Carregando...",
+    "level": "Nível",
+    "minutesShort": "min",
+    "delete": "Excluir",
+    "back": "Voltar",
+    "close": "Fechar",
+    "prev": "Anterior",
+    "next": "Próximo"
   },
   "auth": {
     "signIn": "Entrar",
@@ -27,6 +34,7 @@
   "home": {
     "slogan": "Uma nova estrela para o aprendizado multi-agente personalizado.",
     "greetingWithName": "Olá, {{name}}",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — A new star for personalized learning.",
     "vocationalTestBadge": "Beta",
     "vocationalTestLabel": "Vocational Tasks",
@@ -87,7 +95,14 @@
     "exportFailed": "Falha na exportação",
     "classroomZip": "Exportar ZIP da Sala",
     "classroomZipDesc": "Estrutura do curso + arquivos de mídia",
-    "inlinePartial": "{{count}} recurso(s) externo(s) não puderam ser empacotados; o curso pode não ser exibido corretamente offline."
+    "inlinePartial": "{{count}} recurso(s) externo(s) não puderam ser empacotados; o curso pode não ser exibido corretamente offline.",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineSuccess": "Video timeline exported",
+    "timelineWithWarnings": "Timeline exported",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering"
   },
   "import": {
     "classroom": "Importar Sala de Aula",
@@ -120,7 +135,8 @@
     "endQA": "Encerrar Perguntas",
     "error": {
       "emptyAgentResponses": "Os agentes retornaram respostas vazias; a discussão foi interrompida. Tente novamente ou verifique as configurações do modelo.",
-      "streamInterrupted": "O fluxo de dados terminou inesperadamente; a discussão não foi concluída. Por favor, tente novamente."
+      "streamInterrupted": "O fluxo de dados terminou inesperadamente; a discussão não foi concluída. Por favor, tente novamente.",
+      "maxTurnsReached": "A discussão atingiu o limite máximo de turnos. A conversa foi encerrada."
     },
     "tabs": {
       "lecture": "Anotações",
@@ -477,7 +493,14 @@
     "exitFullscreen": "Sair da tela cheia",
     "editCourse": "Editar curso",
     "doneEditing": "Concluir edição",
-    "proModeDisabledHint": "A edição não está disponível nesta página — abra um slide do curso para editar no modo Pro."
+    "proModeDisabledHint": "A edição não está disponível nesta página — abra um slide do curso para editar no modo Pro.",
+    "scenes": "Cenas",
+    "previousScene": "Cena anterior",
+    "nextScene": "Próxima cena",
+    "toggleChat": "Alternar chat",
+    "moreControls": "Mais controles",
+    "play": "Reproduzir",
+    "pause": "Pausar"
   },
   "classroomComplete": {
     "title": "Curso concluído",
@@ -874,7 +897,9 @@
     "errorTitle": "Failed to load classroom",
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "Modo Profissional",
+    "searchEmptyHint": "Tente outra palavra-chave ou limpe a busca para ver todas as turmas."
   },
   "upload": {
     "courseMaterialSizeLimit": "Documentos, apresentações, planilhas, imagens e texto — até 50 MB (formatos aceitos dependem do extrator selecionado)",
@@ -1844,7 +1869,14 @@
     "mcpTransportStdioHint": "stdio transport spawns a child process and is only available in standalone deployments. Stateless environments like Vercel cannot use it.",
     "mcpUrl": "Server URL",
     "mcpUrlPlaceholder": "e.g. https://mcp.example.com/mcp",
-    "duplicateId": "Duplicate ID"
+    "duplicateId": "Duplicate ID",
+    "teachingSystem": "Ensino",
+    "sidebar": {
+      "agents": "Papéis do agente",
+      "knowledgeGraph": "Grafo",
+      "guardrails": "Proteções",
+      "tracing": "Rastreamento"
+    }
   },
   "profile": {
     "buildProfile": "Build your learning profile for personalized recommendations",
@@ -1937,7 +1969,25 @@
     "totalHours": "Total Hours",
     "totalHoursLabel": "Total Hours",
     "weeklyHours": "Weekly Hours",
-    "weeklyHoursLabel": "Weekly Hours"
+    "weeklyHoursLabel": "Weekly Hours",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "Base de conhecimento",
+          "cognitiveStyle": "Estilo cognitivo",
+          "learningGoals": "Objetivos de aprendizagem",
+          "modalityPreference": "Preferência de modalidade",
+          "timeBudget": "Orçamento de tempo",
+          "errorPatterns": "Padrões de erro"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "Domínios e tópicos que você já conhece",
+    "cognitiveStyleDesc": "Como você melhor absorve novas informações",
+    "learningGoalsDesc": "O que você quer alcançar",
+    "modalityPreferenceDesc": "Os formatos com os quais você mais aprende",
+    "timeBudgetDesc": "Quanto tempo você pode investir",
+    "errorPatternsDesc": "Armadilhas comuns para ficar atento"
   },
   "media": {
     "imageCapability": "Geração de Imagens",
@@ -2049,7 +2099,9 @@
     "welcomeDesc": "Your personal AI multi-agent interactive classroom. Tell Nova what you want to learn, and it generates a complete personalized course.",
     "welcomeTitle": "Welcome to Nova ✨",
     "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations.",
-    "whiteboardTitle": "Interactive Whiteboard"
+    "whiteboardTitle": "Interactive Whiteboard",
+    "showHelp": "Mostrar tour de ajuda",
+    "help": "Ajuda"
   },
   "userProfile": {
     "title": "Perfil",
@@ -2110,6 +2162,121 @@
     "unknown": "An unexpected error occurred.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "withContext": "{{message}} ({{context}})",
-    "withDetails": "{{message}} — {{details}}"
+    "withDetails": "{{message}} — {{details}}",
+    "emailTaken": "This email is already registered.",
+    "validationError": "The provided input is invalid."
+  },
+  "audio": {
+    "mute": "Silenciar",
+    "unmute": "Ativar som"
+  },
+  "adaptive": {
+    "knowledgeGraph": "Grafo de conhecimento",
+    "demo": {
+      "concept1Label": "Básico de Python",
+      "concept1Desc": "Variáveis, tipos, fluxo",
+      "concept2Label": "Estruturas de dados",
+      "concept2Desc": "Listas, dicionários, tuplas",
+      "concept3Label": "Funções e módulos",
+      "concept3Desc": "Definições, parâmetros",
+      "concept4Label": "Orientação a objetos",
+      "concept4Desc": "Classes, herança, polimorfismo",
+      "concept5Label": "Projeto prático",
+      "concept5Desc": "Prática integrada"
+    },
+    "learningPath": {
+      "title": "Trilha recomendada",
+      "emptyDesc": "Complete seu perfil para uma trilha personalizada",
+      "summary": "{{count}} tópicos · ~{{minutes}} min",
+      "minutes": "{{n}} min",
+      "footer": "Gerado do seu perfil ({{hours}}h)",
+      "viewDetail": "Ver detalhes",
+      "detailDialog": "Detalhes da trilha — {{minutes}} min\n\n{{summary}}\n\nGrafo: {{name}} ({{count}} conceitos)"
+    },
+    "depth": {
+      "surface": "Visão geral",
+      "normal": "Padrão",
+      "deep": "Aprofundado"
+    },
+    "category": {
+      "prerequisite": "Pré-requisito",
+      "core": "Essencial",
+      "advanced": "Avançado",
+      "application": "Aplicado",
+      "assessment": "Avaliação"
+    },
+    "strategy": {
+      "prerequisite_first": "Base primeiro",
+      "balanced": "Balanceado",
+      "deep_first": "Aprofundar primeiro"
+    }
+  },
+  "tracing": {
+    "title": "Rastreamento de Conhecimento",
+    "simulateLearning": "Simular aprendizagem",
+    "simulateMastery": "Simular domínio",
+    "overallMastery": "Domínio geral",
+    "mastered": "Dominado",
+    "weakConcepts": "Conceitos fracos",
+    "needReview": "Precisa revisão",
+    "conceptMastery": "Domínio do conceito",
+    "attempts": "Tentativas: {{n}}",
+    "correct": "Correto: {{n}}",
+    "confidence": "Confiança: {{pct}}%",
+    "performancePrediction": "Previsão de desempenho",
+    "predictedCorrectness": "Correção prevista",
+    "predictedConfidence": "Confiança prevista",
+    "nextReviewInterval": "Próximo intervalo de revisão",
+    "nextReviewIntervalValue": "{{n}} horas",
+    "forgettingCurve": "Curva de esquecimento (7 dias)",
+    "now": "Agora",
+    "sevenDays": "7 dias",
+    "selectConcept": "Selecione um conceito para ver previsões e curva de esquecimento",
+    "demoConcept1": "Fundamentos",
+    "demoConcept2": "Conceitos centrais",
+    "demoConcept3": "Aplicações avançadas"
+  },
+  "agentRoles": {
+    "subtitle": "Gerenciar funções de agente e suas configurações de permissão",
+    "resetAll": "Redefinir tudo",
+    "description": "Descrição",
+    "interactionMode": "Modo de interação",
+    "permissions": "Permissões ({{n}})",
+    "priority": "Prioridade",
+    "modified": "Modificado",
+    "resetToDefault": "Redefinir para o padrão",
+    "interactions": {
+      "direct": "Ensino direto",
+      "scaffold": "Com andaime",
+      "socratic": "Socrático",
+      "collaborative": "Colaborativo"
+    }
+  },
+  "permissions": {
+    "speak": "Falar",
+    "whiteboardDraw": "Desenhar no quadro",
+    "whiteboardErase": "Apagar quadro",
+    "whiteboardManage": "Gerenciar quadro",
+    "slideControl": "Controle de slide",
+    "slideSpotlight": "Holofote",
+    "slideLaser": "Ponteiro laser",
+    "quizCreate": "Criar quiz",
+    "quizGrade": "Corrigir quiz",
+    "mediaControl": "Controle de mídia",
+    "discussionModerate": "Moderar discussão",
+    "evaluate": "Avaliar",
+    "summarize": "Resumir",
+    "manageAgents": "Gerenciar agentes"
+  },
+  "demoSeed": {
+    "launchingDemo": "Iniciando...",
+    "launchDemo": "Gerar curso de demonstração em tempo real",
+    "loading": "Carregando...",
+    "loadCached": "Abrir curso de demonstração em cache",
+    "requirement": "Crie um curso interativo curto sobre {{topic}}"
+  },
+  "greeting": {
+    "hi": "Olá, {{name}}",
+    "readyToLearn": "Pronto para aprender junto?"
   }
 }

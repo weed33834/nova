@@ -8,9 +8,9 @@
       name="description"
       content="Office PowerPoint(.pptx) file to JSON | 将 PPTX 文件转为可读的 JSON 数据"
     />
-    <meta name="keywords" content="pptx2json,pptxtojson,ppt,powerpoint,json,PPT解析,PPT转JSON" />
+    <meta name="keywords" content="pptxtojson,ppt,powerpoint,json,PPT解析,PPT转JSON,Nova" />
     <link rel="icon" href="data:," />
-    <title>pptxtojson - PPTX转JSON</title>
+    <title>Nova Importer - PPTX 转 JSON</title>
 
     <link
       rel="stylesheet"
@@ -347,7 +347,7 @@
       <!-- 左侧面板 -->
       <div class="left-panel">
         <div class="header">
-          <div class="logo">PPTX<span>TO</span>JSON</div>
+          <div class="logo">Nova<span>Importer</span></div>
           <p class="tagline">将 PPTX 文件转为可读的 JSON 数据</p>
         </div>
 
@@ -387,15 +387,7 @@
           <div class="feature-item link">
             <span class="feature-icon">📦</span>
             <p class="feature-text">
-              <a href="https://github.com/pipipi-pikachu/pptx2json" target="_blank">GitHub 仓库</a>
-            </p>
-          </div>
-          <div class="feature-item link">
-            <span class="feature-icon">🧩</span>
-            <p class="feature-text">
-              <a href="https://pipipi-pikachu.github.io/PPTist/" target="_blank"
-                >在 PPTist 中测试</a
-              >
+              <a href="https://gitcode.com/badhope/nova" target="_blank">Nova 仓库</a>
             </p>
           </div>
         </div>
@@ -417,8 +409,8 @@
 
     <div class="footer">
       <p>
-        MIT License | Copyright © 2020-PRESENT
-        <a href="https://github.com/pipipi-pikachu" target="_blank">pipipi-pikachu</a>
+        MIT License | Copyright © 2026
+        <a href="https://gitcode.com/badhope/nova" target="_blank">Nova</a>
       </p>
     </div>
 
@@ -453,7 +445,7 @@
               loadingOverlay.classList.add('show');
 
               try {
-                const json = await pptxtojsonPro.parse(e.target.result);
+                const json = await NovaImporter.parse(e.target.result);
                 editor.set(json);
                 console.log(json);
                 jsonString = JSON.stringify(json, null, 2);
@@ -478,7 +470,7 @@
           loadingOverlay.classList.add('show');
 
           try {
-            const json = await pptxtojsonPro.parse(file);
+            const json = await NovaImporter.parse(file);
             editor.set(json);
             console.log(json);
             jsonString = JSON.stringify(json, null, 2);

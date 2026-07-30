@@ -209,7 +209,7 @@ function resolveBlipOpacity(blip: SafeXmlNode): number {
 const OOXML_100K = 100000;
 
 /**
- * Build `filters` for PPTist: `sharpen`, `colorTemperature`, `saturation`, `brightness`, `contrast`.
+ * Build `filters`: `sharpen`, `colorTemperature`, `saturation`, `brightness`, `contrast`.
  *
  * - **ISO / DrawingML**: `<a:lum bright contrast>` on `<a:blip>`.
  * - **Office 2010+** (same as legacy `src1/fill.js` `getPicFilters`): `a:extLst` → `ext` →
@@ -288,7 +288,7 @@ function applyExtLstImageEffectsToFilters(
           case 'sharpenSoften': {
             const amount = el.numAttr('amount');
             if (amount !== undefined && amount !== 0) {
-              // Positive = sharpen, negative = soften (PPTist only has `sharpen`; use signed value).
+              // Positive = sharpen, negative = soften (downstream only exposes `sharpen`; use signed value).
               out.sharpen = amount / OOXML_100K;
             }
             break;

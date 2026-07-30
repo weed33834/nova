@@ -3,7 +3,14 @@
     "you": "你",
     "confirm": "确定",
     "cancel": "取消",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "level": "Lv.",
+    "minutesShort": "分钟",
+    "delete": "删除",
+    "back": "返回",
+    "close": "关闭",
+    "prev": "上一个",
+    "next": "下一个"
   },
   "auth": {
     "signIn": "登录",
@@ -79,6 +86,7 @@
   "home": {
     "slogan": "个性化多智能体学习的新星。",
     "greetingWithName": "嗨，{{name}}",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — 个性化学习的新星。",
     "vocationalTestBadge": "测试功能",
     "vocationalTestLabel": "职教任务",
@@ -179,7 +187,8 @@
     "endQA": "结束问答",
     "error": {
       "emptyAgentResponses": "智能体连续无响应,讨论已停止。请重新尝试或检查模型配置。",
-      "streamInterrupted": "数据流意外中断,讨论未能完成。请重新尝试。"
+      "streamInterrupted": "数据流意外中断,讨论未能完成。请重新尝试。",
+      "maxTurnsReached": "讨论已达到最大轮次上限,对话已结束。"
     },
     "tabs": {
       "lecture": "笔记",
@@ -261,7 +270,14 @@
     "exitFullscreen": "退出全屏",
     "editCourse": "编辑课程",
     "doneEditing": "完成编辑",
-    "proModeDisabledHint": "本页不支持编辑——打开任意课程页即可使用 Pro 模式编辑。"
+    "proModeDisabledHint": "本页不支持编辑——打开任意课程页即可使用 Pro 模式编辑。",
+    "scenes": "场景",
+    "previousScene": "上一个场景",
+    "nextScene": "下一个场景",
+    "toggleChat": "切换对话",
+    "moreControls": "更多操作",
+    "play": "播放",
+    "pause": "暂停"
   },
   "edit": {
     "proMode": "专业模式",
@@ -947,7 +963,9 @@
     "loading": "正在加载课堂...",
     "loadingAriaLabel": "加载课堂",
     "errorTitle": "课堂加载失败",
-    "retryLabel": "重试"
+    "retryLabel": "重试",
+    "vocationalMode": "职业模式",
+    "searchEmptyHint": "换个关键词试试,或者清空搜索查看所有课堂。"
   },
   "upload": {
     "courseMaterialSizeLimit": "支持文档、演示、表格、图像、纯文本，最大 50MB（具体支持格式随所选解析器而定）",
@@ -1161,7 +1179,25 @@
     "weeklyHoursLabel": "周学习时长",
     "totalHoursLabel": "总可用时长",
     "deadlineLabel": "截止日期",
-    "buildProfile": "完善学习画像，获取个性化推荐"
+    "buildProfile": "完善学习画像，获取个性化推荐",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "知识基础",
+          "cognitiveStyle": "认知风格",
+          "learningGoals": "学习目标",
+          "modalityPreference": "模态偏好",
+          "timeBudget": "时间预算",
+          "errorPatterns": "错误模式"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "你已经掌握的领域与主题",
+    "cognitiveStyleDesc": "你最容易吸收新知的方式",
+    "learningGoalsDesc": "你希望达成的目标",
+    "modalityPreferenceDesc": "最适合你的学习形式",
+    "timeBudgetDesc": "你愿意投入的时间",
+    "errorPatternsDesc": "需要特别留意的常见误区"
   },
   "intro": {
     "title": "Nova",
@@ -1229,7 +1265,9 @@
     "agentBarTitle": "角色配置",
     "agentBarDesc": "点击展开配置 AI 角色。可调整人设、音色、优先级。自动模式下 AI 会根据课程生成角色。",
     "whiteboardTitle": "互动白板",
-    "whiteboardDesc": "随时打开白板进行板书、绘图、公式推导。AI 也会在讲解时自动添加板书内容。"
+    "whiteboardDesc": "随时打开白板进行板书、绘图、公式推导。AI 也会在讲解时自动添加板书内容。",
+    "showHelp": "显示帮助引导",
+    "help": "帮助"
   },
   "settings": {
     "title": "设置",
@@ -2078,7 +2116,14 @@
     },
     "ttsBrowserNativeTimelineNotice": "浏览器内置 TTS 不支持编辑器时间轴的音频功能（试听、重新生成、全部配音）。切换到托管 TTS 提供方即可逐句生成和管理音频。",
     "alidocmindAccessKeyId": "AccessKey ID",
-    "alidocmindAccessKeySecret": "AccessKey Secret"
+    "alidocmindAccessKeySecret": "AccessKey Secret",
+    "teachingSystem": "教学系统",
+    "sidebar": {
+      "agents": "智能体角色",
+      "knowledgeGraph": "知识图谱",
+      "guardrails": "安全护栏",
+      "tracing": "知识追踪"
+    }
   },
   "media": {
     "imageCapability": "图像生成",
@@ -2120,5 +2165,118 @@
     "fileTooLarge": "图片过大，请选择小于 5MB 的图片",
     "invalidFileType": "请选择图片文件",
     "editTooltip": "点击编辑个人资料"
+  },
+  "audio": {
+    "mute": "静音",
+    "unmute": "取消静音"
+  },
+  "adaptive": {
+    "knowledgeGraph": "学习知识图谱",
+    "demo": {
+      "concept1Label": "Python基础语法",
+      "concept1Desc": "变量、数据类型、控制流",
+      "concept2Label": "数据结构",
+      "concept2Desc": "列表、字典、元组、集合",
+      "concept3Label": "函数与模块",
+      "concept3Desc": "函数定义、参数、模块导入",
+      "concept4Label": "面向对象编程",
+      "concept4Desc": "类、继承、多态",
+      "concept5Label": "实战项目",
+      "concept5Desc": "综合项目实践"
+    },
+    "learningPath": {
+      "title": "推荐学习路径",
+      "emptyDesc": "完成学习画像后，将为你生成个性化学习路径",
+      "summary": "{{count}} 个知识点 · 约 {{minutes}} 分钟",
+      "minutes": "{{n}} 分钟",
+      "footer": "根据你的学习画像 ({{hours}}h 学习时间) 生成",
+      "viewDetail": "查看详情",
+      "detailDialog": "学习路径详情 — {{minutes}} 分钟\n\n{{summary}}\n\n知识点图: {{name}} ({{count}} 个概念)"
+    },
+    "depth": {
+      "surface": "概览",
+      "normal": "标准",
+      "deep": "深入"
+    },
+    "category": {
+      "prerequisite": "前置",
+      "core": "核心",
+      "advanced": "进阶",
+      "application": "应用",
+      "assessment": "评估"
+    },
+    "strategy": {
+      "prerequisite_first": "前置优先",
+      "balanced": "均衡",
+      "deep_first": "深入优先"
+    }
+  },
+  "tracing": {
+    "title": "知识追踪",
+    "simulateLearning": "模拟学习",
+    "simulateMastery": "模拟掌握",
+    "overallMastery": "整体掌握度",
+    "mastered": "已掌握",
+    "weakConcepts": "薄弱概念",
+    "needReview": "需复习",
+    "conceptMastery": "概念掌握度",
+    "attempts": "尝试: {{n}}",
+    "correct": "正确: {{n}}",
+    "confidence": "自信: {{pct}}%",
+    "performancePrediction": "表现预测",
+    "predictedCorrectness": "预测正确率",
+    "predictedConfidence": "预测置信度",
+    "nextReviewInterval": "下次复习间隔",
+    "nextReviewIntervalValue": "{{n}} 小时",
+    "forgettingCurve": "遗忘曲线 (7天)",
+    "now": "现在",
+    "sevenDays": "7天",
+    "selectConcept": "选择一个概念查看预测和遗忘曲线",
+    "demoConcept1": "基础知识",
+    "demoConcept2": "核心概念",
+    "demoConcept3": "进阶应用"
+  },
+  "agentRoles": {
+    "subtitle": "管理智能体角色及其权限配置",
+    "resetAll": "重置全部",
+    "description": "描述",
+    "interactionMode": "交互模式",
+    "permissions": "权限 ({{n}})",
+    "priority": "优先级",
+    "modified": "已修改",
+    "resetToDefault": "重置为默认",
+    "interactions": {
+      "direct": "直接教学",
+      "scaffold": "支架式",
+      "socratic": "苏格拉底式",
+      "collaborative": "协作式"
+    }
+  },
+  "permissions": {
+    "speak": "发言",
+    "whiteboardDraw": "白板绘制",
+    "whiteboardErase": "白板擦除",
+    "whiteboardManage": "白板管理",
+    "slideControl": "幻灯片控制",
+    "slideSpotlight": "聚光灯",
+    "slideLaser": "激光笔",
+    "quizCreate": "创建测验",
+    "quizGrade": "批改测验",
+    "mediaControl": "媒体控制",
+    "discussionModerate": "讨论主持",
+    "evaluate": "评估",
+    "summarize": "总结",
+    "manageAgents": "管理智能体"
+  },
+  "demoSeed": {
+    "launchingDemo": "正在启动...",
+    "launchDemo": "AI 实时生成演示课程",
+    "loading": "加载中...",
+    "loadCached": "秒开缓存演示课程",
+    "requirement": "为我创建一个关于{{topic}}的简短互动课程"
+  },
+  "greeting": {
+    "hi": "你好，{{name}}",
+    "readyToLearn": "准备好一起学习了吗？"
   }
 }

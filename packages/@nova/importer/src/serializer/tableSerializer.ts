@@ -7,8 +7,8 @@
  *   Later sections override earlier ones for fill, borders, and text props.
  *   Direct cell tcPr always takes highest priority.
  *
- * Aligned with src1/table.js for output format and
- * pptx-renderer-main/TableRenderer.ts for resolution logic.
+ * Aligned with src1/table.js for output format and the reference
+ * renderer's TableRenderer for resolution logic.
  */
 
 import type { TableNodeData } from '../model/nodes/TableNode';
@@ -553,7 +553,7 @@ export function tableToElement(node: TableNodeData, ctx: RenderContext, _order: 
       // (run-level rPr still overrides — e.g. user-set red text on a white
       // header cell still shows red). This keeps HTML <span> color/bold in
       // sync with cell.fontColor/fontBold metadata so downstream renderers
-      // that read span.style.color first (pptist) render correctly.
+      // that read span.style.color first render correctly.
       const text = cell.textBody
         ? renderTextBody(cell.textBody, undefined, ctx, {
             cellTextColor: textProps?.color,

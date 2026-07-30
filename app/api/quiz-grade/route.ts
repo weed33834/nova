@@ -12,6 +12,7 @@ import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { parseJsonResponse } from '@/lib/generation/json-repair';
 const log = createLogger('Quiz Grade');
 
 // Single LLM grading turn — pin an explicit ceiling so a slow model isn't
@@ -85,24 +86,27 @@ ${commentPrompt ? `Grading guidance: ${commentPrompt}\n` : ''}Student answer: ${
       thinkingConfig,
     );
 
-    // Parse the LLM response as JSON
+    // Parse the LLM response as JSON using the project's robust parser
+    // (handles truncated JSON, unescaped quotes, trailing commas, code
+    // fences, and LaTeX escapes — far more tolerant than a bare regex +
+    // JSON.parse, which was the previous approach).
     const text = result.text.trim();
     let gradeResult: GradeResponse;
 
-    try {
-      // Try to extract JSON from the response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('No JSON found');
-      const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = parseJsonResponse<{ score?: unknown; comment?: unknown }>(text);
+    if (parsed) {
       const parsedScore = Number(parsed.score);
       gradeResult = {
         score: Number.isFinite(parsedScore)
           ? Math.max(0, Math.min(points, Math.round(parsedScore)))
           : 0,
-        comment: String(parsed.comment || ''),
+        comment: typeof parsed.comment === 'string' ? parsed.comment : '',
       };
-    } catch {
+    } else {
       // Fallback: give 0 points — do NOT inflate scores with partial credit
+      log.warn(
+        `Quiz grade JSON parsing failed even with repair strategies, falling back to 0 score`,
+      );
       gradeResult = {
         score: 0,
         comment: isZh

@@ -139,6 +139,190 @@
     scrollbar-gutter: stable;
     overflow-y: scroll;
   }
+
+  /* ── Mobile Foundation ──────────────────────────────────────────── */
+  /* Safe area insets for notched devices (iPhone X+).                */
+  /* Requires viewportFit: 'cover' in viewport meta.                  */
+  :root {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    /* Touch target minimum (WCAG 2.5.5) */
+    --touch-target-min: 44px;
+    /* Mobile-specific spacing */
+    --mobile-header-height: 56px;
+    --mobile-toolbar-height: 48px;
+    --mobile-bottom-bar-height: 56px;
+  }
+
+  /* Remove tap highlight color on mobile (iOS) */
+  @media (max-width: 768px) {
+    html {
+      -webkit-tap-highlight-color: transparent;
+      /* On mobile, don't force scrollbar (saves screen space) */
+      scrollbar-gutter: auto;
+      overflow-y: auto;
+    }
+
+    /* Opt-in touch target sizing — apply `.touch-target` to elements that
+       need WCAG 2.5.5 compliant 44px targets. Do NOT force this on all
+       buttons, as many UI elements (pills, icon buttons, inline links)
+       are intentionally smaller. */
+    .touch-target {
+      min-height: var(--touch-target-min);
+      min-width: var(--touch-target-min);
+    }
+
+    /* Dense toolbar variant — 36px minimum for compact controls */
+    .compact-touch {
+      min-height: 36px;
+      min-width: 36px;
+    }
+
+    /* Prevent text selection on long press for UI elements */
+    .no-select-touch {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    /* Momentum scrolling on touch devices */
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    /* Prevent pull-to-refresh on interactive areas */
+    .disable-pull-refresh {
+      overscroll-behavior-y: contain;
+    }
+
+    /* ── Homepage Mobile Adaptations ──────────────────────────────── */
+    /* Stack the input toolbar vertically on mobile: primary tools on
+       row 1, action buttons on row 2. Prevents horizontal overflow. */
+    .mobile-toolbar-wrap {
+      flex-wrap: wrap;
+    }
+
+    /* Hide text labels on mobile — icon-only buttons save space */
+    .mobile-hide-label {
+      display: none;
+    }
+    @media (min-width: 640px) {
+      .mobile-hide-label {
+        display: inline;
+      }
+    }
+
+    /* Make hover-dependent elements visible on touch devices */
+    .mobile-always-visible {
+      opacity: 1 !important;
+      max-width: none !important;
+    }
+
+    /* Classroom card action buttons — always visible on touch */
+    .mobile-card-actions {
+      opacity: 1 !important;
+    }
+
+    /* Safe area padding for fixed elements */
+    .safe-area-top {
+      padding-top: var(--safe-area-top);
+    }
+    .safe-area-bottom {
+      padding-bottom: var(--safe-area-bottom);
+    }
+
+    /* ── Mobile Roundtable Adaptation ─────────────────────────────── */
+    /* The Roundtable component uses fixed widths (90px teacher, 140px   */
+    /* participants) that don't work on mobile. These overrides narrow   */
+    /* the side columns and hide the toolbar strip (handled by           */
+    /* MobileBottomBar) when inside a [data-mobile-roundtable] wrapper.  */
+    [data-mobile-roundtable] > div > div:first-child {
+      display: none !important;
+    }
+
+    /* Teacher column: 90px → 48px */
+    [data-mobile-roundtable] > div > div:last-child > div:first-child {
+      width: 48px !important;
+      min-width: 48px !important;
+    }
+
+    /* Participants column: 140px → 64px */
+    [data-mobile-roundtable] > div > div:last-child > div:last-child {
+      width: 64px !important;
+      min-width: 64px !important;
+    }
+
+    /* Reduce teacher avatar size on mobile */
+    [data-mobile-roundtable] .w-12.h-12 {
+      width: 32px !important;
+      height: 32px !important;
+    }
+    [data-mobile-roundtable] .w-10.h-10 {
+      width: 28px !important;
+      height: 28px !important;
+    }
+
+    /* Hide decorative book icon and gradient in teacher column on mobile */
+    [data-mobile-roundtable] .absolute.top-3.inset-x-0 {
+      display: none !important;
+    }
+    [data-mobile-roundtable] .absolute.top-0.inset-x-0.h-16 {
+      display: none !important;
+    }
+
+    /* Reduce teacher name label size */
+    [data-mobile-roundtable] .max-w-\[80px\] {
+      max-width: 44px !important;
+      font-size: 8px !important;
+      padding: 1px 4px !important;
+    }
+
+    /* Reduce participant avatar sizes on mobile */
+    [data-mobile-roundtable] .w-9.h-9,
+    [data-mobile-roundtable] .w-8.h-8 {
+      width: 28px !important;
+      height: 28px !important;
+    }
+
+    /* Reduce the interaction stage card padding and border radius */
+    [data-mobile-roundtable] .rounded-\[2\.5rem\] {
+      border-radius: 1rem !important;
+    }
+    [data-mobile-roundtable] .px-6 {
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+    }
+
+    /* Hide the separator line in participants column on mobile */
+    [data-mobile-roundtable] .mx-auto.my-1\.5.w-8.h-px {
+      display: none !important;
+    }
+
+    /* Reduce mic/message button sizes in participants column */
+    [data-mobile-roundtable] .flex.flex-col.gap-1\.5.shrink-0 button {
+      width: 28px !important;
+      height: 28px !important;
+      min-width: 28px !important;
+      min-height: 28px !important;
+    }
+
+    /* ── Mobile Drawer Content Scrolling ──────────────────────────── */
+    /* Ensure drawer content scrolls smoothly on touch devices */
+    [data-slot='sheet-content'] {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    /* Allow compact touch targets inside sheet content */
+    [data-slot='sheet-content'] button,
+    [data-slot='sheet-content'] [role='button'] {
+      min-height: 40px;
+      min-width: 40px;
+    }
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -507,6 +691,45 @@ body[data-nova-editor='true'] .editable-element-text li,
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+/* Soft, sweeping gradient skeleton. Lives in `globals.css` rather than as a
+   Tailwind class because we want to layer the gradient on top of the base
+   muted background and animate via transform — defining it here lets the
+   `<Skeleton />` component stay a one-liner. */
+.nova-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: oklch(0.97 0 0);
+}
+.dark .nova-skeleton {
+  background: oklch(0.269 0 0);
+}
+.nova-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.55) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.dark .nova-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.06) 50%,
+    transparent 100%
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .nova-skeleton::after {
+    animation: none;
   }
 }
 

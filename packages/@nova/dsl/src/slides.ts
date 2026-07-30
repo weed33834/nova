@@ -609,7 +609,7 @@ export interface TableCell {
    * CSS-native `vertical-align` value applied to the cell. When undefined the
    * renderer applies no vertical alignment (browser baseline).
    *
-   * NOTE: the importer currently also emits the PPTist aliases `up | mid | down`.
+   * NOTE: the importer currently also emits the legacy aliases `up | mid | down`.
    * Those are *not* part of this canonical contract — the importer must
    * normalize them to `top | middle | bottom` before producing DSL output.
    */

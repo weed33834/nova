@@ -6,6 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **i18n double-nesting bug** — 7 top-level keys (`common`, `agentRoles`, `permissions`,
+  `demoSeed`, `greeting`, `home`, `classroom`) in all 8 locale JSON files (`en-US`, `zh-CN`,
+  `zh-TW`, `ja-JP`, `ko-KR`, `ru-RU`, `ar-SA`, `pt-BR`) had a redundant inner key with the
+  same name (e.g. `"agentRoles": { "agentRoles": { ... } }`), causing
+  `t('agentRoles.subtitle')` and `t('permissions.speak')` to return the raw key string
+  instead of the translation. All sections flattened to the correct single-level structure.
+- **Missing i18n keys** — Added `common.delete`, `common.back`, `common.close`,
+  `common.prev`, `common.next` to all 8 locale files (previously showed raw key strings in
+  `tips-carousel.tsx`, `knowledge-graph-panel.tsx`, `learning-path-panel.tsx`, and
+  `settings/index.tsx`). Added `demoSeed.requirement` to all 8 locale files.
+- **Scene generation error recovery** — `lib/server/classroom-generation.ts` now wraps
+  `generateSceneActions` in try-catch with continue, so a single scene failure no longer
+  aborts the entire classroom creation.
+- **Quiz grading JSON robustness** — `app/api/quiz-grade/route.ts` replaced fragile regex +
+  `JSON.parse` with the project's `parseJsonResponse` utility (uses `jsonrepair`) for
+  tolerant parsing of malformed LLM output.
+- **Infinite agent conversations** — `lib/chat/agent-loop.ts` now enforces a
+  `maxTotalTurns` limit (default 50) to prevent unending agent discussion loops.
+- **Quota enforcement on generation** — `app/api/generate-classroom/route.ts` now calls
+  `checkQuota` before processing; returns 402 `QUOTA_EXCEEDED` when the limit is hit.
+- **Director LLM failure fallback** — `lib/orchestration/director-graph.ts` now falls back
+  to dispatching the first eligible agent when the director LLM call fails, instead of
+  terminating the discussion.
+- **Next.js fetch interception with custom baseURL** — `lib/ai/providers.ts` now uses
+  undici's pristine `fetch` with `EnvHttpProxyAgent` when a custom baseURL is configured,
+  bypassing Next.js's patched fetch that fails with "Cannot connect to API" for external
+  URLs in production mode. The `EnvHttpProxyAgent` also ensures proxy env vars
+  (`HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY`) are respected.
 - **PPTX export crash** — `lib/export/use-export-pptx.ts` clip block had a broken brace
   structure (missing `}` for the `else` and `if (el.clip)` scopes) that produced malformed
   JS; rewrote the block with proper nesting. Gradient background `colors[0]`/`colors[length-1]`
@@ -68,6 +96,14 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Default model** — Switched default model to `openai:DeepSeek-V4-Flash` for faster,
+  more reliable generation. Added `LLM_TIMEOUT_MS=300000` (5 min) and
+  `FALLBACK_MODELS=openai:Qwen3.6-35B-A3B,openai:glm-5.2` for automatic failover.
+- **Server provider config** — `server-providers.yml` now excludes the `auto` model router
+  to prevent timeout issues from slow reasoning model selection; `DeepSeek-V4-Flash` is the
+  primary model.
+- **Production build** — Added `SKIP_TS_CHECK=true` env var support in `next.config.ts` to
+  skip TypeScript checking during build (useful when memory-constrained).
 - **Deep-clone hot path** — `lib/store/snapshot.ts` (2 sites) and
   `lib/store/whiteboard-history.ts` (1 site) used the `JSON.parse(JSON.stringify(...))`
   anti-pattern for undo/redo snapshots; switched to `structuredClone` (faster, preserves
@@ -124,6 +160,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **`QUOTA_EXCEEDED` error code** — New error code in `lib/server/api-response.ts` for
+  quota limit responses.
+- **HCNSec API provider** — Added HCNSec API as a server-managed OpenAI-compatible
+  provider in `server-providers.yml`.
 - **Multi-mode course design (`CourseFormat`)** — per-course macro override for media
   generation. Three modes: `video` (default, full media), `ppt-audio` (images + TTS, no
   video), `text-only` (no media). Selector lives on the home toolbar; the chosen format is

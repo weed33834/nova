@@ -5,7 +5,7 @@ Thanks for your interest in contributing! This guide covers the basics.
 ## Development Setup
 
 ```bash
-git clone https://github.com/weed33834/nova.git
+git clone https://gitcode.com/badhope/nova.git
 cd nova
 pnpm install
 pnpm dev
@@ -51,7 +51,7 @@ See the [README](README.md) for full prerequisites and configuration.
 
 ## Reporting Issues
 
-Use the [GitHub Issue Templates](https://github.com/weed33834/nova/issues/new/choose). Include:
+Use the [GitHub Issue Templates](https://gitcode.com/badhope/nova/issues/new/choose). Include:
 
 - Steps to reproduce
 - Expected vs actual behavior

@@ -1,10 +1,10 @@
 /**
  * Model-list fetching for OpenAI-compatible providers.
  *
- * Ported from cc-switch `src-tauri/src/services/model_fetch.rs`. The core value
- * is `buildModelsUrlCandidates`: token-plan / aggregator base URLs come in many
- * shapes, so we generate an ordered candidate list (with an Anthropic-compat
- * suffix-strip fallback) and try each until one returns a model list.
+ * The core value is `buildModelsUrlCandidates`: token-plan / aggregator base
+ * URLs come in many shapes, so we generate an ordered candidate list (with an
+ * Anthropic-compat suffix-strip fallback) and try each until one returns a
+ * model list.
  */
 
 import { fetchWithTimeout } from './fetch-with-timeout';

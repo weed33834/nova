@@ -4,12 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Zap, Loader2, Database } from 'lucide-react';
+import { useI18n } from '@/lib/hooks/use-i18n';
 import type { SceneOutline } from '@/lib/types/generation';
 
-const DEMO_REQUIREMENT =
-  '人工智能导论：从AI基础到前沿技术，系统掌握人工智能核心知识。涵盖搜索算法、知识表示、机器学习、深度学习、NLP、计算机视觉、强化学习、生成式AI、AI伦理。';
-
 export function DemoSeedButton() {
+  const { t } = useI18n();
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
   const [loadingCached, setLoadingCached] = useState(false);
@@ -21,7 +20,12 @@ export function DemoSeedButton() {
     try {
       const sessionState = {
         sessionId: `demo_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-        requirements: { requirement: DEMO_REQUIREMENT },
+        requirements: {
+          requirement: t('demoSeed.requirement', {
+            defaultValue:
+              'Introduction to AI: from AI fundamentals to cutting-edge technology, systematically master the core knowledge of artificial intelligence. Covering search algorithms, knowledge representation, machine learning, deep learning, NLP, computer vision, reinforcement learning, generative AI, and AI ethics.',
+          }),
+        },
         pdfText: '',
         pdfImages: [],
         imageStorageIds: [],
@@ -64,7 +68,7 @@ export function DemoSeedButton() {
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 flex-wrap">
       <Button
         onClick={handleGenerateFresh}
         disabled={generating}
@@ -73,7 +77,7 @@ export function DemoSeedButton() {
         <Loader2 className={`h-4 w-4 ${generating ? '' : 'hidden'}`} />
         <Sparkles className={`h-4 w-4 ${generating ? 'hidden' : ''}`} />
         <Zap className={`h-4 w-4 ${generating ? 'hidden' : ''}`} />
-        <span>{generating ? '正在启动...' : 'AI 实时生成演示课程'}</span>
+        <span>{generating ? t('demoSeed.launchingDemo') : t('demoSeed.launchDemo')}</span>
       </Button>
       <Button
         variant="outline"
@@ -82,7 +86,7 @@ export function DemoSeedButton() {
         className="gap-2"
       >
         <Database className={`h-4 w-4 ${loadingCached ? 'animate-spin' : ''}`} />
-        <span>{loadingCached ? '加载中...' : '秒开缓存演示课程'}</span>
+        <span>{loadingCached ? t('demoSeed.loading') : t('demoSeed.loadCached')}</span>
       </Button>
     </div>
   );

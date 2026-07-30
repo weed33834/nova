@@ -3,9 +3,8 @@ import type { LanguageModelUsage } from 'ai';
 /**
  * Normalized token usage in the four billable classes plus reasoning tokens.
  *
- * This mirrors cc-switch's `TokenUsage` shape (input / output / cacheRead /
- * cacheCreation) so the same per-class pricing model applies. `reasoningTokens`
- * is carried for display/diagnostics; it is part of output tokens for billing.
+ * `reasoningTokens` is carried for display/diagnostics; it is part of output
+ * tokens for billing.
  */
 export interface NormalizedUsage {
   inputTokens: number;
@@ -62,8 +61,7 @@ export function normalizeUsage(usage: LanguageModelUsage | undefined | null): No
 
 /**
  * Whether the usage has any billable tokens. Used to skip writing empty rows
- * when an OpenAI-compatible upstream omits usage on a streamed response
- * (mirrors cc-switch `parser.rs::has_billable_tokens`).
+ * when an OpenAI-compatible upstream omits usage on a streamed response.
  */
 export function hasBillableTokens(usage: NormalizedUsage): boolean {
   return (

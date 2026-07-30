@@ -23,7 +23,7 @@ import { SLIDE_RENDERER_STYLES } from './styles';
 
 export interface SlideCanvasProps {
   /**
-   * Single slide data (PPTist-style). May be omitted when this component is
+   * Single slide data. May be omitted when this component is
    * rendered inside a `<SlideRendererProvider>` that supplies it.
    */
   slide?: Slide;

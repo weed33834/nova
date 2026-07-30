@@ -1,6 +1,6 @@
 /**
  * Serializer layer: converts PresentationData (and render context) into
- * pptxtojson/PPTist JSON using the same resolution flow as the reference renderer.
+ * pptxtojson-compatible JSON using the same resolution flow as the reference renderer.
  */
 
 export { createRenderContext, type RenderContext } from './RenderContext';

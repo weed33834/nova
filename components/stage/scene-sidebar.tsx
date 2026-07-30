@@ -28,6 +28,8 @@ interface SceneSidebarProps {
   readonly onSceneSelect?: (sceneId: string) => void;
   readonly onRetryOutline?: (outlineId: string) => Promise<void>;
   readonly isCourseComplete?: boolean;
+  /** When true, fills the parent container (for mobile drawer mode). */
+  readonly fillContainer?: boolean;
 }
 
 const DEFAULT_WIDTH = 220;
@@ -40,6 +42,7 @@ export function SceneSidebar({
   onSceneSelect,
   onRetryOutline,
   isCourseComplete,
+  fillContainer = false,
 }: SceneSidebarProps) {
   const { t } = useI18n();
   const router = useRouter();
@@ -73,31 +76,52 @@ export function SceneSidebar({
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Combined mouse + touch resize handler. The previous implementation only
+  // listened for `mousemove`/`mouseup`, so a tablet / iPad with a stylus or
+  // finger couldn't resize the sidebar. Pointer events cover mouse, touch,
+  // and pen in a single API and let us disable text selection + native scroll
+  // while dragging, which is the only way the drag feels natural on touch.
   const handleDragStart = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      // Only the primary button matters for mouse; touch/pen have button=0 too.
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault();
+      // Capture the pointer so we keep receiving move events even if the user
+      // drags off the 1.5px-wide handle onto the scene list.
+      (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
       setIsDragging(true);
       const startX = e.clientX;
       const startWidth = sidebarWidth;
 
-      const handleMouseMove = (me: MouseEvent) => {
-        const delta = me.clientX - startX;
+      const handleMove = (pe: PointerEvent) => {
+        const delta = pe.clientX - startX;
         const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth + delta));
         setSidebarWidth(newWidth);
       };
 
-      const handleMouseUp = () => {
+      const handleEnd = (pe: PointerEvent) => {
         setIsDragging(false);
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        const target = e.currentTarget as HTMLDivElement;
+        try {
+          if (target.hasPointerCapture(pe.pointerId)) {
+            target.releasePointerCapture(pe.pointerId);
+          }
+        } catch {
+          /* pointer already released */
+        }
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
+        document.body.style.touchAction = '';
       };
 
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      // Prevent the browser from interpreting a sideways drag as a back/forward
+      // swipe on iOS Safari, which would otherwise yank the sidebar away mid-resize.
+      document.body.style.touchAction = 'none';
+      document.addEventListener('pointermove', handleMove);
+      document.addEventListener('pointerup', handleEnd);
+      document.addEventListener('pointercancel', handleEnd);
     },
     [sidebarWidth],
   );
@@ -112,24 +136,29 @@ export function SceneSidebar({
     return icons[type] || BookOpen;
   };
 
-  const displayWidth = collapsed ? 0 : sidebarWidth;
+  const displayWidth = fillContainer ? '100%' : collapsed ? 0 : sidebarWidth;
 
   return (
     <div
       style={{
         width: displayWidth,
-        transition: isDragging ? 'none' : 'width 0.3s ease',
+        transition: fillContainer || isDragging ? 'none' : 'width 0.3s ease',
       }}
       className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 shadow-[2px_0_24px_rgba(0,0,0,0.02)] flex flex-col shrink-0 z-20 relative overflow-visible"
       data-tour="sidebar"
     >
-      {/* Drag handle */}
-      {!collapsed && (
+      {/* Drag handle — hidden in fillContainer (mobile drawer) mode.
+          Wider (w-3 = 12px) + `touch-target` class to clear the WCAG 2.5.5
+          44px touch-target height so finger drags feel precise on tablets. */}
+      {!collapsed && !fillContainer && (
         <div
-          onMouseDown={handleDragStart}
-          className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize z-50 group hover:bg-pink-400/30 dark:hover:bg-pink-600/30 active:bg-pink-500/40 dark:active:bg-pink-500/40 transition-colors"
+          onPointerDown={handleDragStart}
+          className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize z-50 group touch-target hover:bg-pink-400/30 dark:hover:bg-pink-600/30 active:bg-pink-500/40 dark:active:bg-pink-500/40 transition-colors"
+          aria-label="Resize sidebar"
+          role="separator"
+          aria-orientation="vertical"
         >
-          <div className="absolute right-0.5 top-1/2 -translate-y-1/2 w-0.5 h-8 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-pink-400 dark:group-hover:bg-pink-500 transition-colors" />
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 w-0.5 h-8 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-pink-400 dark:group-hover:bg-pink-500 transition-colors" />
         </div>
       )}
 

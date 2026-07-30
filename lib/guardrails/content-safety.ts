@@ -37,7 +37,6 @@ const PII_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   // is all ASCII digits/X.
   { pattern: /\b\d{17}[\dXx]\b/g, label: 'Chinese ID number' },
   { pattern: /\b1[3-9]\d{9}\b/g, label: 'Chinese phone number' },
-  { pattern: /\b\d{6,16}\b/g, label: 'Possible account number' },
   // Require a letter-only TLD (≥2 chars) to avoid false positives on npm-style
   // version specifiers (e.g. katex@0.16.9) and other @-delimited identifiers.
   { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, label: 'Email address' },
@@ -154,8 +153,8 @@ export function checkHallucinationRisk(
 
   // \b doesn't work for CJK; match the Chinese vague terms directly.
   const vagueStatements = generatedContent.match(/(可能|大概|也许|据说|好像|应该是|不确定)/g);
-  if (vagueStatements && vagueStatements.length > 3) {
-    score += 0.1 * vagueStatements.length;
+  if (vagueStatements && vagueStatements.length > 8) {
+    score += 0.05 * vagueStatements.length;
     reasons.push(`High uncertainty language (${vagueStatements.length} vague terms)`);
   }
 

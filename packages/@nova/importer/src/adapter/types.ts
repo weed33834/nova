@@ -1,5 +1,5 @@
 /**
- * pptxtojson / PPTist 输出格式类型定义
+ * 输出格式类型定义（与 pptxtojson 的 Output 结构对齐）
  * 长度与坐标单位均为 pt。
  */
 

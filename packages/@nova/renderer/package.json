@@ -1,7 +1,7 @@
 {
   "name": "@nova/renderer",
   "version": "0.0.2",
-  "description": "React component for rendering PPTist-style Slide JSON, extracted from Nova.",
+  "description": "React component for rendering Nova Slide JSON.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -50,7 +50,6 @@
   "keywords": [
     "slide",
     "renderer",
-    "pptist",
     "canvas",
     "react"
   ],

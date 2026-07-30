@@ -1,5 +1,3 @@
-// Non-professional designers can use this app to draw basic shapes: https://github.com/pipipi-pikachu/svgPathCreator
-
 import { ShapePathFormulasKeys } from '@nova/dsl';
 
 export interface ShapePoolItem {

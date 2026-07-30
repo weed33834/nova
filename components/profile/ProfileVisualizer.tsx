@@ -33,18 +33,22 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useProfileStore, useProfileActions } from '@/lib/store/profile';
 import type {
   StudentProfile,
 } from '@/lib/profile/schema';
 
+// i18n keys for each dimension. The visualizer resolves `label`/`desc` via
+// `profile.${key}Label` / `profile.${key}Desc` so the schema above stays pure
+// data (key + icon + color) and the UI text lives in the locale files.
 const DIMENSION_CONFIG = [
-  { key: 'knowledgeFoundation', label: '知识基础', icon: BookOpen, color: 'blue', weight: 0.25 },
-  { key: 'cognitiveStyle', label: '认知风格', icon: Brain, color: 'purple', weight: 0.15 },
-  { key: 'learningGoals', label: '学习目标', icon: Target, color: 'amber', weight: 0.2 },
-  { key: 'modalityPreference', label: '模态偏好', icon: Palette, color: 'pink', weight: 0.15 },
-  { key: 'timeBudget', label: '时间预算', icon: Clock, color: 'green', weight: 0.1 },
-  { key: 'errorPatterns', label: '易错点', icon: AlertTriangle, color: 'red', weight: 0.15 },
+  { key: 'knowledgeFoundation', icon: BookOpen, color: 'blue', weight: 0.25 },
+  { key: 'cognitiveStyle', icon: Brain, color: 'purple', weight: 0.15 },
+  { key: 'learningGoals', icon: Target, color: 'amber', weight: 0.2 },
+  { key: 'modalityPreference', icon: Palette, color: 'pink', weight: 0.15 },
+  { key: 'timeBudget', icon: Clock, color: 'green', weight: 0.1 },
+  { key: 'errorPatterns', icon: AlertTriangle, color: 'red', weight: 0.15 },
 ] as const;
 
 const COLOR_MAP: Record<string, string> = {
@@ -56,24 +60,27 @@ const COLOR_MAP: Record<string, string> = {
   red: 'bg-red-500',
 };
 
+// Goal + modality types are pure data (icon + i18n key) — display text comes
+// from `profile.goalType.${value}` / `profile.modality.${value}` in the locale
+// files, so the strings below stay out of the JS bundle entirely.
 const LEARNING_GOAL_TYPES = [
-  { value: 'exam_prep', label: '考试备考', icon: GraduationCap },
-  { value: 'skill_acquisition', label: '技能习得', icon: Lightbulb },
-  { value: 'conceptual_understanding', label: '概念理解', icon: Brain },
-  { value: 'project_completion', label: '项目完成', icon: Code2 },
-  { value: 'certification', label: '认证考试', icon: Trophy },
-  { value: 'career_transition', label: '职业转型', icon: Briefcase },
-  { value: 'curiosity', label: '好奇探索', icon: Lightbulb },
-  { value: 'teaching_others', label: '教学他人', icon: Users },
+  { value: 'exam_prep', icon: GraduationCap },
+  { value: 'skill_acquisition', icon: Lightbulb },
+  { value: 'conceptual_understanding', icon: Brain },
+  { value: 'project_completion', icon: Code2 },
+  { value: 'certification', icon: Trophy },
+  { value: 'career_transition', icon: Briefcase },
+  { value: 'curiosity', icon: Lightbulb },
+  { value: 'teaching_others', icon: Users },
 ];
 
 const MODALITY_TYPES = [
-  { value: 'text', label: '文本阅读', icon: FileText },
-  { value: 'video', label: '视频观看', icon: Video },
-  { value: 'audio', label: '音频收听', icon: Music },
-  { value: 'interactive', label: '互动操作', icon: MousePointer2 },
-  { value: 'code', label: '代码实操', icon: Code2 },
-  { value: 'diagram', label: '图表图解', icon: BarChart3 },
+  { value: 'text', icon: FileText },
+  { value: 'video', icon: Video },
+  { value: 'audio', icon: Music },
+  { value: 'interactive', icon: MousePointer2 },
+  { value: 'code', icon: Code2 },
+  { value: 'diagram', icon: BarChart3 },
 ];
 
 import { FileText, Briefcase } from 'lucide-react';
@@ -199,14 +206,19 @@ export function ProfileVisualizer({
           )}
         </div>
         {kf.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {mode === 'edit' ? t('profile.noKnowledgeYet') : t('profile.noKnowledgeView')}
-            {mode === 'edit' && (
-              <Button className="mt-2" size="sm" onClick={handleAddKnowledgeFoundation}>
-                {t('profile.addFirstDomain')}
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            icon={BookOpen}
+            size="sm"
+            tone="muted"
+            title={mode === 'edit' ? t('profile.noKnowledgeYet') : t('profile.noKnowledgeView')}
+            action={
+              mode === 'edit' ? (
+                <Button size="sm" onClick={handleAddKnowledgeFoundation}>
+                  {t('profile.addFirstDomain')}
+                </Button>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {kf.map((item, idx) => (
@@ -316,9 +328,14 @@ export function ProfileVisualizer({
             )}
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            {mode === 'edit' ? t('profile.noCognitiveStyleYet') : t('profile.noCognitiveStyleView')}
-          </div>
+          <EmptyState
+            icon={Brain}
+            size="sm"
+            tone="muted"
+            title={
+              mode === 'edit' ? t('profile.noCognitiveStyleYet') : t('profile.noCognitiveStyleView')
+            }
+          />
         )}
       </div>
     );
@@ -342,9 +359,12 @@ export function ProfileVisualizer({
           )}
         </div>
         {goals.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {mode === 'edit' ? t('profile.noGoalsYet') : t('profile.noGoalsView')}
-          </div>
+          <EmptyState
+            icon={Target}
+            size="sm"
+            tone="muted"
+            title={mode === 'edit' ? t('profile.noGoalsYet') : t('profile.noGoalsView')}
+          />
         ) : (
           <div className="space-y-3">
             {goals.map((goal, idx) => (
@@ -436,9 +456,14 @@ export function ProfileVisualizer({
             </div>
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            {mode === 'edit' ? t('profile.noModalityYet') : t('profile.noModalityView')}
-          </div>
+          <EmptyState
+            icon={Palette}
+            size="sm"
+            tone="muted"
+            title={
+              mode === 'edit' ? t('profile.noModalityYet') : t('profile.noModalityView')
+            }
+          />
         )}
       </div>
     );
@@ -481,9 +506,14 @@ export function ProfileVisualizer({
             )}
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            {mode === 'edit' ? t('profile.noTimeBudgetYet') : t('profile.noTimeBudgetView')}
-          </div>
+          <EmptyState
+            icon={Clock}
+            size="sm"
+            tone="muted"
+            title={
+              mode === 'edit' ? t('profile.noTimeBudgetYet') : t('profile.noTimeBudgetView')
+            }
+          />
         )}
       </div>
     );
@@ -502,9 +532,12 @@ export function ProfileVisualizer({
           )}
         </div>
         {eps.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {mode === 'edit' ? t('profile.noErrorPatternsYet') : t('profile.noErrorPatternsView')}
-          </div>
+          <EmptyState
+            icon={AlertTriangle}
+            size="sm"
+            tone="muted"
+            title={mode === 'edit' ? t('profile.noErrorPatternsYet') : t('profile.noErrorPatternsView')}
+          />
         ) : (
           <div className="space-y-2">
             {eps.map((ep, idx) => (
@@ -592,14 +625,17 @@ export function ProfileVisualizer({
             const config = DIMENSION_CONFIG[currentIdx >= 0 ? currentIdx : 0];
             const IconComponent = config.icon;
             const color = config.color;
-            const label = config.label;
             return (
               <div className="text-center mb-6">
                 <IconComponent
                   className={`size-10 mx-auto mb-3 ${COLOR_MAP[color]}/20 text-${color}-600 dark:text-${color}-400`}
                 />
-                <h2 className="text-xl font-bold">{t(`profile.${label}`)}</h2>
-                <p className="text-muted-foreground mt-1">{t(`profile.${label}Desc`)}</p>
+                <h2 className="text-xl font-bold">
+                  {t(`profile.${config.key}`)}
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  {t(`profile.${config.key}Desc`)}
+                </p>
               </div>
             );
           })()}
@@ -686,7 +722,7 @@ export function ProfileVisualizer({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-1 mb-4">
-          {DIMENSION_CONFIG.map((dim, _idx) => (
+          {DIMENSION_CONFIG.map((dim) => (
             <TabsTrigger
               key={dim.key}
               value={dim.key}
@@ -698,7 +734,7 @@ export function ProfileVisualizer({
             >
               <div className="flex flex-col items-center gap-1">
                 <dim.icon className="size-5" />
-                <span>{dim.label}</span>
+                <span>{t(`profile.${dim.key}`)}</span>
                 {dimensionScores[dim.key] > 0 && (
                   <span className="absolute -top-1 -right-1 size-4 rounded-full bg-green-500 text-white text-[9px] font-bold flex items-center justify-center">
                     ✓

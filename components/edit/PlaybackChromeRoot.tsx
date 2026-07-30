@@ -13,7 +13,7 @@ import { useStageStore } from '@/lib/store';
 import { useShallow } from 'zustand/react/shallow';
 import { PENDING_SCENE_ID } from '@/lib/store/stage';
 import { useCanvasStore } from '@/lib/store/canvas';
-import { useSettingsStore } from '@/lib/store/settings';
+import { useSettingsStore, PLAYBACK_SPEEDS } from '@/lib/store/settings';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { SceneSidebar } from '@/components/stage/scene-sidebar';
 import { Header } from '@/components/header';
@@ -54,6 +54,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AlertTriangle } from 'lucide-react';
 import { VisuallyHidden } from 'radix-ui';
+import { useIsMobile } from '@/lib/hooks/use-responsive';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { MobileHeader } from '@/components/mobile/mobile-header';
+import { MobileBottomBar } from '@/components/mobile/mobile-bottom-bar';
 
 /**
  * Imperative handle exposed via `ref` so the parent (`Stage`) can tear
@@ -163,6 +167,12 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
     const [isPresenting, setIsPresenting] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
     const [isPresentationInteractionActive, setIsPresentationInteractionActive] = useState(false);
+
+    // Mobile detection — enables drawer-based layout instead of three-column
+    const isMobile = useIsMobile();
+    const [mobileSceneDrawerOpen, setMobileSceneDrawerOpen] = useState(false);
+    const [mobileChatDrawerOpen, setMobileChatDrawerOpen] = useState(false);
+    const [mobileRoundtableExpanded, setMobileRoundtableExpanded] = useState(false);
 
     // Whiteboard state (from canvas store so AI tools can open it)
     const whiteboardOpen = useCanvasStore.use.whiteboardOpen();
@@ -796,6 +806,18 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
       audioPlayerRef.current.setPlaybackRate(playbackSpeed);
     }, [playbackSpeed]);
 
+    // Auto-play and speed setters for MobileBottomBar
+    const autoPlayLecture = useSettingsStore((s) => s.autoPlayLecture);
+    const setAutoPlayLecture = useSettingsStore((s) => s.setAutoPlayLecture);
+    const setPlaybackSpeed = useSettingsStore((s) => s.setPlaybackSpeed);
+
+    const cyclePlaybackSpeed = useCallback(() => {
+      const speeds = PLAYBACK_SPEEDS;
+      const currentIdx = speeds.indexOf(playbackSpeed as (typeof speeds)[number]);
+      const nextIdx = (currentIdx + 1) % speeds.length;
+      setPlaybackSpeed(speeds[nextIdx]);
+    }, [playbackSpeed, setPlaybackSpeed]);
+
     /**
      * Handle discussion SSE — POST /api/chat and push events to engine
      */
@@ -1172,6 +1194,358 @@ export const PlaybackChromeRoot = forwardRef<PlaybackChromeRootHandle, PlaybackC
           agentId: discussionTrigger.agentId || 'default-1',
         }
       : null;
+
+    // ── Mobile Layout ──────────────────────────────────────────────────
+    // Mobile uses a vertical flex layout with drawer-based side panels
+    // instead of the desktop three-column horizontal flex layout.
+    // SceneSidebar → left Sheet drawer, ChatArea → right Sheet drawer.
+    // Roundtable is rendered in a compact container with CSS overrides
+    // (see [data-mobile-roundtable] in globals.css) to narrow its
+    // internal three-column layout for small screens.
+    if (isMobile) {
+      return (
+        <div
+          ref={stageRef}
+          className={cn(
+            'flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900',
+            isPresenting && !controlsVisible && 'cursor-none',
+          )}
+        >
+          {/* Mobile Header — compact 56px bar */}
+          {!isPresenting && (
+            <MobileHeader
+              currentSceneTitle={
+                currentScene?.title ||
+                (isCourseComplete && isPendingScene ? t('stage.courseComplete') : '')
+              }
+              mode={mode}
+              canEdit={!!canEnterProMode}
+              onToggleEditMode={onEnterProMode}
+            />
+          )}
+
+          {/* Canvas Area — full width, no toolbar (MobileBottomBar handles controls) */}
+          <div
+            className="overflow-hidden relative flex-1 min-h-0 isolate"
+            suppressHydrationWarning
+          >
+            <CanvasArea
+              currentScene={currentScene}
+              currentSceneIndex={currentSceneIndex}
+              scenesCount={totalScenesCount}
+              mode={mode}
+              engineState={canvasEngineState}
+              isLiveSession={
+                chatIsStreaming || isTopicPending || engineMode === 'live' || !!chatSessionType
+              }
+              whiteboardOpen={whiteboardOpen}
+              sidebarCollapsed={false}
+              chatCollapsed={false}
+              onToggleSidebar={() => setMobileSceneDrawerOpen(true)}
+              onToggleChat={() => setMobileChatDrawerOpen(true)}
+              onPrevSlide={handlePreviousScene}
+              onNextSlide={handleNextScene}
+              onPlayPause={handlePlayPause}
+              onWhiteboardClose={handleWhiteboardToggle}
+              isPresenting={isPresenting}
+              onTogglePresentation={togglePresentation}
+              showStopDiscussion={
+                engineMode === 'live' ||
+                (chatIsStreaming && (chatSessionType === 'qa' || chatSessionType === 'discussion'))
+              }
+              onStopDiscussion={handleStopDiscussion}
+              hideToolbar={true}
+              isPendingScene={isPendingScene}
+              isCourseComplete={isCourseComplete}
+              isGenerationFailed={
+                isPendingScene && failedOutlines.some((f) => f.id === generatingOutlines[0]?.id)
+              }
+              onRetryGeneration={
+                onRetryOutline && generatingOutlines[0]
+                  ? () => onRetryOutline(generatingOutlines[0].id)
+                  : undefined
+              }
+            />
+          </div>
+
+          {/* Roundtable — mobile compact mode with CSS overrides */}
+          {mode === 'playback' && (
+            <div
+              data-mobile-roundtable
+              className={cn(
+                'shrink-0 transition-all duration-300 overflow-hidden relative',
+                isPresenting
+                  ? 'absolute inset-x-0 bottom-0 z-20'
+                  : mobileRoundtableExpanded
+                    ? 'h-[45vh]'
+                    : 'h-[140px]',
+              )}
+              data-tour="whiteboard"
+            >
+              {/* Expand/collapse toggle handle */}
+              {!isPresenting && (
+                <button
+                  onClick={() => setMobileRoundtableExpanded(!mobileRoundtableExpanded)}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex h-5 w-16 items-center justify-center touch-none"
+                  aria-label={mobileRoundtableExpanded ? 'Collapse' : 'Expand'}
+                >
+                  <div className="h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-600" />
+                </button>
+              )}
+              <Roundtable
+                mode={mode}
+                initialParticipants={participants}
+                playbackView={playbackView}
+                currentSpeech={liveSpeech}
+                lectureSpeech={lectureSpeech}
+                idleText={firstSpeechText}
+                playbackCompleted={playbackCompleted}
+                discussionRequest={discussionRequest}
+                engineMode={engineMode}
+                isStreaming={chatIsStreaming}
+                audioIndicatorState={audioIndicatorState}
+                audioAgentId={audioAgentId}
+                sessionType={
+                  chatSessionType === 'qa'
+                    ? 'qa'
+                    : chatSessionType === 'discussion'
+                      ? 'discussion'
+                      : undefined
+                }
+                speakingAgentId={speakingAgentId}
+                speechProgress={speechProgress}
+                showEndFlash={showEndFlash}
+                endFlashSessionType={endFlashSessionType}
+                thinkingState={thinkingState}
+                isCueUser={isCueUser}
+                isTopicPending={isTopicPending}
+                onMessageSend={async (msg) => {
+                  setIsDiscussionPaused(false);
+                  chatAreaRef.current?.resumeActiveLiveBuffer();
+                  discussionTTS.cleanup();
+                  if (isTopicPending) {
+                    setIsTopicPending(false);
+                    setLiveSpeech(null);
+                    setSpeakingAgentId(null);
+                  }
+                  if (
+                    engineRef.current &&
+                    (engineMode === 'playing' || engineMode === 'live' || engineMode === 'paused')
+                  ) {
+                    engineRef.current.handleUserInterrupt(msg);
+                  } else {
+                    chatAreaRef.current?.sendMessage(msg);
+                  }
+                  chatAreaRef.current?.switchToTab('chat');
+                  setIsCueUser(false);
+                  setChatIsStreaming(true);
+                  setChatSessionType(chatSessionType || 'qa');
+                  setThinkingState({ stage: 'director' });
+                }}
+                onDiscussionStart={() => {
+                  engineRef.current?.confirmDiscussion();
+                }}
+                onDiscussionSkip={() => {
+                  engineRef.current?.skipDiscussion();
+                }}
+                onStopDiscussion={handleStopDiscussion}
+                onInputActivate={() => {
+                  if (chatSessionType === 'qa' || chatSessionType === 'discussion') {
+                    const paused = chatAreaRef.current?.pauseActiveLiveBuffer();
+                    if (paused) {
+                      discussionTTS.pause();
+                      setIsDiscussionPaused(true);
+                    }
+                  }
+                  if (engineRef.current && (engineMode === 'playing' || engineMode === 'live')) {
+                    engineRef.current.pause();
+                  }
+                }}
+                onResumeTopic={doResumeTopic}
+                onPlayPause={handlePlayPause}
+                isDiscussionPaused={isDiscussionPaused}
+                onDiscussionPause={() => {
+                  const paused = chatAreaRef.current?.pauseActiveLiveBuffer();
+                  if (paused) {
+                    discussionTTS.pause();
+                    setIsDiscussionPaused(true);
+                  }
+                }}
+                onDiscussionResume={() => {
+                  chatAreaRef.current?.resumeActiveLiveBuffer();
+                  discussionTTS.resume();
+                  setIsDiscussionPaused(false);
+                }}
+                totalActions={totalActions}
+                currentActionIndex={currentPlaybackActionIndex ?? 0}
+                currentSceneIndex={currentSceneIndex}
+                scenesCount={totalScenesCount}
+                whiteboardOpen={whiteboardOpen}
+                sidebarCollapsed={false}
+                chatCollapsed={false}
+                onToggleSidebar={() => setMobileSceneDrawerOpen(true)}
+                onToggleChat={() => setMobileChatDrawerOpen(true)}
+                onPrevSlide={handlePreviousScene}
+                onNextSlide={handleNextScene}
+                onWhiteboardClose={handleWhiteboardToggle}
+                isPresenting={isPresenting}
+                controlsVisible={controlsVisible}
+                onTogglePresentation={togglePresentation}
+                onPresentationInteractionChange={setIsPresentationInteractionActive}
+                fullscreenContainerRef={stageRef}
+              />
+            </div>
+          )}
+
+          {/* Mobile Bottom Bar — primary navigation */}
+          {!isPresenting && (
+            <MobileBottomBar
+              currentSceneIndex={currentSceneIndex}
+              scenesCount={totalScenesCount}
+              engineState={canvasEngineState}
+              isLiveSession={
+                chatIsStreaming || isTopicPending || engineMode === 'live' || !!chatSessionType
+              }
+              showStopDiscussion={
+                engineMode === 'live' ||
+                (chatIsStreaming && (chatSessionType === 'qa' || chatSessionType === 'discussion'))
+              }
+              onStopDiscussion={handleStopDiscussion}
+              onPrevSlide={handlePreviousScene}
+              onNextSlide={handleNextScene}
+              onPlayPause={handlePlayPause}
+              onToggleScenes={() => setMobileSceneDrawerOpen(true)}
+              onToggleChat={() => setMobileChatDrawerOpen(true)}
+              onTogglePresentation={togglePresentation}
+              isPresenting={isPresenting}
+              onToggleWhiteboard={handleWhiteboardToggle}
+              whiteboardOpen={whiteboardOpen}
+              ttsMuted={ttsMuted}
+              onToggleMute={() => setTTSMuted(!ttsMuted)}
+              autoPlayLecture={autoPlayLecture}
+              onToggleAutoPlay={() => setAutoPlayLecture(!autoPlayLecture)}
+              playbackSpeed={playbackSpeed}
+              onCycleSpeed={cyclePlaybackSpeed}
+            />
+          )}
+
+          {/* Scene Sidebar — left drawer */}
+          <Sheet open={mobileSceneDrawerOpen} onOpenChange={setMobileSceneDrawerOpen}>
+            <SheetContent side="left" showCloseButton={false} className="p-0 w-[85vw] max-w-xs">
+              <SceneSidebar
+                collapsed={false}
+                fillContainer
+                onCollapseChange={() => setMobileSceneDrawerOpen(false)}
+                onSceneSelect={(id) => {
+                  gatedSceneSwitch(id);
+                  setMobileSceneDrawerOpen(false);
+                }}
+                onRetryOutline={onRetryOutline}
+                isCourseComplete={isCourseComplete}
+              />
+            </SheetContent>
+          </Sheet>
+
+          {/* Chat Area — right drawer */}
+          <Sheet open={mobileChatDrawerOpen} onOpenChange={setMobileChatDrawerOpen}>
+            <SheetContent side="right" showCloseButton={false} className="p-0 w-[85vw] max-w-md">
+              <ChatArea
+                ref={chatAreaRef}
+                fillContainer
+                collapsed={false}
+                onCollapseChange={() => setMobileChatDrawerOpen(false)}
+                activeBubbleId={activeBubbleId}
+                onActiveBubble={(id) => setActiveBubbleId(id)}
+                currentSceneId={currentSceneId}
+                currentActionIndex={currentPlaybackActionIndex}
+                canJumpToAction={canJumpToAction}
+                onJumpToAction={(sceneId, actionIndex) => {
+                  void handleJumpToAction(sceneId, actionIndex);
+                }}
+                onLiveSpeech={(text, agentId) => {
+                  const epoch = sceneEpochRef.current;
+                  queueMicrotask(() => {
+                    if (sceneEpochRef.current !== epoch) return;
+                    setLiveSpeech(text);
+                    if (agentId !== undefined) {
+                      setSpeakingAgentId(agentId);
+                    }
+                    if (text !== null || agentId) {
+                      setChatIsStreaming(true);
+                      setChatSessionType(chatAreaRef.current?.getActiveSessionType?.() ?? null);
+                      setIsTopicPending(false);
+                    } else if (text === null && agentId === null) {
+                      setChatIsStreaming(false);
+                    }
+                  });
+                }}
+                onSpeechProgress={(ratio) => {
+                  const epoch = sceneEpochRef.current;
+                  queueMicrotask(() => {
+                    if (sceneEpochRef.current !== epoch) return;
+                    setSpeechProgress(ratio);
+                  });
+                }}
+                onThinking={(state) => {
+                  const epoch = sceneEpochRef.current;
+                  queueMicrotask(() => {
+                    if (sceneEpochRef.current !== epoch) return;
+                    setThinkingState(state);
+                  });
+                }}
+                onCueUser={(_fromAgentId, _prompt) => {
+                  setIsCueUser(true);
+                }}
+                onLiveSessionError={handleLiveSessionError}
+                onStopSession={doSessionCleanup}
+                onSegmentSealed={discussionTTS.handleSegmentSealed}
+                shouldHoldAfterReveal={discussionTTS.shouldHold}
+              />
+            </SheetContent>
+          </Sheet>
+
+          {/* Scene switch confirmation dialog */}
+          <AlertDialog
+            open={!!pendingSceneId}
+            onOpenChange={(open) => {
+              if (!open) cancelSceneSwitch();
+            }}
+          >
+            <AlertDialogContent
+              container={isPresenting ? stageRef.current : undefined}
+              className="max-w-sm rounded-2xl p-0 overflow-hidden border-0 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]"
+            >
+              <VisuallyHidden.Root>
+                <AlertDialogTitle>{t('stage.confirmSwitchTitle')}</AlertDialogTitle>
+              </VisuallyHidden.Root>
+              <div className="h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-red-400" />
+              <div className="px-6 pt-5 pb-2 flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-4 ring-1 ring-amber-200/50 dark:ring-amber-700/30">
+                  <AlertTriangle className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-1.5">
+                  {t('stage.confirmSwitchTitle')}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  {t('stage.confirmSwitchMessage')}
+                </p>
+              </div>
+              <AlertDialogFooter className="px-6 pb-5 pt-3 flex-row gap-3">
+                <AlertDialogCancel onClick={cancelSceneSwitch} className="flex-1 rounded-xl">
+                  {t('common.cancel')}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmSceneSwitch}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-md shadow-amber-200/50 dark:shadow-amber-900/30"
+                >
+                  {t('common.confirm')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      );
+    }
 
     // Scene viewer height — header is 80px when visible, roundtable is
     // 192px in playback mode (autonomous hides it). Mode is guaranteed

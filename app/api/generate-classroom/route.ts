@@ -11,8 +11,12 @@ import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { withApiHandler } from '@/lib/server/api-handler';
 import { moderateContent } from '@/lib/server/content-moderation';
 import { authOptions } from '@/lib/auth/config';
+import { checkQuota } from '@/lib/server/quota';
 
 const log = createLogger('GenerateClassroom API');
+
+/** Maximum length for the requirement text (prevents token-bomb abuse). */
+const MAX_REQUIREMENT_LENGTH = 10000;
 
 export const maxDuration = 300;
 
@@ -47,6 +51,17 @@ export const POST = withApiHandler(async (req: NextRequest) => {
       return apiError('MISSING_REQUIRED_FIELD', 400, 'Missing required field: requirement');
     }
 
+    // Input length validation — prevents excessively long requirements
+    // from consuming disproportionate LLM tokens (important for enterprise
+    // multi-tenant deployments where cost control matters).
+    if (requirement.length > MAX_REQUIREMENT_LENGTH) {
+      return apiError(
+        'INVALID_REQUEST',
+        400,
+        `Requirement text exceeds maximum length of ${MAX_REQUIREMENT_LENGTH} characters (received ${requirement.length}). Please shorten your input.`,
+      );
+    }
+
     // ── Content moderation: reject unsafe input before generation ──────────
     const moderation = await moderateContent(requirement);
     if (moderation.flagged) {
@@ -67,11 +82,36 @@ export const POST = withApiHandler(async (req: NextRequest) => {
 
     // Record owner when user is authenticated (optional — no auth = anonymous)
     let ownerId: string | null = null;
+    let userRole: string | undefined;
     try {
       const session = await getServerSession(authOptions);
       ownerId = (session?.user as { id?: string } | undefined)?.id ?? null;
+      userRole = (session?.user as { role?: string } | undefined)?.role;
     } catch {
       // Auth not configured — generation is anonymous
+    }
+
+    // ── Quota check: enforce monthly usage limits for authenticated users ──
+    // Anonymous users bypass quota (they are rate-limited instead).
+    if (ownerId) {
+      try {
+        const quotaStatus = await checkQuota(ownerId, 'llm', userRole);
+        if (quotaStatus.exceeded) {
+          log.warn(
+            `Quota exceeded for user ${ownerId}: ${quotaStatus.used}/${quotaStatus.limit} LLM calls this month`,
+          );
+          return apiError(
+            'QUOTA_EXCEEDED',
+            402,
+            'Monthly generation quota exceeded',
+            `You have used ${quotaStatus.used}/${quotaStatus.limit} LLM calls this month. Quota resets at the start of each month.`,
+          );
+        }
+      } catch (quotaErr) {
+        // If the database is unavailable, fail open (allow generation) rather
+        // than blocking all users when the quota DB has an outage.
+        log.warn('Quota check failed (failing open):', quotaErr);
+      }
     }
 
     const jobBody: GenerateClassroomInput = { ...body, ownerId };

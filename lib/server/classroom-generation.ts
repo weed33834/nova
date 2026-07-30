@@ -25,6 +25,7 @@ import { buildSearchQuery } from '@/lib/server/search-query-builder';
 import { formatSearchResultsAsContext, searchWeb } from '@/lib/web-search';
 import type { BaiduSubSources, WebSearchProviderId } from '@/lib/web-search/types';
 import { persistClassroom } from '@/lib/server/classroom-storage';
+import { checkModelAvailability } from '@/lib/ai/model-preflight';
 import {
   generateMediaForClassroom,
   replaceMediaPlaceholders,
@@ -218,6 +219,33 @@ export async function generateClassroom(
       `No API key configured for provider "${providerId}". ` +
         `Set the appropriate key in .env.local or server-providers.yml (e.g. ${providerId.toUpperCase()}_API_KEY).`,
     );
+  }
+
+  // Pre-flight model availability check: verify the configured model exists
+  // on the API endpoint before starting generation. This catches issues like
+  // model name typos or models not deployed on custom endpoints early,
+  // instead of failing mid-generation after spending time on outlines.
+  if (apiKey) {
+    const modelIdFromStr = modelString.includes(':') ? modelString.split(':').slice(1).join(':') : modelString;
+    try {
+      const preflight = await checkModelAvailability(modelIdFromStr, providerId, apiKey);
+      if (!preflight.available) {
+        const availableList = preflight.availableModels?.slice(0, 10).join(', ') ?? 'N/A';
+        throw new Error(
+          `Model "${modelIdFromStr}" is not available on the API endpoint. ` +
+            `Available models: ${availableList}${preflight.availableModels && preflight.availableModels.length > 10 ? '...' : ''}. ` +
+            `Update DEFAULT_MODEL in .env.local to use one of the available models.`,
+        );
+      }
+      log.info(`Pre-flight check: ${preflight.message}`);
+    } catch (preflightErr) {
+      // Only re-throw if it's our explicit "model not available" error
+      if (preflightErr instanceof Error && preflightErr.message.includes('not available on the API endpoint')) {
+        throw preflightErr;
+      }
+      // Other pre-flight errors (network, etc.) are non-blocking
+      log.warn('Model pre-flight check failed (non-blocking):', preflightErr);
+    }
   }
 
   // The web-search query rewrite is a light, separable stage operators may route
@@ -483,17 +511,37 @@ export async function generateClassroom(
       continue;
     }
 
-    const actions = await withGenerationRetry(
-      () =>
-        generateSceneActions(safeOutline, content, sceneAiCall, {
-          agents,
-          languageDirective,
-        }),
-      {
-        label: `scene ${index + 1}/${outlines.length} actions`,
-        onRetry: (event) => reportSceneRetry('actions', event),
-      },
-    );
+    let actions;
+    try {
+      actions = await withGenerationRetry(
+        () =>
+          generateSceneActions(safeOutline, content, sceneAiCall, {
+            agents,
+            languageDirective,
+          }),
+        {
+          label: `scene ${index + 1}/${outlines.length} actions`,
+          onRetry: (event) => reportSceneRetry('actions', event),
+        },
+      );
+    } catch (actionsErr) {
+      // Action generation failed after all retries — skip this scene
+      // instead of aborting the entire classroom generation. This mirrors
+      // the content-generation fallback above and ensures a single scene's
+      // failure doesn't waste the work already done on preceding scenes.
+      log.error(
+        `Scene "${safeOutline.title}" action generation failed after retries, skipping scene:`,
+        actionsErr,
+      );
+      await options.onProgress?.({
+        step: 'generating_scenes',
+        progress: 30 + Math.floor(((index + 1) / Math.max(outlines.length, 1)) * 60),
+        message: `Scene "${safeOutline.title}" skipped — action generation failed`,
+        scenesGenerated: generatedScenes,
+        totalScenes: outlines.length,
+      });
+      continue;
+    }
     log.info(`Scene "${safeOutline.title}": ${actions.length} actions`);
 
     // Post-generation guardrail check. By default this is a non-blocking

@@ -16,8 +16,8 @@
   <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript" alt="TypeScript" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" /></a>
   <a href="#"><img src="https://img.shields.io/badge/License-MIT-green" alt="License" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/Tests-2768%20passed-success" alt="Tests" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/LLM-20%2B%20providers-8b5cf6" alt="LLM Providers" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Tests-3152%20passed-success" alt="Tests" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/LLM-17%20providers-8b5cf6" alt="LLM Providers" /></a>
   <a href="#"><img src="https://img.shields.io/badge/i18n-8%20languages-pink" alt="i18n" /></a>
 </p>
 
@@ -72,20 +72,25 @@ Nova はマルチエージェント型のインテリジェント教学プラッ
 ### インフラストラクチャ
 
 <details>
-<summary><strong>20 以上の LLM プロバイダ</strong></summary>
+<summary><strong>17 LLM プロバイダ</strong></summary>
 
 | プロバイダ | 代表モデル |
 |-----------|-----------|
-| OpenAI | GPT-4o, GPT-4o-mini |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
-| Google | Gemini 2.0 Flash, Gemini 1.5 Pro |
+| OpenAI | GPT-5.6, GPT-5.4 |
+| Azure OpenAI | ユーザー定義デプロイ |
+| Anthropic | Claude Opus 4.8, Claude Sonnet 4.6 |
+| Google | Gemini 3.5 Flash, Gemini 2.5 Pro |
 | DeepSeek | DeepSeek-V4-Pro, DeepSeek-V4-Flash |
-| Qwen | Qwen3.5-397B, Qwen3.6-35B |
-| GLM | GLM-5.2, GLM-5.1 |
-| Kimi | Kimi-K2.6 |
+| Qwen | Qwen3.7 Plus, Qwen3.6 Flash |
+| GLM | GLM-5.2, GLM-4.6 |
+| Kimi | Kimi-K2.7, Kimi-K2.6 |
 | MiniMax | MiniMax-M3 |
 | SiliconFlow | 全モデル集約 |
-| Doubao | Doubao シリーズ |
+| Doubao | Doubao Seed シリーズ |
+| OpenRouter | DeepSeek 他多数 |
+| Grok | Grok 4.20, Grok 4.1 |
+| Tencent Hunyuan | Hy3 Preview |
+| Xiaomi MiMo | MiMo V2.5 Pro, MiMo V2 |
 | Ollama | ローカルモデル |
 | Lemonade | ローカル AMD モデル |
 
@@ -132,7 +137,7 @@ SILICONFLOW_API_KEY=your-key
 SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
 
 # 方法 B: サーバーサイド管理設定（推奨）
-cp server-providers.example.yml server-providers.yml
+cp server-providers.yml.example server-providers.yml
 # server-providers.yml に資格情報を入力 — キーはサーバー側に留まります
 ```
 
@@ -151,7 +156,7 @@ pnpm dev
 ## テスト
 
 ```bash
-pnpm test          # ユニット & コンポーネントテスト（312 ファイル / 2768 ケース）
+pnpm test          # ユニット & コンポーネントテスト（340 ファイル / 3155 ケース）
 pnpm test:e2e      # エンドツーエンドテスト（Playwright）
 pnpm test:e2e:ui   # インタラクティブ UI 付き E2E
 pnpm lint          # ESLint

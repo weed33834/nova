@@ -117,7 +117,7 @@ const rotateLine = (line: PPTLineElement, angleDeg: number) => {
 };
 
 /**
- * 从 SVG path 中提取两段 C 命令的控制点，近似为 PPTist 单段三次贝塞尔。
+ * 从 SVG path 中提取两段 C 命令的控制点，近似为单段三次贝塞尔。
  * path 中数值与 JSON 的 width/height 同为 pt；parseLineElement 里 start/end 已乘 ratio，
  * 控制点也必须乘 ratio，否则与端点量纲不一致，曲线会退化为近似直线。
  */
@@ -159,7 +159,7 @@ const parseCubicFromPath = (
 };
 
 /**
- * 从 pptxtojson-pro 的 line path 中检测箭头三角形。
+ * 从 line path 中检测箭头三角形。
  *
  * path 结构：主线段 `M<x1>,<y1> L<x2>,<y2>` 后，每个箭头追加一段
  * 闭合三角形 `M<base>L<p1>L<p2>Z`，其中 base 与主线段的某个端点重合。
@@ -189,7 +189,7 @@ const detectArrowsFromPath = (path: string): [boolean, boolean] => {
   let head = false,
     tail = false;
   for (let i = 1; i < segments.length; i++) {
-    // pptxtojson-pro 的 arrow 子路径有两种格式：
+    // arrow 子路径有两种格式：
     //   - triangle / diamond / oval (含默认 stealth)：M..L..L..[L..]Z
     //   - openArrow (OOXML type="arrow")：           M..L..L..  ← 无 Z
     // 原实现强制要求 Z，会漏掉 openArrow 类型。放宽为「含 Z」或「至少
@@ -237,7 +237,7 @@ const parseLineElement = (el: Shape, ratio: number) => {
 
   // 不再用 "isConnector ? arrow : empty" 作为 tail 的兜底：OOXML preset
   // connector (straightConnector/curvedConnector) 默认就是无箭头的，
-  // 是否有箭头完全取决于 a:headEnd/tailEnd 的 type。pptxtojson-pro 已按
+  // 是否有箭头完全取决于 a:headEnd/tailEnd 的 type。解析阶段已按
   // OOXML 把 arrow 几何 append 到 path（或不 append），detectArrowsFromPath
   // 是唯一权威信号。原 fallback 会给所有 connector 强加箭头，破坏那些
   // 显式 type="none" 的 case（典型：FP-tree 节点之间的实线连接）。

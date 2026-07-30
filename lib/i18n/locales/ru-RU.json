@@ -3,7 +3,14 @@
     "you": "Вы",
     "confirm": "Подтвердить",
     "cancel": "Отмена",
-    "loading": "Загрузка..."
+    "loading": "Загрузка...",
+    "level": "Ур.",
+    "minutesShort": "мин",
+    "delete": "Удалить",
+    "back": "Назад",
+    "close": "Закрыть",
+    "prev": "Предыдущий",
+    "next": "Следующий"
   },
   "auth": {
     "signIn": "Войти",
@@ -27,6 +34,7 @@
   "home": {
     "slogan": "Новая звезда персонализированного мультиагентного обучения.",
     "greetingWithName": "Привет, {{name}}",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — A new star for personalized learning.",
     "vocationalTestBadge": "Beta",
     "vocationalTestLabel": "Vocational Tasks",
@@ -87,7 +95,14 @@
     "exportFailed": "Ошибка экспорта",
     "classroomZip": "Экспорт ZIP класса",
     "classroomZipDesc": "Структура курса + медиафайлы",
-    "inlinePartial": "Не удалось упаковать {{count}} внешн. ресурс(ов); курс может отображаться некорректно офлайн."
+    "inlinePartial": "Не удалось упаковать {{count}} внешн. ресурс(ов); курс может отображаться некорректно офлайн.",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineSuccess": "Video timeline exported",
+    "timelineWithWarnings": "Timeline exported",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering"
   },
   "import": {
     "classroom": "Импорт класса",
@@ -120,7 +135,8 @@
     "endQA": "Завершить вопросы и ответы",
     "error": {
       "emptyAgentResponses": "Агенты вернули пустые ответы; обсуждение остановлено. Попробуйте ещё раз или проверьте настройки модели.",
-      "streamInterrupted": "Поток данных неожиданно прервался; обсуждение не завершено. Попробуйте ещё раз."
+      "streamInterrupted": "Поток данных неожиданно прервался; обсуждение не завершено. Попробуйте ещё раз.",
+      "maxTurnsReached": "Обсуждение достигло максимального количества ходов. Разговор завершён."
     },
     "tabs": {
       "lecture": "Заметки",
@@ -202,7 +218,14 @@
     "exitFullscreen": "Свернуть",
     "editCourse": "Редактировать курс",
     "doneEditing": "Завершить редактирование",
-    "proModeDisabledHint": "Редактирование недоступно на этой странице — откройте слайд курса, чтобы редактировать в Pro-режиме."
+    "proModeDisabledHint": "Редактирование недоступно на этой странице — откройте слайд курса, чтобы редактировать в Pro-режиме.",
+    "scenes": "Сцены",
+    "previousScene": "Предыдущая сцена",
+    "nextScene": "Следующая сцена",
+    "toggleChat": "Показать чат",
+    "moreControls": "Другие параметры",
+    "play": "Воспр.",
+    "pause": "Пауза"
   },
   "edit": {
     "proMode": "Pro",
@@ -874,7 +897,9 @@
     "errorTitle": "Failed to load classroom",
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "Профессиональный режим",
+    "searchEmptyHint": "Попробуйте другое ключевое слово или очистите поиск, чтобы увидеть все классы."
   },
   "upload": {
     "courseMaterialSizeLimit": "Документы, презентации, таблицы, изображения, текст — до 50 МБ (список форматов зависит от выбранного парсера)",
@@ -1844,7 +1869,14 @@
     "mcpTransportStdioHint": "stdio transport spawns a child process and is only available in standalone deployments. Stateless environments like Vercel cannot use it.",
     "mcpUrl": "Server URL",
     "mcpUrlPlaceholder": "e.g. https://mcp.example.com/mcp",
-    "duplicateId": "Duplicate ID"
+    "duplicateId": "Duplicate ID",
+    "teachingSystem": "Обучение",
+    "sidebar": {
+      "agents": "Роли агентов",
+      "knowledgeGraph": "Граф знаний",
+      "guardrails": "Защита",
+      "tracing": "Трассировка"
+    }
   },
   "profile": {
     "buildProfile": "Build your learning profile for personalized recommendations",
@@ -1937,7 +1969,25 @@
     "totalHours": "Total Hours",
     "totalHoursLabel": "Total Hours",
     "weeklyHours": "Weekly Hours",
-    "weeklyHoursLabel": "Weekly Hours"
+    "weeklyHoursLabel": "Weekly Hours",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "Фундамент знаний",
+          "cognitiveStyle": "Когнитивный стиль",
+          "learningGoals": "Цели обучения",
+          "modalityPreference": "Предпочтение модальности",
+          "timeBudget": "Бюджет времени",
+          "errorPatterns": "Паттерны ошибок"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "Области и темы, которые вы уже знаете",
+    "cognitiveStyleDesc": "Как вы лучше всего усваиваете новую информацию",
+    "learningGoalsDesc": "Чего вы хотите достичь",
+    "modalityPreferenceDesc": "Форматы, через которые вам проще учиться",
+    "timeBudgetDesc": "Сколько времени вы можете инвестировать",
+    "errorPatternsDesc": "Распространённые ошибки, которых стоит остерегаться"
   },
   "media": {
     "imageCapability": "Генерация изображений",
@@ -2049,7 +2099,9 @@
     "welcomeDesc": "Your personal AI multi-agent interactive classroom. Tell Nova what you want to learn, and it generates a complete personalized course.",
     "welcomeTitle": "Welcome to Nova ✨",
     "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations.",
-    "whiteboardTitle": "Interactive Whiteboard"
+    "whiteboardTitle": "Interactive Whiteboard",
+    "showHelp": "Показать обзор",
+    "help": "Помощь"
   },
   "userProfile": {
     "title": "Профиль",
@@ -2110,6 +2162,121 @@
     "unknown": "An unexpected error occurred.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "withContext": "{{message}} ({{context}})",
-    "withDetails": "{{message}} — {{details}}"
+    "withDetails": "{{message}} — {{details}}",
+    "emailTaken": "This email is already registered.",
+    "validationError": "The provided input is invalid."
+  },
+  "audio": {
+    "mute": "Без звука",
+    "unmute": "Включить звук"
+  },
+  "adaptive": {
+    "knowledgeGraph": "Граф знаний",
+    "demo": {
+      "concept1Label": "Основы Python",
+      "concept1Desc": "Переменные, типы, поток",
+      "concept2Label": "Структуры данных",
+      "concept2Desc": "Списки, словари, кортежи, множества",
+      "concept3Label": "Функции и модули",
+      "concept3Desc": "Определения, параметры, импорт",
+      "concept4Label": "ООП",
+      "concept4Desc": "Классы, наследование, полиморфизм",
+      "concept5Label": "Практический проект",
+      "concept5Desc": "Комплексная практика"
+    },
+    "learningPath": {
+      "title": "Рекомендуемый путь",
+      "emptyDesc": "Заполните профиль для персонального пути",
+      "summary": "{{count}} тем · ~{{minutes}} мин",
+      "minutes": "{{n}} мин",
+      "footer": "Создано по профилю ({{hours}}ч)",
+      "viewDetail": "Подробнее",
+      "detailDialog": "Путь обучения — {{minutes}} мин\n\n{{summary}}\n\nГраф: {{name}} ({{count}} концепций)"
+    },
+    "depth": {
+      "surface": "Обзор",
+      "normal": "Стандарт",
+      "deep": "Глубокий"
+    },
+    "category": {
+      "prerequisite": "Предв.",
+      "core": "Ядро",
+      "advanced": "Продв.",
+      "application": "Прим.",
+      "assessment": "Оценка"
+    },
+    "strategy": {
+      "prerequisite_first": "Сначала база",
+      "balanced": "Баланс",
+      "deep_first": "Сначала глубокое"
+    }
+  },
+  "tracing": {
+    "title": "Отслеживание знаний",
+    "simulateLearning": "Симулировать обучение",
+    "simulateMastery": "Симулировать мастерство",
+    "overallMastery": "Общее мастерство",
+    "mastered": "Освоено",
+    "weakConcepts": "Слабые концепции",
+    "needReview": "Нужно повторить",
+    "conceptMastery": "Мастерство концепции",
+    "attempts": "Попытки: {{n}}",
+    "correct": "Правильно: {{n}}",
+    "confidence": "Уверенность: {{pct}}%",
+    "performancePrediction": "Прогноз результатов",
+    "predictedCorrectness": "Прогнозируемая правильность",
+    "predictedConfidence": "Прогнозируемая уверенность",
+    "nextReviewInterval": "Следующий интервал повторения",
+    "nextReviewIntervalValue": "{{n}} часов",
+    "forgettingCurve": "Кривая забывания (7 дней)",
+    "now": "Сейчас",
+    "sevenDays": "7 дней",
+    "selectConcept": "Выберите концепцию для просмотра прогнозов и кривой забывания",
+    "demoConcept1": "Основы",
+    "demoConcept2": "Основные концепции",
+    "demoConcept3": "Продвинутые приложения"
+  },
+  "agentRoles": {
+    "subtitle": "Управление ролями агентов и их правами",
+    "resetAll": "Сбросить все",
+    "description": "Описание",
+    "interactionMode": "Режим взаимодействия",
+    "permissions": "Разрешения ({{n}})",
+    "priority": "Приоритет",
+    "modified": "Изменено",
+    "resetToDefault": "Сброс к значениям по умолчанию",
+    "interactions": {
+      "direct": "Прямое обучение",
+      "scaffold": "Скаффолдинг",
+      "socratic": "Сократический",
+      "collaborative": "Совместный"
+    }
+  },
+  "permissions": {
+    "speak": "Говорить",
+    "whiteboardDraw": "Рисовать на доске",
+    "whiteboardErase": "Стирать с доски",
+    "whiteboardManage": "Управлять доской",
+    "slideControl": "Управление слайдами",
+    "slideSpotlight": "Прожектор",
+    "slideLaser": "Лазерная указка",
+    "quizCreate": "Создать тест",
+    "quizGrade": "Оценить тест",
+    "mediaControl": "Управление медиа",
+    "discussionModerate": "Модерировать обсуждение",
+    "evaluate": "Оценить",
+    "summarize": "Подвести итог",
+    "manageAgents": "Управление агентами"
+  },
+  "demoSeed": {
+    "launchingDemo": "Запуск...",
+    "launchDemo": "Генерация демо-курса в реальном времени",
+    "loading": "Загрузка...",
+    "loadCached": "Открыть кэшированный демо-курс",
+    "requirement": "Создайте короткий интерактивный курс по теме {{topic}}"
+  },
+  "greeting": {
+    "hi": "Привет, {{name}}",
+    "readyToLearn": "Готовы учиться вместе?"
   }
 }

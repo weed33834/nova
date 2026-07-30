@@ -1,6 +1,6 @@
 /**
  * Convert legacy / non-web-safe image bytes to PNG data URLs
- * so JSON output works in browsers (PPTist).
+ * so JSON output works in browsers.
  *
  * Supported conversions:
  * - TIFF/TIF  → PNG  (sync, via UTIF)

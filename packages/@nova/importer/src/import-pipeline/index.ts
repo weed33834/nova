@@ -1,5 +1,5 @@
 /**
- * High-level entry: parsed pptxtojson(-pro) JSON → Nova canvas `Slide[]`.
+ * High-level entry: parsed JSON → Nova canvas `Slide[]`.
  *
  * `parsedToSlides` is the transform-only path: it never touches the parser
  * source under `../src`, which keeps `pdfjs-dist`'s dynamic `require()` out
@@ -45,13 +45,13 @@ export interface ImportPptxOptions {
 }
 
 /**
- * Convert a pre-parsed pptxtojson(-pro) `Output` JSON into Nova slides.
+ * Convert a pre-parsed `Output` JSON into Nova slides.
  *
  * Resolves after every queued upload has settled, so `Slide` elements
  * either hold the uploaded URL or fall back to the original base64.
  *
  * Bundler-safe: this entry has no transitive dependency on
- * `pptxtojson-pro/src` and therefore no `pdfjs-dist` dynamic-require trap.
+ * the parser source and therefore no `pdfjs-dist` dynamic-require trap.
  */
 export async function parsedToSlides(
   json: Output,
@@ -65,7 +65,7 @@ export async function parsedToSlides(
     json.size.width > 0 ? json.size.width * baseCtx.ratio : FALLBACK_VIEWPORT_SIZE;
   const ctx: ImportContext = { ...baseCtx, viewportWidth: deckViewportWidth };
 
-  // pptxtojson-pro's `Output` is structurally compatible with the npm
+  // 本库产出的 `Output` is structurally compatible with the npm
   // `pptxtojson` shape that `transformParsedToSlides` is typed against;
   // the cast bridges the two declaration sources.
   const { slides, uploadTasks } = await transformParsedToSlides(
@@ -116,7 +116,7 @@ export function normalizeImportedSlides(slides: Slide[]): Slide[] {
 /**
  * Parse a .pptx file and convert it into Nova canvas slides.
  *
- * Convenience wrapper for environments that can bundle `pptxtojson-pro/src`
+ * Convenience wrapper for environments that can bundle the parser source
  * (Node, Vite, etc.). Inside Next/Turbopack, prefer URL-loading `parse`
  * yourself and calling {@link parsedToSlides} with the result.
  */

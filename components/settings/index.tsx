@@ -584,9 +584,9 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
   const getHeaderContent = () => {
     switch (activeSection) {
       case 'general':
-        return <h2 className="text-lg font-semibold">{t('settings.systemSettings')}</h2>;
+        return <h2 className="text-base sm:text-lg font-semibold truncate">{t('settings.systemSettings')}</h2>;
       case 'token-plan':
-        return <h2 className="text-lg font-semibold">{t('settings.tokenPlan.nav')}</h2>;
+        return <h2 className="text-base sm:text-lg font-semibold truncate">{t('settings.tokenPlan.nav')}</h2>;
       case 'providers':
         if (selectedProvider) {
           return (
@@ -598,7 +598,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                   decoding="async"
                   alt={selectedProvider.name}
                   className={cn(
-                    'w-8 h-8 rounded',
+                    'w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0',
                     MONO_LOGO_PROVIDERS.has(selectedProvider.id) && 'dark:invert',
                   )}
                   onError={(e) => {
@@ -609,7 +609,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 <Box className="h-8 w-8 text-muted-foreground" />
               )}
               <div>
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-base sm:text-lg font-semibold truncate">
                   {t(`settings.providerNames.${selectedProvider.id}`) !==
                   `settings.providerNames.${selectedProvider.id}`
                     ? t(`settings.providerNames.${selectedProvider.id}`)
@@ -634,7 +634,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 loading="lazy"
                 decoding="async"
                 alt={pdfProvider.name}
-                className="w-8 h-8 rounded"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -642,7 +642,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             ) : (
               <Box className="h-8 w-8 text-muted-foreground" />
             )}
-            <h2 className="text-lg font-semibold">{pdfProvider.name}</h2>
+            <h2 className="text-base sm:text-lg font-semibold truncate">{pdfProvider.name}</h2>
           </>
         );
       }
@@ -657,7 +657,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 loading="lazy"
                 decoding="async"
                 alt={wsProvider.name}
-                className="w-8 h-8 rounded"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -665,7 +665,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             ) : (
               <Box className="h-8 w-8 text-muted-foreground" />
             )}
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-base sm:text-lg font-semibold truncate">
               {getWebSearchProviderDisplayName(wsProvider.id, t)}
             </h2>
           </>
@@ -682,7 +682,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 loading="lazy"
                 decoding="async"
                 alt={imgProvider?.name}
-                className="w-8 h-8 rounded"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -690,7 +690,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             ) : (
               <Box className="h-8 w-8 text-muted-foreground" />
             )}
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-base sm:text-lg font-semibold truncate">
               {t(`settings.${IMAGE_PROVIDER_NAMES[selectedImageProviderId]}`) || imgProvider?.name}
             </h2>
           </>
@@ -707,7 +707,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 loading="lazy"
                 decoding="async"
                 alt={vidProvider?.name}
-                className="w-8 h-8 rounded"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -715,7 +715,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             ) : (
               <Box className="h-8 w-8 text-muted-foreground" />
             )}
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-base sm:text-lg font-semibold truncate">
               {t(`settings.${VIDEO_PROVIDER_NAMES[selectedVideoProviderId]}`) || vidProvider?.name}
             </h2>
           </>
@@ -731,7 +731,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 loading="lazy"
                 decoding="async"
                 alt=""
-                className="w-8 h-8 rounded"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -739,7 +739,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             ) : (
               <Volume2 className="h-6 w-6 text-muted-foreground" />
             )}
-            <h2 className="text-lg font-semibold">{getTTSProviderName(ttsProviderId, t)}</h2>
+            <h2 className="text-base sm:text-lg font-semibold truncate">{getTTSProviderName(ttsProviderId, t)}</h2>
           </>
         );
       }
@@ -753,7 +753,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
                 loading="lazy"
                 decoding="async"
                 alt=""
-                className="w-8 h-8 rounded"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -761,7 +761,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             ) : (
               <Mic className="h-6 w-6 text-muted-foreground" />
             )}
-            <h2 className="text-lg font-semibold">{getASRProviderName(asrProviderId, t)}</h2>
+            <h2 className="text-base sm:text-lg font-semibold truncate">{getASRProviderName(asrProviderId, t)}</h2>
           </>
         );
       }
@@ -769,21 +769,21 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
         return (
           <>
             <Plug className="h-6 w-6 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">{t('settings.mcpSettings')}</h2>
+            <h2 className="text-base sm:text-lg font-semibold truncate">{t('settings.mcpSettings')}</h2>
           </>
         );
       case 'skills':
         return (
           <>
             <Blocks className="h-6 w-6 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">{t('settings.skillSettings')}</h2>
+            <h2 className="text-base sm:text-lg font-semibold truncate">{t('settings.skillSettings')}</h2>
           </>
         );
       case 'prompts':
         return (
           <>
             <FileText className="h-6 w-6 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">{t('settings.promptSettings')}</h2>
+            <h2 className="text-base sm:text-lg font-semibold truncate">{t('settings.promptSettings')}</h2>
           </>
         );
       default:
@@ -793,16 +793,47 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[85vh] p-0 gap-0 block" showCloseButton={false}>
+      <DialogContent
+        className="h-[100dvh] sm:h-[85vh] max-w-[100vw] sm:max-w-[95vw] p-0 gap-0 block overflow-hidden"
+        showCloseButton={false}
+      >
         <DialogTitle className="sr-only">{t('settings.title')}</DialogTitle>
         <DialogDescription className="sr-only">{t('settings.description')}</DialogDescription>
-        <div className="flex h-full overflow-hidden">
-          {/* Left Sidebar - Navigation */}
-          <div className="flex-shrink-0 bg-muted/30 p-3 space-y-1" style={{ width: sidebarWidth }}>
+        <div className="flex flex-col sm:flex-row h-full overflow-hidden">
+          {/* Mobile header — only on mobile, gives the dialog a clear
+              title bar with a close button. On desktop the right-panel
+              header takes over. */}
+          <div className="flex sm:hidden items-center justify-between gap-2 px-4 h-12 min-h-[48px] border-b border-border/40 bg-background/80 backdrop-blur-sm shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Settings className="h-4 w-4 text-primary shrink-0" />
+              <h2 className="text-[15px] font-semibold truncate">{t('settings.title')}</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => onOpenChange(false)}
+              aria-label={t('common.close')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Left Sidebar - Navigation. On mobile, the sidebar scrolls
+              horizontally as a chip strip so all 14 categories are
+              reachable without overflow / cramped wrapping. The active
+              chip gets a soft tinted background and primary text. */}
+          <div
+            className="flex-shrink-0 bg-muted/20 sm:bg-muted/30 backdrop-blur-sm sm:backdrop-blur-0 sm:border-b-0 sm:border-r sm:border-border/50 border-b border-border/40 sm:p-2 sm:space-y-1 sm:overflow-y-auto sm:flex-col flex flex-row gap-1.5 sm:gap-0 w-full sm:w-auto overflow-x-auto p-2"
+            style={{
+              minWidth:
+                typeof window !== 'undefined' && window.innerWidth < 640 ? undefined : sidebarWidth,
+            }}
+          >
             <button
               onClick={() => setActiveSection('token-plan')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'token-plan'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -815,7 +846,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('providers')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'providers'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -828,7 +859,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('image')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'image'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -841,7 +872,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('video')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'video'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -854,7 +885,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('tts')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'tts'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -867,7 +898,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('asr')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'asr'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -880,7 +911,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('pdf')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'pdf'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -893,7 +924,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('web-search')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'web-search'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -906,7 +937,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('mcp')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'mcp'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -919,7 +950,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('skills')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'skills'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -932,7 +963,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('prompts')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'prompts'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -945,7 +976,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
             <button
               onClick={() => setActiveSection('general')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'general'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
@@ -957,67 +988,67 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
 
             <div className="pt-3 pb-1">
               <div className="px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                教学系统
+                {t('settings.teachingSystem')}
               </div>
             </div>
 
             <button
               onClick={() => setActiveSection('agents')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'agents'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
               )}
             >
               <Users className="h-4 w-4 shrink-0" />
-              <span className="truncate">智能体角色</span>
+              <span className="truncate">{t('settings.sidebar.agents')}</span>
             </button>
 
             <button
               onClick={() => setActiveSection('knowledge-graph')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'knowledge-graph'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
               )}
             >
               <Network className="h-4 w-4 shrink-0" />
-              <span className="truncate">知识图谱</span>
+              <span className="truncate">{t('settings.sidebar.knowledgeGraph')}</span>
             </button>
 
             <button
               onClick={() => setActiveSection('guardrails')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'guardrails'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
               )}
             >
               <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span className="truncate">安全护栏</span>
+              <span className="truncate">{t('settings.sidebar.guardrails')}</span>
             </button>
 
             <button
               onClick={() => setActiveSection('tracing')}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97]',
+                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-150 text-left min-w-0 active:scale-[0.97] shrink-0 whitespace-nowrap',
                 activeSection === 'tracing'
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'hover:bg-muted',
               )}
             >
               <Brain className="h-4 w-4 shrink-0" />
-              <span className="truncate">知识追踪</span>
+              <span className="truncate">{t('settings.sidebar.tracing')}</span>
             </button>
           </div>
 
           {/* Sidebar resize handle */}
           <div
             onMouseDown={(e) => handleResizeStart(e, 'sidebar')}
-            className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+            className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
           >
             <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
           </div>
@@ -1034,7 +1065,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1053,7 +1084,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1075,7 +1106,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1098,7 +1129,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1121,7 +1152,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1154,7 +1185,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1187,7 +1218,7 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               />
               <div
                 onMouseDown={(e) => handleResizeStart(e, 'providerList')}
-                className="flex-shrink-0 w-[5px] cursor-col-resize group flex justify-center"
+                className="hidden sm:flex flex-shrink-0 w-[5px] cursor-col-resize group justify-center"
               >
                 <div className="w-px h-full bg-border group-hover:bg-primary/50 transition-colors" />
               </div>
@@ -1196,29 +1227,37 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
 
           {/* Right - Configuration Panel */}
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b">
-              <div className="flex items-center gap-3">{getHeaderContent()}</div>
-              <div className="flex items-center gap-2">
+            {/* Header — tighter padding on mobile (p-3) vs desktop (p-5).
+                The close button is hidden on mobile since the mobile-only
+                header bar above already has one. */}
+            <div className="flex items-center justify-between p-3 sm:p-5 border-b">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">{getHeaderContent()}</div>
+              <div className="flex items-center gap-2 shrink-0">
                 {activeSection === 'providers' &&
                   !providersConfig[selectedProviderId]?.isBuiltIn && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 text-destructive hover:text-destructive"
+                      className="h-8 sm:h-7 px-2 text-destructive hover:text-destructive"
                       onClick={() => handleDeleteProvider(selectedProviderId)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
-                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                {/* Desktop close button — mobile uses the top header bar's close */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden sm:inline-flex"
+                  onClick={() => onOpenChange(false)}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-5">
+            {/* Content — tighter padding on mobile (p-3) vs desktop (p-5) */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-5">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeSection}
@@ -1284,8 +1323,8 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
               </AnimatePresence>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-5 py-3 border-t bg-muted/30">
+            {/* Footer — tighter padding on mobile to save vertical space */}
+            <div className="flex items-center justify-end gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 border-t bg-muted/30">
               {saveStatus === 'saved' && (
                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4" />

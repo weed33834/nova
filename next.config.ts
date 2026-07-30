@@ -27,9 +27,11 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
-  // Disable type checking during dev for faster startup
+  // Disable type checking during dev for faster startup.
+  // Also skip when SKIP_TS_CHECK is set — tsc --noEmit is run separately in CI
+  // with a higher memory limit to avoid the Next.js worker OOM on large projects.
   typescript: {
-    ignoreBuildErrors: process.env.NODE_ENV === 'development',
+    ignoreBuildErrors: process.env.NODE_ENV === 'development' || process.env.SKIP_TS_CHECK === 'true',
   },
   async headers() {
     const extraAncestors = process.env.ALLOWED_FRAME_ANCESTORS?.trim();

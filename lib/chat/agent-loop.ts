@@ -62,6 +62,12 @@ export interface AgentLoopRequest {
   model?: string;
   providerType?: string;
   thinkingConfig?: ThinkingConfig;
+  /**
+   * Hard ceiling on total agent turns across the entire loop. Prevents
+   * runaway conversations where the director keeps dispatching agents
+   * without ever cueing the user or ending. Default: 50.
+   */
+  maxTotalTurns?: number;
 }
 
 /** Per-iteration outcome extracted from the done event */
@@ -108,7 +114,7 @@ export interface AgentLoopCallbacks {
 /** Final outcome of the agent loop */
 export interface AgentLoopOutcome {
   /** Why the loop stopped */
-  reason: 'end' | 'cue_user' | 'aborted' | 'empty_turns' | 'no_done';
+  reason: 'end' | 'cue_user' | 'aborted' | 'empty_turns' | 'no_done' | 'max_turns';
   /** Accumulated director state */
   directorState?: DirectorState;
   /** Number of iterations completed */
@@ -122,15 +128,15 @@ export interface AgentLoopOutcome {
  *
  * Each iteration: refresh state → POST /api/chat → process SSE events
  * → check exit conditions → repeat until director cues USER, ENDs, the
- * stream errors out, or two consecutive empty agent turns are observed.
- * There is no client-side max-turn cap; the LLM director controls
- * round length via cue_user / END.
+ * stream errors out, two consecutive empty agent turns are observed,
+ * or the global max_total_turns safety limit is reached.
  */
 export async function runAgentLoop(
   request: AgentLoopRequest,
   callbacks: AgentLoopCallbacks,
   signal: AbortSignal,
 ): Promise<AgentLoopOutcome> {
+  const maxTotalTurns = request.maxTotalTurns ?? 50;
   let directorState: DirectorState | undefined = undefined;
   let turnCount = 0;
   let consecutiveEmptyTurns = 0;
@@ -138,6 +144,17 @@ export async function runAgentLoop(
   while (true) {
     if (signal.aborted) {
       return { reason: 'aborted', directorState, turnCount };
+    }
+
+    // Global turn limit — prevents infinite agent conversations where the
+    // director keeps dispatching agents without ever cueing the user. This
+    // is a safety net; the director's cue_user / END decisions are the
+    // primary exit mechanism.
+    if (turnCount >= maxTotalTurns) {
+      log.warn(
+        `[AgentLoop] Reached max_total_turns (${maxTotalTurns}), stopping loop`,
+      );
+      return { reason: 'max_turns', directorState, turnCount };
     }
 
     // Refresh store state each iteration — agent actions may have changed

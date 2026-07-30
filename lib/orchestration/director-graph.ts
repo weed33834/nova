@@ -236,7 +236,44 @@ async function directorNode(
       shouldEnd: false,
     };
   } catch (error) {
-    log.error('[Director] Error:', error);
+    // AbortError must propagate — the user explicitly cancelled.
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
+
+    log.error('[Director] LLM decision failed, attempting fallback:', error);
+
+    // Fallback: instead of immediately ending the discussion on a transient
+    // LLM error (network blip, rate limit, timeout), dispatch the first
+    // eligible agent who hasn't exhausted their turn limit. This keeps the
+    // conversation alive and gives the user a response rather than a dead
+    // silence — critical for classroom scenarios where students are waiting.
+    const eligibleAgents = agents.filter((a) => {
+      const turnsTaken = state.agentResponses.filter(
+        (r) => r.agentId === a.id,
+      ).length;
+      return !hasExceededMaxTurns(a.role, turnsTaken);
+    });
+
+    if (eligibleAgents.length > 0) {
+      // Prefer the teacher, then the first eligible agent.
+      const fallbackAgent =
+        eligibleAgents.find((a) => a.role === 'teacher') ?? eligibleAgents[0];
+      log.info(
+        `[Director] Fallback: dispatching agent "${fallbackAgent.name}" (${fallbackAgent.id})`,
+      );
+      write({
+        type: 'thinking',
+        data: { stage: 'agent_loading', agentId: fallbackAgent.id },
+      });
+      return {
+        currentAgentId: fallbackAgent.id,
+        shouldEnd: false,
+      };
+    }
+
+    // No eligible agents left — end gracefully.
+    log.warn('[Director] No eligible agents for fallback, ending discussion');
     return { shouldEnd: true };
   }
 }

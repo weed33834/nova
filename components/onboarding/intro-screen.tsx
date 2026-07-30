@@ -161,13 +161,12 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
           />
 
           {/* Content */}
-          <div className="relative z-10 w-full max-w-3xl px-6 py-8">
+          <div className="relative z-10 w-full max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
             <AnimatePresence mode="wait">
               {/* ── Phase 1: Welcome ── */}
               {phase === 'welcome' && (
                 <motion.div
-                  key="welcome"
-                  className="flex flex-col items-center text-center space-y-8"
+                  className="flex flex-col items-center text-center space-y-6 sm:space-y-8"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, y: -30, transition: { duration: 0.4 } }}
@@ -178,8 +177,8 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                     transition={LOGO_SPRING}
                     className="relative"
                   >
-                    <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-500 to-amber-500 shadow-xl shadow-rose-500/30">
-                      <Sparkles className="h-12 w-12 text-white" />
+                    <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-500 to-amber-500 shadow-xl shadow-rose-500/30">
+                      <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
                     </div>
                     <motion.div
                       className="absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-400 to-amber-400 blur-xl opacity-50"
@@ -192,12 +191,12 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: DURATION_SLOW, ease: EASE_OUT }}
-                    className="space-y-3"
+                    className="space-y-2 sm:space-y-3"
                   >
-                    <h1 className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent">
+                    <h1 className="text-4xl sm:text-5xl sm:text-6xl font-bold bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent">
                       {t('intro.title', { defaultValue: 'Nova' })}
                     </h1>
-                    <p className="text-lg sm:text-xl text-muted-foreground max-w-xl">
+                    <p className="text-base sm:text-lg sm:text-xl text-muted-foreground max-w-xl px-2 sm:px-0">
                       {t('intro.subtitle', {
                         defaultValue: 'AI-Powered Interactive Classroom Generator',
                       })}
@@ -212,7 +211,7 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                     <Button
                       size="lg"
                       onClick={handleStart}
-                      className="gap-2 text-base px-8 py-6 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 shadow-lg shadow-rose-500/25 transition-all hover:shadow-xl hover:shadow-rose-500/30 hover:scale-105"
+                      className="gap-2 text-sm sm:text-base px-6 py-4 sm:px-8 sm:py-6 rounded-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 shadow-lg shadow-rose-500/25 transition-all hover:shadow-xl hover:shadow-rose-500/30 hover:scale-105"
                     >
                       {t('intro.startButton', { defaultValue: 'Get Started' })}
                       <ArrowRight className="h-5 w-5" />
@@ -236,17 +235,17 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
               {phase === 'showcase' && (
                 <motion.div
                   key="showcase"
-                  className="space-y-8"
+                  className="space-y-6 sm:space-y-8"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.3 } }}
                 >
                   {/* Header */}
-                  <div className="text-center space-y-2">
+                  <div className="text-center space-y-1.5 sm:space-y-2">
                     <motion.h2
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-2xl sm:text-3xl font-bold"
+                      className="text-xl sm:text-2xl sm:text-3xl font-bold"
                     >
                       {t('intro.showcaseTitle', {
                         defaultValue: 'What can Nova do?',
@@ -255,7 +254,7 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1, transition: { delay: 0.2 } }}
-                      className="text-sm text-muted-foreground"
+                      className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-0"
                     >
                       {t('intro.showcaseDesc', {
                         defaultValue:
@@ -265,7 +264,7 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                   </div>
 
                   {/* Feature carousel — auto-advancing, with progress dots */}
-                  <div className="relative h-40 sm:h-36">
+                  <div className="relative h-36 sm:h-40">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={activeFeature}
@@ -273,7 +272,7 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -40 }}
                         transition={{ duration: DURATION_NORMAL, ease: EASE_OUT }}
-                        className="absolute inset-0 flex items-center justify-center"
+                        className="absolute inset-0 flex items-center justify-center px-2 sm:px-0"
                       >
                         <FeatureCard feature={FEATURES[activeFeature]} t={t} />
                       </motion.div>
@@ -309,7 +308,7 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                         defaultValue: 'Try one of these to get started',
                       })}
                     </p>
-                    <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="grid sm:grid-cols-2 gap-2.5 sm:gap-3">
                       {STARTER_PROMPT_KEYS.map((promptKey, i) => {
                         const Icon = PROMPT_ICONS[i] ?? Lightbulb;
                         return (
@@ -321,12 +320,12 @@ export function IntroScreen({ onComplete }: IntroScreenProps) {
                             whileHover={{ scale: 1.02, y: -2 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handlePromptClick(promptKey)}
-                            className="group flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm p-4 text-left transition-colors hover:border-rose-300/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20"
+                            className="group flex items-start gap-2.5 sm:gap-3 rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm p-3 sm:p-4 text-left transition-colors hover:border-rose-300/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20"
                           >
-                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/10 to-amber-500/10 text-rose-600 dark:text-rose-400">
-                              <Icon className="h-4 w-4" />
+                            <div className="mt-0.5 flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/10 to-amber-500/10 text-rose-600 dark:text-rose-400">
+                              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </div>
-                            <p className="text-sm leading-relaxed text-foreground/80 group-hover:text-foreground">
+                            <p className="text-xs sm:text-sm leading-relaxed text-foreground/80 group-hover:text-foreground">
                               {t(promptKey)}
                             </p>
                           </motion.button>
@@ -387,22 +386,22 @@ function FeatureCard({
   return (
     <div
       className={cn(
-        'flex items-center gap-4 rounded-2xl border border-border/40 p-5 backdrop-blur-md shadow-lg',
+        'flex items-center gap-3 sm:gap-4 rounded-2xl border border-border/40 p-3 sm:p-5 backdrop-blur-md shadow-lg w-full max-w-md',
         feature.glow,
         feature.bg,
       )}
     >
       <div
         className={cn(
-          'flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-card/80',
+          'flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-card/80',
           feature.color,
         )}
       >
-        <Icon className="h-7 w-7" />
+        <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
       </div>
-      <div className="text-left space-y-1">
-        <h3 className="font-semibold text-base">{t(feature.titleKey)}</h3>
-        <p className="text-sm text-muted-foreground max-w-md">{t(feature.descKey)}</p>
+      <div className="text-left space-y-0.5 sm:space-y-1 min-w-0">
+        <h3 className="font-semibold text-sm sm:text-base">{t(feature.titleKey)}</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{t(feature.descKey)}</p>
       </div>
     </div>
   );

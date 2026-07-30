@@ -3,7 +3,14 @@
     "you": "あなた",
     "confirm": "確認",
     "cancel": "キャンセル",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "level": "Lv.",
+    "minutesShort": "分",
+    "delete": "削除",
+    "back": "戻る",
+    "close": "閉じる",
+    "prev": "前へ",
+    "next": "次へ"
   },
   "auth": {
     "signIn": "サインイン",
@@ -27,6 +34,7 @@
   "home": {
     "slogan": "パーソナライズ×マルチエージェント学習の新星。",
     "greetingWithName": "こんにちは、{{name}}さん",
+    "greetingOnlyName": "{{name}}",
     "footer": "Nova — A new star for personalized learning.",
     "vocationalTestBadge": "Beta",
     "vocationalTestLabel": "Vocational Tasks",
@@ -87,7 +95,14 @@
     "exportFailed": "エクスポートに失敗しました",
     "classroomZip": "教室ZIPをエクスポート",
     "classroomZipDesc": "コース構造 + メディアファイル",
-    "inlinePartial": "{{count}} 個の外部リソースをバンドルできませんでした。オフラインでは正しく表示されない可能性があります。"
+    "inlinePartial": "{{count}} 個の外部リソースをバンドルできませんでした。オフラインでは正しく表示されない可能性があります。",
+    "exportingVideoTimeline": "Exporting video timeline...",
+    "timelineErrors": "Timeline exported with errors",
+    "timelineFailed": "Failed to export video timeline",
+    "timelineSuccess": "Video timeline exported",
+    "timelineWithWarnings": "Timeline exported",
+    "videoTimeline": "Export Video Timeline",
+    "videoTimelineDesc": "Timeline IR JSON for video rendering"
   },
   "import": {
     "classroom": "教室をインポート",
@@ -120,7 +135,8 @@
     "endQA": "Q&Aを終了",
     "error": {
       "emptyAgentResponses": "エージェントが空の応答を返したため、ディスカッションを停止しました。再試行するかモデル設定をご確認ください。",
-      "streamInterrupted": "ストリームが予期せず終了し、ディスカッションが完了しませんでした。再度お試しください。"
+      "streamInterrupted": "ストリームが予期せず終了し、ディスカッションが完了しませんでした。再度お試しください。",
+      "maxTurnsReached": "ディスカッションが最大ターン数に達しました。会話を終了します。"
     },
     "tabs": {
       "lecture": "ノート",
@@ -202,7 +218,14 @@
     "exitFullscreen": "全画面表示を終了",
     "editCourse": "コースを編集",
     "doneEditing": "編集を完了",
-    "proModeDisabledHint": "このページでは編集できません。コースのスライドを開くと Pro モードで編集できます。"
+    "proModeDisabledHint": "このページでは編集できません。コースのスライドを開くと Pro モードで編集できます。",
+    "scenes": "シーン",
+    "previousScene": "前のシーン",
+    "nextScene": "次のシーン",
+    "toggleChat": "チャット切替",
+    "moreControls": "その他の操作",
+    "play": "再生",
+    "pause": "一時停止"
   },
   "edit": {
     "proMode": "プロモード",
@@ -874,7 +897,9 @@
     "errorTitle": "Failed to load classroom",
     "loading": "Loading classroom...",
     "loadingAriaLabel": "Loading classroom",
-    "retryLabel": "Retry"
+    "retryLabel": "Retry",
+    "vocationalMode": "職業モード",
+    "searchEmptyHint": "別のキーワードを試すか、検索をクリアしてすべてのクラスを表示してください。"
   },
   "upload": {
     "courseMaterialSizeLimit": "ドキュメント、スライド、表計算、画像、テキスト — 最大50MB（対応形式は選択したエクストラクタに依存）",
@@ -1844,7 +1869,14 @@
     "mcpTransportStdioHint": "stdio transport spawns a child process and is only available in standalone deployments. Stateless environments like Vercel cannot use it.",
     "mcpUrl": "Server URL",
     "mcpUrlPlaceholder": "e.g. https://mcp.example.com/mcp",
-    "duplicateId": "Duplicate ID"
+    "duplicateId": "Duplicate ID",
+    "teachingSystem": "教育システム",
+    "sidebar": {
+      "agents": "エージェント役割",
+      "knowledgeGraph": "ナレッジグラフ",
+      "guardrails": "ガードレール",
+      "tracing": "知識トレース"
+    }
   },
   "profile": {
     "buildProfile": "Build your learning profile for personalized recommendations",
@@ -1937,7 +1969,25 @@
     "totalHours": "Total Hours",
     "totalHoursLabel": "Total Hours",
     "weeklyHours": "Weekly Hours",
-    "weeklyHoursLabel": "Weekly Hours"
+    "weeklyHoursLabel": "Weekly Hours",
+    "dimension": {
+      "profile": {
+        "dimension": {
+          "knowledgeFoundation": "知識基盤",
+          "cognitiveStyle": "認知スタイル",
+          "learningGoals": "学習目標",
+          "modalityPreference": "モダリティ設定",
+          "timeBudget": "時間予算",
+          "errorPatterns": "エラーパターン"
+        }
+      }
+    },
+    "knowledgeFoundationDesc": "すでに習得している分野とテーマ",
+    "cognitiveStyleDesc": "新しい知識を最も吸収しやすい方法",
+    "learningGoalsDesc": "達成したい目標",
+    "modalityPreferenceDesc": "最も効果的な学習形式",
+    "timeBudgetDesc": "投資できる時間",
+    "errorPatternsDesc": "注意すべきよくある落とし穴"
   },
   "media": {
     "imageCapability": "画像生成",
@@ -2049,7 +2099,9 @@
     "welcomeDesc": "Your personal AI multi-agent interactive classroom. Tell Nova what you want to learn, and it generates a complete personalized course.",
     "welcomeTitle": "Welcome to Nova ✨",
     "whiteboardDesc": "Open anytime for writing, drawing, formulas. AI auto-adds board content during explanations.",
-    "whiteboardTitle": "Interactive Whiteboard"
+    "whiteboardTitle": "Interactive Whiteboard",
+    "showHelp": "ヘルプチューアーを表示",
+    "help": "ヘルプ"
   },
   "userProfile": {
     "title": "プロフィール",
@@ -2110,6 +2162,121 @@
     "unknown": "An unexpected error occurred.",
     "upstreamError": "The model provider is temporarily unavailable. Please try again later.",
     "withContext": "{{message}} ({{context}})",
-    "withDetails": "{{message}} — {{details}}"
+    "withDetails": "{{message}} — {{details}}",
+    "emailTaken": "This email is already registered.",
+    "validationError": "The provided input is invalid."
+  },
+  "audio": {
+    "mute": "ミュート",
+    "unmute": "ミュート解除"
+  },
+  "adaptive": {
+    "knowledgeGraph": "ナレッジグラフ",
+    "demo": {
+      "concept1Label": "Python基礎",
+      "concept1Desc": "変数、データ型、制御フロー",
+      "concept2Label": "データ構造",
+      "concept2Desc": "リスト、辞書、タプル、集合",
+      "concept3Label": "関数とモジュール",
+      "concept3Desc": "関数定義、パラメータ、モジュール",
+      "concept4Label": "オブジェクト指向",
+      "concept4Desc": "クラス、継承、ポリモーフィズム",
+      "concept5Label": "実践プロジェクト",
+      "concept5Desc": "総合プロジェクト実践"
+    },
+    "learningPath": {
+      "title": "おすすめ学習パス",
+      "emptyDesc": "プロフィールを完成させると、あなた専用の学習パスを生成します",
+      "summary": "{{count}} 知识点 · 約 {{minutes}} 分",
+      "minutes": "{{n}} 分",
+      "footer": "プロフィールから生成 ({{hours}}h 学習時間)",
+      "viewDetail": "詳細を見る",
+      "detailDialog": "学習パス詳細 — {{minutes}} 分\n\n{{summary}}\n\nグラフ: {{name}} ({{count}} 概念)"
+    },
+    "depth": {
+      "surface": "概要",
+      "normal": "標準",
+      "deep": "詳細"
+    },
+    "category": {
+      "prerequisite": "前提",
+      "core": "コア",
+      "advanced": "上級",
+      "application": "応用",
+      "assessment": "評価"
+    },
+    "strategy": {
+      "prerequisite_first": "前提優先",
+      "balanced": "バランス",
+      "deep_first": "詳細優先"
+    }
+  },
+  "tracing": {
+    "title": "ナレッジ・トレーシング",
+    "simulateLearning": "学習をシミュレート",
+    "simulateMastery": "習得をシミュレート",
+    "overallMastery": "全体の習熟度",
+    "mastered": "習得済み",
+    "weakConcepts": "苦手な概念",
+    "needReview": "復習が必要",
+    "conceptMastery": "概念の習熟度",
+    "attempts": "試行: {{n}}",
+    "correct": "正解: {{n}}",
+    "confidence": "確信度: {{pct}}%",
+    "performancePrediction": "パフォーマンス予測",
+    "predictedCorrectness": "予測正解率",
+    "predictedConfidence": "予測信頼度",
+    "nextReviewInterval": "次の復習間隔",
+    "nextReviewIntervalValue": "{{n}} 時間",
+    "forgettingCurve": "忘却曲線 (7日間)",
+    "now": "今",
+    "sevenDays": "7日間",
+    "selectConcept": "予測と忘却曲線を表示する概念を選択",
+    "demoConcept1": "基礎知識",
+    "demoConcept2": "中核概念",
+    "demoConcept3": "高度な応用"
+  },
+  "agentRoles": {
+    "subtitle": "エージェントの役割と権限設定を管理する",
+    "resetAll": "すべてリセット",
+    "description": "説明",
+    "interactionMode": "インタラクションモード",
+    "permissions": "権限 ({{n}})",
+    "priority": "優先度",
+    "modified": "変更済み",
+    "resetToDefault": "デフォルトにリセット",
+    "interactions": {
+      "direct": "直接指導",
+      "scaffold": "足場かけ",
+      "socratic": "ソクラテス式",
+      "collaborative": "協調的"
+    }
+  },
+  "permissions": {
+    "speak": "発言",
+    "whiteboardDraw": "ホワイトボードに描く",
+    "whiteboardErase": "ホワイトボードを消去",
+    "whiteboardManage": "ホワイトボード管理",
+    "slideControl": "スライド制御",
+    "slideSpotlight": "スポットライト",
+    "slideLaser": "レーザーポインター",
+    "quizCreate": "クイズ作成",
+    "quizGrade": "クイズ採点",
+    "mediaControl": "メディア制御",
+    "discussionModerate": "ディスカッション司会",
+    "evaluate": "評価",
+    "summarize": "要約",
+    "manageAgents": "エージェント管理"
+  },
+  "demoSeed": {
+    "launchingDemo": "起動中...",
+    "launchDemo": "AIでデモコースをリアルタイム生成",
+    "loading": "読み込み中...",
+    "loadCached": "キャッシュされたデモコースを即時表示",
+    "requirement": "{{topic}}についての短いインタラクティブなコースを作成してください"
+  },
+  "greeting": {
+    "hi": "こんにちは、{{name}}",
+    "readyToLearn": "一緒に学ぶ準備はできましたか？"
   }
 }
