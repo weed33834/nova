@@ -1545,6 +1545,31 @@ export function getModel(config: ModelConfig): ModelWithInfo {
         baseURL: effectiveBaseUrl,
       };
 
+      // When using a custom baseURL (OpenAI-compatible endpoint), bypass
+      // Next.js's patched fetch which can fail with "Cannot connect to API"
+      // errors for external URLs in production mode. Use undici's pristine
+      // fetch implementation directly to avoid Next.js fetch interception.
+      //
+      // Additionally, configure an EnvHttpProxyAgent so undici respects
+      // HTTP_PROXY / HTTPS_PROXY / NO_PROXY env vars. Node's built-in fetch
+      // and undici.fetch do NOT read proxy env vars by default; in sandboxed
+      // or enterprise environments external traffic must traverse a proxy,
+      // otherwise requests fail with "Cannot connect to API". EnvHttpProxyAgent
+      // honors NO_PROXY so localhost / internal hosts bypass the proxy.
+      let baseFetch: typeof globalThis.fetch | undefined;
+      if (effectiveBaseUrl && effectiveBaseUrl !== 'https://api.openai.com/v1') {
+        // eval('require') prevents the bundler from statically resolving
+        // 'undici' — this is a server-only Node.js built-in module.
+        // This code path only runs inside getModel() on the server.
+        // eslint-disable-next-line no-eval
+        const _require = eval('require');
+        const undici = _require('undici');
+        const dispatcher = new undici.EnvHttpProxyAgent();
+        baseFetch = ((url: RequestInfo | URL, init?: RequestInit) =>
+          undici.fetch(url, { ...(init as Record<string, unknown>), dispatcher })) as typeof globalThis.fetch;
+        openaiOptions.fetch = baseFetch;
+      }
+
       // For OpenAI-compatible providers (not native OpenAI), add a fetch
       // wrapper that injects vendor-specific thinking params into the HTTP
       // body. The thinking config is read from AsyncLocalStorage, set by
@@ -1597,7 +1622,7 @@ export function getModel(config: ModelConfig): ModelWithInfo {
               /* leave body as-is */
             }
           }
-          const response = await globalThis.fetch(url, init);
+          const response = await (baseFetch ?? globalThis.fetch)(url, init);
 
           // Recover reasoning that @ai-sdk/openai's chat schema drops: rewrite
           // streamed `reasoning_content` deltas into an inline <think> block
