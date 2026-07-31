@@ -237,6 +237,18 @@ nova/
 
 Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.
 
+## Mirrors / 镜像
+
+This repository is primarily hosted on **GitHub** and mirrored to GitCode and Gitee for accessibility.
+
+| Platform | URL |
+|----------|-----|
+| **GitHub** (primary) | https://github.com/weed33834/nova |
+| GitCode (mirror) | https://gitcode.com/badhope/nova |
+| Gitee (mirror) | https://gitee.com/badhope/nova |
+
+> Content is synchronized manually across platforms. GitHub is the canonical source.
+
 ## License
 
 [MIT](LICENSE)
