@@ -3,7 +3,7 @@
 </div>
 
 <p align="center">
-  <strong>An AI-powered multi-agent classroom that turns any topic into an interactive learning experience.</strong>
+  <strong>An AI-powered multi-agent classroom that turns any topic into an interactive lesson.</strong>
 </p>
 
 <p align="center">
@@ -21,22 +21,69 @@
   <a href="#features"><img src="https://img.shields.io/badge/i18n-8%20languages-pink" alt="i18n" /></a>
 </p>
 
-<p align="center">
-  <a href="#features">Features</a> ·
-  <a href="#quick-start">Quick Start</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="#testing">Testing</a> ·
-  <a href="#project-structure">Structure</a> ·
-  <a href="#contributing">Contributing</a>
-</p>
-
 ---
 
-## Overview
+## What is this?
 
-Nova is a multi-agent teaching platform. Give it a topic and an AI teacher generates a structured course outline, produces slides, writes narration scripts, and delivers the lesson in a virtual classroom. Multiple AI agents collaborate — a teacher leads the lecture, an assistant answers questions, and a class clown keeps the mood light.
+Nova is a multi-agent teaching platform. Type a topic on the home page, and AI breaks it into a structured course outline, builds slides, writes narration, and delivers the lesson in a virtual classroom where multiple AI agents work together: a lead teacher, a teaching assistant, and a class clown who keeps the mood light.
 
-The core idea: not just a slide generator, but a complete teaching system with role separation, safety guardrails, and knowledge tracking.
+It is not just a slide generator. It is a full teaching system with role separation, safety guardrails, and knowledge tracing.
+
+<div align="center">
+  <img src="assets/screenshots/home-hero.png" alt="Nova home page" width="900" />
+  <p><em>Home page: enter any topic, or open the cached demo to try a full classroom instantly</em></p>
+</div>
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 22+
+- pnpm 10+
+
+### Install
+
+```bash
+git clone https://gitcode.com/badhope/nova.git
+cd nova
+pnpm install
+```
+
+### Configure
+
+Create a `.env.local` with at least one LLM provider:
+
+```bash
+# Option A: direct API key
+OPENAI_API_KEY=your-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+
+# Option B: server-side managed config (recommended — keys stay server-side)
+cp server-providers.yml.example server-providers.yml
+# Edit server-providers.yml with your credentials
+```
+
+Optional environment variables:
+
+```bash
+DEFAULT_MODEL=openai:your-model        # Default model (provider:model format)
+LLM_TIMEOUT_MS=300000                  # LLM request timeout in milliseconds
+FALLBACK_MODELS=openai:m2,openai:m3    # Comma-separated fallback models
+LLM_THINKING_DISABLED=true             # Disable thinking/reasoning tokens
+SKIP_TS_CHECK=true                     # Skip TypeScript checking during build
+```
+
+### Run
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and enter a topic to start.
+
+### No API key? Try the demo
+
+Click **"Open Cached Demo Course"** on the home page to load a pre-built Introduction to AI course — no API key required.
 
 ## Features
 
@@ -51,10 +98,15 @@ The core idea: not just a slide generator, but a complete teaching system with r
 
 ### Multi-Agent Classroom
 
+<div align="center">
+  <img src="assets/screenshots/classroom.png" alt="Nova classroom" width="900" />
+  <p><em>Classroom: a virtual room where AI teacher, assistant, and class clown co-teach</em></p>
+</div>
+
 | Agent | Role | Permissions |
 |-------|------|-------------|
-| AI Teacher | Leads the lesson, explains core concepts | Speak, slide control, spotlight, whiteboard |
-| AI Assistant | Supports the teacher, answers questions | Speak, whiteboard, slide control |
+| AI Teacher | Leads the lesson and explains core concepts | Speak, slide control, spotlight, whiteboard |
+| AI Assistant | Supports the teacher and answers questions | Speak, whiteboard, slide control |
 | Class Clown | Lightens the mood | Speak |
 
 - **Role Persistence** — Customize names, descriptions, and permissions for 10 built-in roles; changes persist across sessions
@@ -123,66 +175,6 @@ The core idea: not just a slide generator, but a complete teaching system with r
 
 Data flow: user enters a topic → the prompt engine assembles the prompt → LLM generates content → guardrails scan for safety → multi-agent orchestration → interactive classroom rendering. State is persisted to browser-local storage via Zustand.
 
-## Quick Start
-
-### Prerequisites
-
-- Node.js 22+
-- pnpm 10+
-
-### Installation
-
-```bash
-git clone https://gitcode.com/badhope/nova.git
-cd nova
-pnpm install
-```
-
-### Configuration
-
-Create a `.env.local` file with at least one LLM provider:
-
-```bash
-# Option A: direct API key
-OPENAI_API_KEY=your-key
-OPENAI_BASE_URL=https://api.openai.com/v1
-
-# Option B: server-side managed config (recommended)
-cp server-providers.yml.example server-providers.yml
-# Edit server-providers.yml with your credentials — keys stay server-side
-```
-
-Optional environment variables:
-
-```bash
-DEFAULT_MODEL=openai:your-model       # Default LLM model (provider:model format)
-LLM_TIMEOUT_MS=300000                 # LLM request timeout in milliseconds
-FALLBACK_MODELS=openai:model2,openai:model3  # Comma-separated fallback models
-LLM_THINKING_DISABLED=true            # Disable thinking/reasoning tokens
-SKIP_TS_CHECK=true                    # Skip TypeScript checking during build
-```
-
-### Run
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) and enter a topic to start.
-
-### Production
-
-```bash
-pnpm build            # Build for production
-pnpm start            # Start production server
-```
-
-> **Note:** If the build runs out of memory during TypeScript checking, use `SKIP_TS_CHECK=true pnpm build`.
-
-### No API Key? Try the Demo
-
-Click **"Open Cached Demo Course"** on the home page to load a pre-built Introduction to AI course — no API key required.
-
 ## Testing
 
 ```bash
@@ -218,7 +210,7 @@ nova/
 │       └── storage/      # Persistence layer
 ├── e2e/                  # Playwright tests
 ├── configs/              # Shared constants
-└── assets/               # Static assets & logo
+└── assets/               # Static assets & screenshots
 ```
 
 ## Tech Stack
@@ -233,18 +225,18 @@ nova/
 | Testing | Vitest, Playwright |
 | Package Manager | pnpm Workspaces |
 
-## Contributing
-
-Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.
-
-## Mirrors / 镜像
+## Mirrors
 
 | Platform | URL | Role |
 |----------|-----|------|
-| **GitCode** (primary) | https://gitcode.com/badhope/nova | Canonical source, issues & PRs |
+| **GitCode (primary)** | https://gitcode.com/badhope/nova | Canonical source, issues & PRs |
 | GitHub (mirror) | https://github.com/weed33834/nova | Read-only mirror |
 
 > GitCode is the primary development platform. GitHub is a read-only mirror — please open issues and pull requests on GitCode.
+
+## Contributing
+
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.
 
 ## License
 

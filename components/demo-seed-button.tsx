@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Zap, Loader2, Database } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import type { SceneOutline } from '@/lib/types/generation';
+import { CACHED_AI_COURSE_SCENES } from '@/lib/demo/cached-ai-course';
 
 export function DemoSeedButton() {
   const { t } = useI18n();
@@ -58,6 +59,10 @@ export function DemoSeedButton() {
       const stage = CACHED_AI_COURSE.stage;
       stageStore.setStage(stage);
       stageStore.setOutlines(CACHED_AI_COURSE.outlines as SceneOutline[]);
+      stageStore.setScenes(CACHED_AI_COURSE_SCENES);
+      stageStore.setGenerationComplete(true);
+      // 确保场景落盘后再跳转，避免课堂页从 IndexedDB 读到空场景
+      await stageStore.saveToStorage();
 
       router.push(`/classroom/${stage.id}`);
     } catch (err) {

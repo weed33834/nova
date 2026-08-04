@@ -433,3 +433,67 @@ export const CACHED_AI_COURSE = {
 };
 
 export type CachedCourse = typeof CACHED_AI_COURSE;
+
+// 将大纲就地渲染为可立刻展示的幻灯片场景，避免缓存 Demo 进入课堂后长时间加载。
+const defaultTheme = {
+  backgroundColor: '#ffffff',
+  themeColors: ['#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4'],
+  fontColor: '#333333',
+  fontName: 'Microsoft Yahei',
+};
+
+function textEl(
+  id: string,
+  content: string,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  size = 20,
+  color = '#333333',
+  weight = 400,
+) {
+  return {
+    type: 'text' as const,
+    id,
+    name: id,
+    left,
+    top,
+    width,
+    height,
+    rotate: 0,
+    content: `<p style="font-size:${size}px;font-weight:${weight};color:${color};margin:0;line-height:1.4">${content}</p>`,
+    defaultFontName: 'Microsoft Yahei',
+    defaultColor: color,
+  };
+}
+
+function buildSlideScene(outline: (typeof CACHED_AI_COURSE.outlines)[number]) {
+  const elements = [
+    textEl(`${outline.id}-title`, outline.title, 50, 45, 900, 80, 34, '#1a1a1a', 700),
+    ...outline.keyPoints.map((pt, i) =>
+      textEl(`${outline.id}-bullet-${i}`, `• ${pt}`, 70, 150 + i * 58, 860, 52, 19, '#333333'),
+    ),
+  ];
+  return {
+    id: outline.id,
+    stageId: CACHED_AI_COURSE.stage.id,
+    title: outline.title,
+    order: outline.order,
+    type: 'slide' as const,
+    content: {
+      type: 'slide' as const,
+      canvas: {
+        id: `slide-${outline.id}`,
+        viewportSize: 1000,
+        viewportRatio: 0.5625,
+        theme: defaultTheme,
+        elements,
+      },
+    },
+    createdAt: CACHED_AI_COURSE.stage.createdAt,
+    updatedAt: CACHED_AI_COURSE.stage.updatedAt,
+  };
+}
+
+export const CACHED_AI_COURSE_SCENES = CACHED_AI_COURSE.outlines.map(buildSlideScene);

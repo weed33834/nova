@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] — 2026-08-04
+
+### Fixed
+
+- **Cached demo course** — `lib/demo/cached-ai-course.ts` now ships with pre-built slide scenes for every outline, and `DemoSeedButton` persists them before navigating to the classroom. The "Open Cached Demo Course" button now loads instantly instead of getting stuck on "loading".
+
+### Documentation
+
+- **README screenshots** — Added real UI screenshots (`home-hero.png`, `classroom.png`) under `assets/screenshots/`, captured from a running dev server.
+- **README tone** — Rewrote `README.md` and `README-zh.md` to sound more natural and less like generated copy, while keeping the structure clean.
+
 ## [0.1.2] — 2026-08-04
 
 ### Security
