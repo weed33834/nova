@@ -14,6 +14,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import {
   CustomAgentInput,
@@ -60,6 +61,8 @@ interface CreateAgentBody {
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // 必须登录才能创建 agent
+  await requireAuth();
   try {
     const body = (await req.json()) as CreateAgentBody;
 

@@ -158,30 +158,34 @@ function findOrCreateSamlUser(userInfo: SamlUserInfo): { id: string; email: stri
     return { id: existingUser.id, email: existingUser.email, name: existingUser.name ?? undefined };
   }
 
-  // Create a new user
-  const newUser = db
-    .insert(users)
-    .values({
-      email: userInfo.email,
-      name: userInfo.name || null,
-      role: 'user',
-    })
-    .returning()
-    .get();
+  // Create a new user and SAML account link atomically — if the account
+  // insert fails the user insert is rolled back, avoiding orphan users.
+  const result = db.transaction(() => {
+    const newUser = db
+      .insert(users)
+      .values({
+        email: userInfo.email,
+        name: userInfo.name || null,
+        role: 'user',
+      })
+      .returning()
+      .get();
 
-  // Create the SAML account link
-  db.insert(accounts)
-    .values({
-      userId: newUser.id,
-      type: 'saml',
-      provider: 'saml',
-      providerAccountId: userInfo.id,
-    })
-    .run();
+    db.insert(accounts)
+      .values({
+        userId: newUser.id,
+        type: 'saml',
+        provider: 'saml',
+        providerAccountId: userInfo.id,
+      })
+      .run();
 
-  log.info(`SAML: Created new user ${newUser.id} for ${userInfo.email}`);
+    return newUser;
+  });
 
-  return { id: newUser.id, email: newUser.email, name: newUser.name ?? undefined };
+  log.info(`SAML: Created new user ${result.id} for ${userInfo.email}`);
+
+  return { id: result.id, email: result.email, name: result.name ?? undefined };
 }
 
 export async function POST(req: NextRequest) {

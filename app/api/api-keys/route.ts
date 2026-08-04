@@ -22,7 +22,7 @@ const createApiKeySchema = z.object({
 });
 
 /** GET /api/api-keys — 列出当前用户的 API keys（支持分页） */
-export async function GET(req: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest) => {
   try {
     const session = await requirePermission('apikey:manage');
     const userId = (session.user as { id: string }).id;
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     log.error('Failed to list API keys:', error);
     return apiError('INTERNAL_ERROR', 500, 'Failed to list API keys');
   }
-}
+});
 
 /** POST /api/api-keys — 创建新 API key（明文仅返回一次） */
 export const POST = withApiHandler(async (req: NextRequest) => {

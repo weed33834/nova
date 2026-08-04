@@ -118,10 +118,11 @@ export async function checkModelAvailability(
     };
   }
 
-  // Determine the base URL
+  // Determine the base URL — use the provider's explicit URL, then the global
+  // OPENAI_BASE_URL env (set for CN mirrors), and only fall back to the Openai default.
   const effectiveBaseUrl =
     baseUrl ??
-    (providerId === 'openai' ? process.env.OPENAI_BASE_URL : undefined) ??
+    process.env.OPENAI_BASE_URL ??
     'https://api.openai.com/v1';
 
   // Check cache

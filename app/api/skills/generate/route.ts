@@ -15,6 +15,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 import { validateCustomSkill } from '@/lib/agent/tools/custom-skill';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { callLLM } from '@/lib/ai/llm';
@@ -34,7 +35,8 @@ const SYSTEM_PROMPT = [
   '  "summary": "One-line summary (<=200 chars)",',
   '  "description": "2-4 sentences telling the agent when and how to call this tool",',
   '  "promptTemplate": "The prompt body. Reference parameters as {{paramName}}. Be specific about the desired output format.",',
-  '  "parameters": [ { "name": "paramName", "type": "string"|"number"|"boolean", "description": "...", "required": true } ]',
+  '  "parameters": [ { "name": "paramName", "type": "string"|"number"|"boolean", "description": "...", "required": true } ],',
+  '  "enabled": true,',
   '}',
   'Rules:',
   '- id must match /^[a-z0-9_-]+$/ and not be a reserved id (read_scene_content, regenerate_scene, regenerate_scene_actions, edit_interactive_html, edit_elements).',
@@ -48,6 +50,8 @@ interface GenerateBody {
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // AI 生成消耗 LLM 额度，必须登录
+  await requireAuth();
   try {
     const body = (await req.json().catch(() => ({}))) as GenerateBody;
     const description =
@@ -91,7 +95,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     // generated spec was rejected.
     const stampable =
       parsed && typeof parsed === 'object'
-        ? { ...parsed, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+        ? { enabled: true, ...parsed, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
         : parsed;
     const errors = validateCustomSkill(stampable, { isNew: true });
     if (errors.length > 0) {

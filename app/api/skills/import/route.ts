@@ -11,6 +11,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 import { CustomSkill, validateCustomSkill } from '@/lib/agent/tools/custom-skill';
 import {
   readCustomSkill,
@@ -28,6 +29,7 @@ interface ImportBody {
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  await requireAuth();
   try {
     const body = (await req.json()) as ImportBody;
     const overwrite = body.overwrite === true;

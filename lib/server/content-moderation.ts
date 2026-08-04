@@ -64,9 +64,9 @@ export async function moderateContent(content: string): Promise<ModerationResult
   }
 
   try {
-    // Use the OpenAI Moderation API directly via fetch for Edge compatibility.
-    // `omni-moderation-latest` is the current model.
-    const response = await fetch('https://api.openai.com/v1/moderations', {
+    // Use the OpenAI Moderation API — respects OPENAI_BASE_URL for CN mirror routing.
+    const moderationUrl = `${process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'}/moderations`;
+    const response = await fetch(moderationUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

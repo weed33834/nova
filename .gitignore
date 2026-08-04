@@ -27,6 +27,7 @@ CLAUDE.local.md
 
 # next.js
 /.next/
+/.next-tmp/
 /out/
 
 # production
@@ -78,8 +79,6 @@ next-env.d.ts
 # competition / delivery documents
 docs/competition/
 MULTI_AGENT_DELIVERY.md
-# Real server provider credentials are local-only; keep the sanitized template tracked.
-server-providers.yml
 # Eval results
 eval/whiteboard-layout/results/
 eval/outline-language/results/

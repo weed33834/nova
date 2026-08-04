@@ -37,8 +37,9 @@ const SECURITY_HEADERS: Record<string, string> = {
   'x-frame-options': 'SAMEORIGIN',
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'strict-origin-when-cross-origin',
-  'permissions-policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
-  'x-dns-prefetch-control': 'on',
+  // 与 next.config.ts 保持一致：课堂使用麦克风/摄像头
+  'permissions-policy': 'camera=(self), microphone=(self), geolocation=(), browsing-topics=()',
+  'x-dns-prefetch-control': 'off',
   'strict-transport-security': 'max-age=63072000; includeSubDomains; preload',
 };
 

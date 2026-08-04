@@ -67,10 +67,10 @@ export const accounts = sqliteTable('accounts', {
 }, (table) => ({
   userIdx: index('accounts_user_id_idx').on(table.userId),
   providerIdx: index('accounts_provider_idx').on(table.provider),
+  pk: primaryKey({ columns: [table.provider, table.providerAccountId] }),
 }));
 
-// NextAuth Drizzle adapter expects a composite PK on accounts.
-// (Drizzle's primaryKey helper is used in the relations below.)
+// NextAuth Drizzle adapter 需要 (provider, provider_account_id) 复合主键。
 
 export const sessions = sqliteTable('sessions', {
   sessionToken: text('session_token').primaryKey(),
@@ -307,7 +307,7 @@ export const contentVersions = sqliteTable('content_versions', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  classroomId: text('classroom_id').notNull(),
+  classroomId: text('classroom_id').notNull().references(() => classrooms.id, { onDelete: 'cascade' }),
   version: integer('version').notNull(), // incrementing version number
   // Snapshot
   stageJson: text('stage_json').notNull(),

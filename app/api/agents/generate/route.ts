@@ -15,6 +15,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 import { validateCustomAgent } from '@/lib/server/agent-storage';
 import { resolveModelFromRequest } from '@/lib/server/resolve-model';
 import { callLLM } from '@/lib/ai/llm';
@@ -50,6 +51,8 @@ interface GenerateBody {
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // AI 生成消耗 LLM 额度，必须登录
+  await requireAuth();
   try {
     const body = (await req.json().catch(() => ({}))) as GenerateBody;
     const description =

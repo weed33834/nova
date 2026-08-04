@@ -10,6 +10,25 @@
     "url": "https://gitcode.com/badhope/nova.git"
   },
   "homepage": "https://gitcode.com/badhope/nova",
+  "bugs": {
+    "url": "https://gitcode.com/badhope/nova/issues"
+  },
+  "keywords": [
+    "ai",
+    "education",
+    "classroom",
+    "multi-agent",
+    "llm",
+    "slides",
+    "nextjs",
+    "react",
+    "typescript",
+    "langgraph",
+    "teaching",
+    "course-generator",
+    "interactive-learning",
+    "open-source"
+  ],
   "engines": {
     "node": ">=22 <23"
   },

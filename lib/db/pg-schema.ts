@@ -63,6 +63,7 @@ export const accounts = pgTable('accounts', {
 }, (table) => ({
   userIdx: index('accounts_user_id_idx').on(table.userId),
   providerIdx: index('accounts_provider_idx').on(table.provider),
+  pk: primaryKey({ columns: [table.provider, table.providerAccountId] }),
 }));
 
 export const sessions = pgTable('sessions', {
@@ -128,6 +129,28 @@ export const skills = pgTable('skills', {
 }, (table) => ({
   ownerIdx: index('skills_owner_id_idx').on(table.ownerId),
   categoryIdx: index('skills_category_idx').on(table.category),
+}));
+
+// ---------------------------------------------------------------------------
+// Agents — platform teacher agents
+// ---------------------------------------------------------------------------
+
+export const agents = pgTable('agents', {
+  id: text('id').primaryKey(),
+  ownerId: text('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  role: text('role').notNull(),
+  systemPrompt: text('system_prompt').notNull(),
+  voice: text('voice'),
+  avatar: text('avatar'),
+  allowedActionsJson: text('allowed_actions_json').notNull().default('[]'),
+  enabled: boolean('enabled').notNull().default(true),
+  category: text('category'),
+  createdAt: integer('created_at').notNull().default(0), // epoch ms
+  updatedAt: integer('updated_at').notNull().default(0), // epoch ms
+}, (table) => ({
+  ownerIdx: index('agents_owner_id_idx').on(table.ownerId),
+  categoryIdx: index('agents_category_idx').on(table.category),
 }));
 
 // ---------------------------------------------------------------------------
@@ -246,7 +269,7 @@ export const contentVersions = pgTable('content_versions', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  classroomId: text('classroom_id').notNull(),
+  classroomId: text('classroom_id').notNull().references(() => classrooms.id, { onDelete: 'cascade' }),
   version: integer('version').notNull(),
   stageJson: text('stage_json').notNull(),
   scenesJson: text('scenes_json').notNull(),

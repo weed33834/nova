@@ -12,6 +12,7 @@
 import type { NextRequest } from 'next/server';
 import { apiSuccess, apiError, apiErrorLogged } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { SKILL_CATALOG, V0_ALLOWLIST } from '@/lib/agent/tools/registry';
 import {
@@ -76,6 +77,8 @@ interface CreateSkillBody {
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // 必须登录才能创建 skill
+  await requireAuth();
   try {
     const body = (await req.json()) as CreateSkillBody;
     const now = new Date().toISOString();

@@ -102,8 +102,8 @@ function createPinoInstance(): pino.Logger {
     },
   };
 
-  if (isDev) {
-    // Pretty-printed output for development
+  if (isDev && typeof pino.transport === 'function') {
+    // Pretty-printed output for development (Node only; browser shim has no transport)
     return pino(baseConfig, pino.transport({
       target: 'pino-pretty',
       options: {

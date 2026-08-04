@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   PanelLeftClose,
@@ -76,6 +76,28 @@ export function SceneSidebar({
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Track active drag handlers so we can clean them up if the component
+  // unmounts during an active resize (e.g. route navigation while dragging).
+  const dragState = useRef<{
+    active: boolean;
+    move: ((e: PointerEvent) => void) | null;
+    end: ((e: PointerEvent) => void) | null;
+  }>({ active: false, move: null, end: null });
+
+  useEffect(() => {
+    const ds = dragState.current;
+    return () => {
+      if (ds.active) {
+        if (ds.move) document.removeEventListener('pointermove', ds.move);
+        if (ds.end) {
+          document.removeEventListener('pointerup', ds.end);
+          document.removeEventListener('pointercancel', ds.end);
+        }
+        ds.active = false;
+      }
+    };
+  }, []);
+
   // Combined mouse + touch resize handler. The previous implementation only
   // listened for `mousemove`/`mouseup`, so a tablet / iPad with a stylus or
   // finger couldn't resize the sidebar. Pointer events cover mouse, touch,
@@ -101,6 +123,10 @@ export function SceneSidebar({
 
       const handleEnd = (pe: PointerEvent) => {
         setIsDragging(false);
+        document.removeEventListener('pointermove', handleMove);
+        document.removeEventListener('pointerup', handleEnd);
+        document.removeEventListener('pointercancel', handleEnd);
+        dragState.current.active = false;
         const target = e.currentTarget as HTMLDivElement;
         try {
           if (target.hasPointerCapture(pe.pointerId)) {
@@ -122,6 +148,7 @@ export function SceneSidebar({
       document.addEventListener('pointermove', handleMove);
       document.addEventListener('pointerup', handleEnd);
       document.addEventListener('pointercancel', handleEnd);
+      dragState.current = { active: true, move: handleMove, end: handleEnd };
     },
     [sidebarWidth],
   );

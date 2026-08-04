@@ -185,6 +185,10 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         } catch {
           // Writer may already be closed
         }
+      } finally {
+        // 确保 writer 一定被关闭，防止资源泄漏
+        stopHeartbeat();
+        try { await writer.close(); } catch { /* already closed */ }
       }
     })();
 

@@ -58,17 +58,47 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     /**
+     * Prevent disabled users from signing in via OAuth providers.
+     * Credentials login is already checked in `authorize`, but OAuth tokens
+     * can persist across sessions — this gate ensures a disabled OAuth user
+     * cannot re-authenticate.
+     */
+    async signIn({ user, account }) {
+      // Credentials login: `authorize` already checked `user.disabled`.
+      if (account?.provider === 'credentials') return true;
+      // OAuth login: re-verify the user is still active.
+      if (user.id) {
+        const db = getDb();
+        const dbUser = db.select().from(users).where(eq(users.id, user.id)).get();
+        if (!dbUser || dbUser.disabled) return false;
+      }
+      return true;
+    },
+    /**
      * Inject the user's role and id into the JWT so the session callback can
      * surface them to the client without an extra DB hit on every request.
+     *
+     * On `trigger: 'update'` (used when an admin changes a user's role),
+     * re-read the `disabled` and `role` fields from the DB so the session
+     * reflects changes immediately — no need to wait for the JWT to expire.
      */
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      if (trigger === 'update' && token.id) {
+        // Refresh disabled/role from DB so admin changes take effect instantly.
+        const db = getDb();
+        const dbUser = db.select({ disabled: users.disabled, role: users.role })
+          .from(users).where(eq(users.id, token.id as string)).get();
+        if (!dbUser || dbUser.disabled) {
+          // User was disabled or deleted — return empty token to force logout.
+          return {};
+        }
+        token.role = dbUser.role;
+      }
       // On first sign-in (user is defined), persist id + role from the DB.
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: Role }).role ?? 'user';
       }
-      // For OAuth sign-in, the account is available on the first callback;
-      // for credentials it's handled by the initial population above.
       return token;
     },
     /**

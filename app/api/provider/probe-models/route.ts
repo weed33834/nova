@@ -5,6 +5,7 @@ import { sanitizedErrorDetails } from '@/lib/server/llm-error-response';
 import { validateUrlForSSRF } from '@/lib/server/ssrf-guard';
 import { fetchModels, ModelFetchError } from '@/lib/server/model-fetch';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 
 const log = createLogger('ProbeModels');
 
@@ -24,6 +25,8 @@ export const maxDuration = 30;
  * a typed status so the UI can fall back to manual model entry.
  */
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // 探测外部模型端点，必须登录
+  await requireAuth();
   try {
     const body = await req.json();
     const { baseUrl, apiKey, modelsUrl } = body as {

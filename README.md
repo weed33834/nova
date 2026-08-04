@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="./README.md">English</a> · <a href="./README-zh.md">中文</a> · <a href="./README-ja.md">日本語</a>
+  <a href="./README.md">English</a> · <a href="./README-zh.md">中文</a>
 </p>
 
 <p align="center">
@@ -239,15 +239,12 @@ Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING
 
 ## Mirrors / 镜像
 
-This repository is primarily hosted on **GitHub** and mirrored to GitCode and Gitee for accessibility.
+| Platform | URL | Role |
+|----------|-----|------|
+| **GitCode** (primary) | https://gitcode.com/badhope/nova | Canonical source, issues & PRs |
+| GitHub (mirror) | https://github.com/weed33834/nova | Read-only mirror |
 
-| Platform | URL |
-|----------|-----|
-| **GitHub** (primary) | https://github.com/weed33834/nova |
-| GitCode (mirror) | https://gitcode.com/badhope/nova |
-| Gitee (mirror) | https://gitee.com/badhope/nova |
-
-> Content is synchronized manually across platforms. GitHub is the canonical source.
+> GitCode is the primary development platform. GitHub is a read-only mirror — please open issues and pull requests on GitCode.
 
 ## License
 

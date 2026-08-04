@@ -41,6 +41,16 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     return apiError('MISSING_REQUIRED_FIELD', 400, 'Missing "file" field');
   }
 
+  // 防止大文件撑爆内存（Buffer.from 会全量加载到内存）
+  const MAX_UPLOAD_SIZE = 25 * 1024 * 1024; // 25 MB
+  if (file.size > MAX_UPLOAD_SIZE) {
+    return apiError(
+      'INVALID_REQUEST',
+      413,
+      `File too large: ${(file.size / 1024 / 1024).toFixed(1)} MB (max ${MAX_UPLOAD_SIZE / 1024 / 1024} MB)`,
+    );
+  }
+
   try {
     const provider = getStorageProvider();
     const buffer = Buffer.from(await file.arrayBuffer());

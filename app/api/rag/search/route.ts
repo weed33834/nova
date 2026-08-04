@@ -10,6 +10,7 @@
 import type { NextRequest } from 'next/server';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
 import { withApiHandler } from '@/lib/server/api-handler';
+import { requireAuth } from '@/lib/auth/rbac';
 import { retrieve } from '@/lib/rag/retrieval';
 
 // Embedding generation is a single upstream call; cap well under the platform
@@ -22,6 +23,8 @@ interface SearchBody {
 }
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // RAG 搜索消耗嵌入模型额度，必须登录
+  await requireAuth();
   let body: SearchBody;
   try {
     body = (await req.json()) as SearchBody;

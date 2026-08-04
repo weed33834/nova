@@ -136,7 +136,15 @@ async function handleMcpRequest(req: NextRequest): Promise<Response> {
   //    注意：Next 的 Request body 只能读一次，SDK 内部会 req.json()，我们
   //    不能预读 body。直接传 req 即可。
   try {
-    const response = await state.transport.handleRequest(req as unknown as Request);
+    // MCP SDK transport 要求 Accept 头含 application/json 或 text/event-stream。
+    // NextRequest.headers 只读，通过克隆 Request 注入缺失的 Accept 头。
+    const mcpReq = new Request(req.url, {
+      method: req.method,
+      headers: { ...Object.fromEntries(req.headers), accept: 'application/json, text/event-stream' },
+      body: req.body,
+      duplex: 'half',
+    } as RequestInit);
+    const response = await state.transport.handleRequest(mcpReq);
     return new Response(response.body, {
       status: response.status,
       headers: response.headers,

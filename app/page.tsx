@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef, useDeferredValue } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, useDeferredValue, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowUp,
@@ -35,9 +36,7 @@ import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
 import { Textarea as UITextarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { SettingsDialog } from '@/components/settings';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
-import { AgentBar } from '@/components/agent/agent-bar';
 import { useTheme } from '@/lib/hooks/use-theme';
 import { nanoid } from 'nanoid';
 import { deleteDocumentBlob, storeDocumentBlob } from '@/lib/utils/image-storage';
@@ -60,7 +59,6 @@ import {
   getFirstSlideByStages,
   revokeThumbnailSlideMediaUrls,
 } from '@/lib/utils/stage-storage';
-import { SlideThumbnail } from '@/components/slide-renderer/SlideThumbnail';
 import type { Slide } from '@nova/dsl';
 import { useMediaGenerationStore } from '@/lib/store/media-generation';
 import { toast } from 'sonner';
@@ -77,7 +75,6 @@ import type { SlideContent } from '@/lib/types/stage';
 import { makeScene } from '@/lib/types/stage';
 import { InteractiveModeButton } from '@/components/generation/interactive-mode-button';
 import { CourseFormatSelector } from '@/components/generation/course-format-selector';
-import { ProfileVisualizer } from '@/components/profile/ProfileVisualizer';
 import { LearningPathPanel } from '@/components/adaptive/learning-path-panel';
 import { useProfileStore } from '@/lib/store/profile';
 import { TipsCarousel } from '@/components/ui/tips-carousel';
@@ -88,7 +85,13 @@ import { DemoSeedButton } from '@/components/demo-seed-button';
 import { preloadData } from '@/lib/utils/preloader';
 import { cacheFetch } from '@/lib/utils/cache';
 import { useOnboardingStore } from '@/lib/store/onboarding';
-import { IntroScreen } from '@/components/onboarding/intro-screen';
+
+// ── 性能优化：重型组件按需懒加载（不阻塞首屏）──
+const SettingsDialog = dynamic(() => import('@/components/settings').then(m => ({ default: m.SettingsDialog })), { ssr: false });
+const AgentBar = dynamic(() => import('@/components/agent/agent-bar').then(m => ({ default: m.AgentBar })), { ssr: false });
+const SlideThumbnail = dynamic(() => import('@/components/slide-renderer/SlideThumbnail').then(m => ({ default: m.SlideThumbnail })), { ssr: false });
+const ProfileVisualizer = dynamic(() => import('@/components/profile/ProfileVisualizer').then(m => ({ default: m.ProfileVisualizer })), { ssr: false });
+const IntroScreen = dynamic(() => import('@/components/onboarding/intro-screen').then(m => ({ default: m.IntroScreen })), { ssr: false });
 
 const log = createLogger('Home');
 

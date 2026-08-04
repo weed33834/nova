@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // Next's standalone trace chunks can contain ':' on Windows. Generate the
   // Docker-only standalone artifact on POSIX hosts, and use normal output locally.
   output: process.env.VERCEL || process.platform === 'win32' ? undefined : 'standalone',
-  transpilePackages: ['mathml2omml', 'pptxgenjs', '@nova/importer'],
+  transpilePackages: ['mathml2omml', 'pptxgenjs', '@nova/importer', '@nova/renderer', '@nova/dsl', '@nova/storage'],
   serverExternalPackages: [
     '@earendil-works/pi-ai',
     '@earendil-works/pi-agent-core',
@@ -13,19 +13,44 @@ const nextConfig: NextConfig = {
     '@node-saml/passport-saml',
   ],
   experimental: {
-    proxyClientMaxBodySize: '200mb',
+    proxyClientMaxBodySize: '100mb',
     optimizePackageImports: [
       'lucide-react',
       'motion',
       '@radix-ui/react-popover',
       'embla-carousel-react',
       'sonner',
+      // 重型依赖：首屏不需要立即加载，分割进独立 chunk
+      'echarts',
+      'shiki',
+      '@langchain/core',
+      '@langchain/langgraph',
+      '@xyflow/react',
+      'next-auth',
+      'katex',
+      'prosemirror-view',
+      'prosemirror-state',
+      'prosemirror-model',
+      // 审计新增：进一步减少首屏bundle体积
+      'ai',                       // Vercel AI SDK (~200KB)
+      '@assistant-ui/react',      // 聊天UI组件库 (~200KB)
+      'jszip',                    // ZIP处理 — 仅导出时用
+      'zustand',                  // 状态管理
+      'zod',                      // 验证 — v4体积增大
+      'immer',                    // 不可变状态
+      'react-i18next',            // i18n框架
     ],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    // 允许课堂内容引用外部图片 CDN（根据需要添加域名）
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.githubusercontent.com' },
+      { protocol: 'https', hostname: '**.unsplash.com' },
+      { protocol: 'https', hostname: '**.wikimedia.org' },
+    ],
   },
   // Disable type checking during dev for faster startup.
   // Also skip when SKIP_TS_CHECK is set — tsc --noEmit is run separately in CI
