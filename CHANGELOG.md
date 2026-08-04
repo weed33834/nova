@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] — 2026-08-04
+
+### Security
+- **Auth: signIn callback** — Block disabled OAuth users from re-authenticating.
+- **Auth: jwt callback** — Re-check `disabled` and `role` on `trigger: 'update'`, force logout if user was disabled.
+- **Auth: 8 API routes** — Added `requireAuth()` to POST routes for agents CRUD+import+generate, skills CRUD+import+generate, rag/search, and provider/probe-models.
+- **Auth: api-keys GET** — Wrapped with `withApiHandler` for proper 401 responses on unauthenticated requests.
+
+### Performance
+- **5 lazy-loaded components** — SettingsDialog, AgentBar, SlideThumbnail, ProfileVisualizer, IntroScreen converted to `next/dynamic`, reducing initial bundle size.
+- **optimizePackageImports** — Expanded from 5 to 20 packages (echarts, shiki, langchain, zustand, zod, etc.).
+
+### Fixed
+- **Hardcoded OpenAI URLs** — `content-moderation.ts`, `model-preflight.ts` now use env-configured `OPENAI_BASE_URL`.
+- **renderer tsc** — Added `"types": ["node"]` to tsconfig, fixing `process` type errors.
+- **pino.transport** — Browser guard prevents crash when Turbopack bundles server logger into client.
+- **scene-sidebar leak** — `handleEnd` now calls `removeEventListener` for pointer events.
+- **chat SSE leak** — Added `finally` block to ensure writer is always closed.
+- **storage upload** — 25MB file size limit to prevent OOM.
+- **proxy.ts** — `permissions-policy` synchronized with next.config.ts; `x-dns-prefetch-control` set to `off`.
+- **proxyClientMaxBodySize** — Reduced from 200mb to 100mb.
+
+### Database
+- **pg-schema** — Added missing `agents` table and `contentVersions.classroomId` FK with `ON DELETE CASCADE`.
+- **accounts table** — Added composite PK `(provider, provider_account_id)`.
+- **SAML ACS** — User+account creation wrapped in `db.transaction()`.
+
+### Documentation
+- **README-zh.md** — Complete Chinese README.
+- **README.md** — Fixed mirror section (GitCode primary, GitHub mirror).
+- **Badge links** — Now link to respective project pages instead of `#`.
+
 ## [Unreleased]
 
 ### Fixed
