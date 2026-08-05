@@ -2279,5 +2279,27 @@
   "greeting": {
     "hi": "你好，{{name}}",
     "readyToLearn": "准备好一起学习了吗？"
+  },
+  "capabilityStatus": {
+    "title": "功能能力状态",
+    "subtitle": "（可选依赖是否已安装）",
+    "copyAll": "复制全部安装命令",
+    "copied": "安装命令已复制",
+    "copyFailed": "复制失败，请手动复制命令",
+    "copyCmd": "复制安装命令",
+    "allInstalled": "所有可选功能均已安装，完整可用。",
+    "someMissing": "有 {{count}} 项功能未安装。未安装的功能将显示为灰色，安装后即可启用。",
+    "installHint": "安装: ",
+    "caps": {
+      "charts": "数据图表",
+      "codeHighlight": "代码高亮",
+      "math": "数学公式",
+      "agentFramework": "智能体编排框架",
+      "mcp": "MCP 工具接入",
+      "docParse": "文档解析",
+      "objectStorage": "对象存储",
+      "zipExport": "压缩导出",
+      "fonts": "扩展字体"
+    }
   }
 }

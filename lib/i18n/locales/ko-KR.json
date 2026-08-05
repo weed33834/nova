@@ -2279,5 +2279,27 @@
   "greeting": {
     "hi": "안녕하세요, {{name}}",
     "readyToLearn": "함께 배울 준비가 되셨나요?"
+  },
+  "capabilityStatus": {
+    "title": "Capability Status",
+    "subtitle": "(optional dependency status)",
+    "copyAll": "Copy all install commands",
+    "copied": "Install command copied",
+    "copyFailed": "Copy failed — please copy the command manually",
+    "copyCmd": "Copy install command",
+    "allInstalled": "All optional features are installed and fully available.",
+    "someMissing": "{{count}} optional feature(s) not installed. Missing features are greyed out and become available after install.",
+    "installHint": "Install: ",
+    "caps": {
+      "charts": "Data Charts",
+      "codeHighlight": "Code Highlight",
+      "math": "Math Formulas",
+      "agentFramework": "Agent Framework",
+      "mcp": "MCP Tools",
+      "docParse": "Document Parsing",
+      "objectStorage": "Object Storage",
+      "zipExport": "Zip Export",
+      "fonts": "Extended Fonts"
+    }
   }
 }
