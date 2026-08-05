@@ -55,7 +55,7 @@ describe('createNovaMcpServer — 暴露面注册', () => {
     });
 
     const { createNovaMcpServer } = await import('@/lib/mcp/server/nova-server');
-    const server = createNovaMcpServer();
+    const server = await createNovaMcpServer();
 
     expect(server).toBe(fakeInstance);
     // parse_document 工具恰好注册一次。
@@ -87,7 +87,7 @@ describe('createNovaMcpServer — 暴露面注册', () => {
     });
 
     const { createNovaMcpServer } = await import('@/lib/mcp/server/nova-server');
-    createNovaMcpServer();
+    await createNovaMcpServer();
 
     for (const call of mocks.registerResource.mock.calls) {
       const config = call[2] as { mimeType?: string };
@@ -118,7 +118,7 @@ describe('parse_document 回调 —— 直接测注册时传入的函数', () =>
       return fakeInstance;
     });
     const { createNovaMcpServer } = await import('@/lib/mcp/server/nova-server');
-    createNovaMcpServer();
+    await createNovaMcpServer();
     const lastCall = mocks.registerTool.mock.calls[mocks.registerTool.mock.calls.length - 1];
     parseCallback = lastCall[2] as typeof parseCallback;
   }

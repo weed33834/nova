@@ -19,6 +19,41 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('MCPClientManager');
 
+// ─── SDK 惰性加载（进程级缓存） ───────────────────────────────────────────────
+// MCP SDK 是可选依赖：只在首次连接时动态 import 一次，之后复用缓存引用。
+// 好处：
+//  1. 未安装 SDK 时（core-only 安装）连接直接报指引错误，不阻断启动；
+//  2. 避免每次 connect 重复解析 node_modules（连接是高频路径）；
+//  3. 规避 vitest 对「并发多次动态 import node_modules 模块」的 vi.mock
+//     竞态——多个 connectOne 并发时共享同一个加载 Promise，保证拿到一致引用。
+interface McpSdkModule {
+  Client: typeof import('@modelcontextprotocol/sdk/client/index.js')['Client'];
+  StdioClientTransport: typeof import('@modelcontextprotocol/sdk/client/stdio.js')['StdioClientTransport'];
+  StreamableHTTPClientTransport: typeof import('@modelcontextprotocol/sdk/client/streamableHttp.js')['StreamableHTTPClientTransport'];
+}
+let sdkPromise: Promise<McpSdkModule> | null = null;
+function loadMcpSdk(): Promise<McpSdkModule> {
+  if (!sdkPromise) {
+    sdkPromise = (async () => {
+      const [index, stdio, http] = await Promise.all([
+        import('@modelcontextprotocol/sdk/client/index.js'),
+        import('@modelcontextprotocol/sdk/client/stdio.js'),
+        import('@modelcontextprotocol/sdk/client/streamableHttp.js'),
+      ]);
+      return {
+        Client: index.Client,
+        StdioClientTransport: stdio.StdioClientTransport,
+        StreamableHTTPClientTransport: http.StreamableHTTPClientTransport,
+      };
+    })().catch((err) => {
+      // 加载失败（通常是未安装）：重置缓存，下次调用可重试并给出指引错误
+      sdkPromise = null;
+      throw err;
+    });
+  }
+  return sdkPromise;
+}
+
 interface ManagedServer {
   config: MCPServerConfig;
   /** Present only when the connection succeeded. */
@@ -96,17 +131,17 @@ export class MCPClientManager {
     await this.disconnect(config.id);
 
     try {
-      // MCP SDK 为可选依赖：运行时动态加载，未安装时连接失败并给出明确指引
-      let ClientCtor: typeof import('@modelcontextprotocol/sdk/client/index.js')['Client'];
+      // MCP SDK 为可选依赖：进程级缓存加载，未安装时连接失败并给出明确指引
+      let sdk: McpSdkModule;
       try {
-        ({ Client: ClientCtor } = await import('@modelcontextprotocol/sdk/client/index.js'));
+        sdk = await loadMcpSdk();
       } catch {
         throw new Error(
           'MCP 接入需要可选依赖 @modelcontextprotocol/sdk，请执行 pnpm add @modelcontextprotocol/sdk 后重试。',
         );
       }
-      const transport = await this.buildTransport(config);
-      const client = new ClientCtor({ name: 'nova-agent', version: '1.0.0' }, { capabilities: {} });
+      const transport = await this.buildTransport(config, sdk);
+      const client = new sdk.Client({ name: 'nova-agent', version: '1.0.0' }, { capabilities: {} });
       await client.connect(transport);
       const result = await client.listTools();
       const tools: MCPDiscoveredTool[] = (result.tools ?? []).map((t) => ({
@@ -140,18 +175,8 @@ export class MCPClientManager {
     }
   }
 
-  private async buildTransport(config: MCPServerConfig): Promise<Transport> {
-    // 动态加载 transport 类（MCP SDK 为可选依赖）
-    let stdioCtor: typeof import('@modelcontextprotocol/sdk/client/stdio.js')['StdioClientTransport'];
-    let httpCtor: typeof import('@modelcontextprotocol/sdk/client/streamableHttp.js')['StreamableHTTPClientTransport'];
-    try {
-      ({ StdioClientTransport: stdioCtor } = await import('@modelcontextprotocol/sdk/client/stdio.js'));
-      ({ StreamableHTTPClientTransport: httpCtor } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js'));
-    } catch {
-      throw new Error(
-        'MCP 接入需要可选依赖 @modelcontextprotocol/sdk，请执行 pnpm add @modelcontextprotocol/sdk 后重试。',
-      );
-    }
+  private async buildTransport(config: MCPServerConfig, sdk: McpSdkModule): Promise<Transport> {
+    const { StdioClientTransport: stdioCtor, StreamableHTTPClientTransport: httpCtor } = sdk;
     if (config.transport === 'stdio') {
       if (!config.command) {
         throw new Error('stdio transport requires a "command"');
