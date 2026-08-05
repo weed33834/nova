@@ -2101,7 +2101,8 @@
       "unitToken": "tokens",
       "unitImage": "images",
       "unitSecond": "sec",
-      "unitCharacter": "chars"
+      "unitCharacter": "chars",
+      "loadingChart": "Loading chart…"
     },
     "tokenPlan": {
       "nav": "Token Plan",

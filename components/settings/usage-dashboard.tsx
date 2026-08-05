@@ -344,7 +344,13 @@ export function UsageDashboard() {
       <div className="rounded-lg border p-3">
         <div className="text-xs text-muted-foreground mb-2">{t('settings.usage.dailyTrend')}</div>
         {byDay.length > 0 ? (
-          <div ref={chartRef} style={{ width: '100%', height: 200 }} />
+          chartReady ? (
+            <div ref={chartRef} style={{ width: '100%', height: 200 }} />
+          ) : (
+            <div className="h-[120px] flex items-center justify-center text-sm text-muted-foreground">
+              {t('settings.usage.loadingChart')}
+            </div>
+          )
         ) : (
           <div className="h-[120px] flex items-center justify-center text-sm text-muted-foreground">
             {t('settings.usage.empty')}

@@ -1702,7 +1702,8 @@
       "unitToken": "tokens",
       "unitImage": "images",
       "unitSecond": "sec",
-      "unitCharacter": "chars"
+      "unitCharacter": "chars",
+      "loadingChart": "Загрузка графика…"
     },
     "tokenPlan": {
       "nav": "Token Plan",

@@ -198,10 +198,8 @@ async function directorNode(
   }
 
   // ── Multi agent: LLM-based decision ──
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const agents: AgentConfig[] = (state.availableAgentIds as any[])
+  const agents: AgentConfig[] = (state.availableAgentIds as AgentConfig['id'][])
     .map((id: string) => resolveAgent(state, id))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((a: AgentConfig | undefined): a is AgentConfig => a != null);
 
   if (agents.length === 0) {

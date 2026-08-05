@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useMemo, useState } from 'react';
-import tinycolor from 'tinycolor2';
 import type { ChartData, ChartOptions, ChartType } from '@nova/dsl';
 import { getChartOption } from './chartOption';
 
@@ -78,7 +77,6 @@ export function Chart({
     };
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateOption = useCallbackRef(() => {
     const echarts = echartsLib;
     if (!echarts || !chartRef.current) return;
@@ -136,9 +134,12 @@ export function Chart({
 
 /**
  * 缓存回调引用：避免每次渲染重建 updateOption 导致 effect 重复触发。
+ * 注意：ref.current 只能在 effect 中更新（React 规范禁止渲染期写 ref）。
  */
 function useCallbackRef<T extends (...args: never[]) => unknown>(fn: T): T {
   const ref = useRef(fn);
-  ref.current = fn;
+  useEffect(() => {
+    ref.current = fn;
+  }, [fn]);
   return useMemo(() => ((...args: never[]) => ref.current(...args)) as T, []);
 }

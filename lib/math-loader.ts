@@ -11,7 +11,6 @@
 
 // ─── KaTeX ───────────────────────────────────────────────────────────────────
 type KatexModule = typeof import('katex')['default'];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let katexCached: KatexModule | null | undefined;
 let katexPromise: Promise<void> | null = null;
 
@@ -53,7 +52,6 @@ export async function ensureKatex(): Promise<KatexModule | null> {
 
 // ─── Temml ───────────────────────────────────────────────────────────────────
 type TemmlModule = typeof import('temml')['default'];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let temmlCached: TemmlModule | null | undefined;
 let temmlPromise: Promise<void> | null = null;
 
