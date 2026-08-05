@@ -2,6 +2,10 @@ import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
+  // 2026-08-05: 工作区 .next 被沙箱文件系统锁定（EPERM，无法删除/写入）。
+  // distDir 由流水线经 NOVA_DIST_DIR 传入（每次运行全新目录，绕开"文件出身"写限制）；
+  // 未传入时回退到 .next2。仅影响本地开发。
+  distDir: process.env.NOVA_DIST_DIR || '.next2',
   // Next's standalone trace chunks can contain ':' on Windows. Generate the
   // Docker-only standalone artifact on POSIX hosts, and use normal output locally.
   output: process.env.VERCEL || process.platform === 'win32' ? undefined : 'standalone',
@@ -11,6 +15,11 @@ const nextConfig: NextConfig = {
     '@earendil-works/pi-agent-core',
     'postgres',
     '@node-saml/passport-saml',
+    // 可选分布式限流依赖（未安装时 lib/server/rate-limit.ts 走内存回退）。
+    // 必须加入 serverExternalPackages，否则 webpack 编译时会去解析动态 import('@upstash/redis')
+    // 并报 "Module not found"，导致 /api/generate/scene-outlines-stream 返回 400。
+    '@upstash/redis',
+    '@upstash/ratelimit',
   ],
   experimental: {
     proxyClientMaxBodySize: '100mb',

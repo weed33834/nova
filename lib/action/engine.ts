@@ -48,7 +48,7 @@ import {
   wbDrawCodeMs,
   wbClearMs,
 } from '@/lib/choreography';
-import katex from 'katex';
+import { ensureKatex } from '@/lib/math-loader';
 import { createLogger } from '@/lib/logger';
 import { delay } from '@/lib/utils/async';
 
@@ -476,6 +476,12 @@ export class ActionEngine {
     if (!wb.success || !wb.data) return;
 
     try {
+      // katex 为可选依赖：动态加载，未安装时跳过公式绘制
+      const katex = await ensureKatex();
+      if (!katex) {
+        log.warn('[Whiteboard] 公式绘制需要可选依赖 katex，请执行 pnpm add katex');
+        return;
+      }
       const html = katex.renderToString(action.latex, {
         throwOnError: false,
         displayMode: true,

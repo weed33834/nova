@@ -19,6 +19,7 @@
   <a href="#测试"><img src="https://img.shields.io/badge/Tests-3160%20passed-success" alt="Tests" /></a>
   <a href="#主要特性"><img src="https://img.shields.io/badge/LLM-17%20providers-8b5cf6" alt="LLM Providers" /></a>
   <a href="#主要特性"><img src="https://img.shields.io/badge/i18n-8%20languages-pink" alt="i18n" /></a>
+  <a href="https://gitcode.com/badhope/nova"><img src="https://img.shields.io/badge/Release-0.1.3-blue" alt="Release" /></a>
 </p>
 
 ---
@@ -34,6 +35,30 @@ Nova 是一个多智能体教学平台。你在首页输入一个话题，AI 会
   <p><em>首页：输入任意话题，秒开缓存 Demo 即可体验完整课堂</em></p>
 </div>
 
+## 演示视频
+
+> 完整演示（约 10 分钟）：**真实 LLM 生成流程**（输入话题 → 大纲 → 课堂角色 → 幻灯片 → 进入课堂）+ **完整课堂交互**（播放 / 24 场景浏览 / 设置面板 14 项配置逐个演示）。
+
+<p align="center">
+  <video src="assets/Nova-完整演示-最终版.mp4" controls width="900" poster="docs/screenshots/04-classroom-playback.png">
+    您的浏览器不支持 video 标签，请<a href="assets/Nova-完整演示-最终版.mp4">下载视频</a>观看。
+  </video>
+</p>
+
+### 界面预览
+
+| 首页与主题输入 | LLM 生成过程 | 课堂播放 |
+|:---:|:---:|:---:|
+| ![首页](docs/screenshots/01-home.png) | ![生成](docs/screenshots/03-llm-generating.png) | ![课堂](docs/screenshots/04-classroom-playback.png) |
+
+| 侧边栏场景导航 | 交互演练场 | 随堂测验场景 |
+|:---:|:---:|:---:|
+| ![侧边栏](docs/screenshots/05-sidebar-scenes.png) | ![演练场](docs/screenshots/09-interactive-lab.png) | ![测验](docs/screenshots/10-quiz-scene.png) |
+
+| 设置面板 | Token 用量 | 语言模型配置 |
+|:---:|:---:|:---:|
+| ![设置](docs/screenshots/06-settings-panel.png) | ![Token](docs/screenshots/07-settings-token.png) | ![模型](docs/screenshots/08-settings-models.png) |
+
 ## 快速开始
 
 ### 环境要求
@@ -48,6 +73,12 @@ git clone https://gitcode.com/badhope/nova.git
 cd nova
 pnpm install
 ```
+
+> **安装太慢？** 见 [docs/DEPENDENCY-TIERING.md](docs/DEPENDENCY-TIERING.md) 的分级安装方案：
+> - 只想快速跑起来：`pnpm install --prod`（跳过开发工具链，1~2 分钟）
+> - 维护者按需补齐高级功能：`node scripts/install-tiers.mjs core|extras|all`
+>
+> 未安装的高级功能（图表、公式、代码高亮、MCP、文档解析等）**不会阻断启动**——对应功能自动降级（纯文本/占位提示/指引错误）。打开 **设置 → 功能能力状态** 卡片可查看已装/未装清单，并一键复制安装命令。
 
 ### 配置
 
@@ -231,8 +262,26 @@ nova/
 |------|-----|------|
 | **GitCode（主仓库）** | https://gitcode.com/badhope/nova | 代码源、Issue、PR |
 | GitHub（镜像） | https://github.com/weed33834/nova | 只读镜像 |
+| Gitee（镜像） | https://gitee.com/badhope/nova | 只读镜像 |
 
-> GitCode 是主要开发平台。请在 GitCode 提交 Issue 和 PR。
+> GitCode 是主要开发平台。请在 GitCode 提交 Issue 和 PR。三平台保持同步（`git push` 依次推送）。
+
+## 常见问题（FAQ）
+
+**Q：首页"进入课堂"按钮是灰的（disabled）？**
+A：说明没有可用的 LLM provider。检查 `.env.local` 的 `OPENAI_API_KEY` 是否有效，或参考 [server-providers.yml.example](server-providers.yml.example) 配置服务端凭据。服务端配置优先（Key 不暴露给前端）。
+
+**Q：生成时提示"模型未返回有效的场景内容"？**
+A：多为模型额度耗尽或暂时不可用。执行 `node scripts/verify-models.mjs` 探活，把可用模型填入 `.env.local` 的 `DEFAULT_MODEL` 与 `LLM_FALLBACK_MODELS`。已实测 `qwen3.8-max`（快）与 `glm-5.2`（稳）可用。
+
+**Q：本地 `pnpm dev` 打开课堂路由很慢 / 报 ChunkLoadError？**
+A：dev 模式按需编译会导致首次访问课堂路由慢（几十秒），极端情况 chunk 加载超时。演示/录制场景建议 `pnpm build && pnpm start`（生产模式，全路由预编译）。
+
+**Q：想开启"编辑课程"（Pro 模式）按钮？**
+A：在 `.env.local` 设置 `NEXT_PUBLIC_NOVA_EDITOR_ENABLED=true` 并重新构建。注意该变量需在 build 时内联到客户端产物，仅改运行环境变量不生效。
+
+**Q：遇到其他启动问题？**
+A：参见 [docs/OPERATIONS-HANDBOOK.md](docs/OPERATIONS-HANDBOOK.md) 故障排查手册（含 17 个历史问题的症状→根因→修复→防范）与启动前检查清单。
 
 ## 贡献
 

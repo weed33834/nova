@@ -24,8 +24,8 @@
  * orphaned by dev hot-reloads.
  */
 
-import { MemorySaver } from '@langchain/langgraph';
 import { createLogger } from '@/lib/logger';
+// 注意：@langchain/langgraph 为可选依赖，getCheckpointer 运行时动态加载（勿恢复静态 import）
 
 const log = createLogger('Checkpointer');
 
@@ -42,6 +42,9 @@ function getGlobal(): typeof globalThis & Record<string, unknown> {
   return globalThis as typeof globalThis & Record<string, unknown>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MemorySaverLike = any;
+
 /**
  * Returns the process-wide `MemorySaver` singleton.
  *
@@ -49,13 +52,20 @@ function getGlobal(): typeof globalThis & Record<string, unknown> {
  * call). Callers that only need to know *whether* checkpointing is active
  * should prefer {@link isCheckpointingEnabled} rather than calling this.
  */
-export function getCheckpointer(): MemorySaver {
+export async function getCheckpointer(): Promise<MemorySaverLike> {
   const g = getGlobal();
   if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = new MemorySaver();
+    const mod = await import('@langchain/langgraph').catch(() => null);
+    if (!mod?.MemorySaver) {
+      throw new Error(
+        '检查点（checkpointing）需要可选依赖 @langchain/langgraph，请执行 pnpm add @langchain/langgraph 后重试。',
+      );
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    g[GLOBAL_KEY] = new mod.MemorySaver() as any;
     log.info('LangGraph MemorySaver initialized (in-memory checkpointing)');
   }
-  return g[GLOBAL_KEY] as MemorySaver;
+  return g[GLOBAL_KEY] as MemorySaverLike;
 }
 
 /**

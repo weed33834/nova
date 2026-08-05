@@ -9,9 +9,10 @@
  */
 
 import { Readable } from 'stream';
-import Client, * as $Docmind from '@alicloud/docmind-api20220711';
-import { Config } from '@alicloud/openapi-client';
-import { RuntimeOptions } from '@alicloud/tea-util';
+// 阿里云 SDK 为可选依赖（docParse 能力）：仅 type import + 运行时动态加载（loadAliDocMind）
+import type { default as DocMindClient, SubmitDocParserJobAdvanceRequest, QueryDocParserStatusRequest, GetDocParserResultRequest, SubmitDocParserJobAdvanceRequestMultimediaParameters } from '@alicloud/docmind-api20220711';
+import type { Config as OpenApiConfig } from '@alicloud/openapi-client';
+import type { RuntimeOptions as TeaRuntimeOptions } from '@alicloud/tea-util';
 import { createLogger } from '@/lib/logger';
 import { sleep } from '@/lib/utils/async';
 import { ALIDOCMIND_DEFAULT_BASE } from '@/lib/pdf/constants';
@@ -20,6 +21,34 @@ const log = createLogger('AliDocMind');
 
 const POLL_INTERVAL_MS = 3_000;
 const POLL_MAX_MS = 15 * 60 * 1_000;
+
+/** 懒加载阿里云 SDK 模块（可选依赖），未安装时抛明确错误。 */
+let aliSdkPromise: Promise<{
+  Client: typeof DocMindClient;
+  $Docmind: typeof import('@alicloud/docmind-api20220711');
+  Config: typeof OpenApiConfig;
+  RuntimeOptions: typeof TeaRuntimeOptions;
+}> | null = null;
+function loadAliDocMind() {
+  if (!aliSdkPromise) {
+    aliSdkPromise = Promise.all([
+      import('@alicloud/docmind-api20220711'),
+      import('@alicloud/openapi-client'),
+      import('@alicloud/tea-util'),
+    ]).then(([docmind, openapi, tea]) => ({
+      Client: docmind.default,
+      $Docmind: docmind,
+      Config: openapi.Config,
+      RuntimeOptions: tea.RuntimeOptions,
+    })).catch((e) => {
+      aliSdkPromise = null; // 允许重试
+      throw new Error(
+        '文档解析（AliDocMind）需要可选依赖 @alicloud/*，请执行 pnpm add @alicloud/docmind-api20220711 @alicloud/openapi-client @alicloud/tea-util 后重试。',
+      );
+    });
+  }
+  return aliSdkPromise;
+}
 
 export interface AliDocMindCredentials {
   accessKeyId: string;
@@ -76,7 +105,8 @@ function resolveCredentials(creds: Partial<AliDocMindCredentials>): AliDocMindCr
   return { accessKeyId, accessKeySecret, endpoint };
 }
 
-function createClient(creds: AliDocMindCredentials): Client {
+async function createClient(creds: AliDocMindCredentials): Promise<DocMindClient> {
+  const { Client, Config } = await loadAliDocMind();
   const config = new Config({
     accessKeyId: creds.accessKeyId,
     accessKeySecret: creds.accessKeySecret,
@@ -101,7 +131,8 @@ export async function parseWithAliDocMindClient(
   options: AliDocMindSubmitOptions,
 ): Promise<AliDocMindResult> {
   const resolved = resolveCredentials(creds);
-  const client = createClient(resolved);
+  const { $Docmind, RuntimeOptions } = await loadAliDocMind();
+  const client = await createClient(resolved);
 
   const fileNameExtension = inferExtension(options.fileName, options.fileNameExtension);
 
@@ -181,7 +212,8 @@ export async function parseWithAliDocMindClient(
   throw new Error(`AliDocMind job ${jobId} timed out after ${POLL_MAX_MS / 1000}s`);
 }
 
-async function fetchResult(client: Client, jobId: string): Promise<Record<string, unknown>> {
+async function fetchResult(client: DocMindClient, jobId: string): Promise<Record<string, unknown>> {
+  const { $Docmind } = await loadAliDocMind();
   const STEP = 100;
   const merged: {
     layouts?: unknown[];
@@ -265,7 +297,8 @@ export async function verifyAliDocMindCredentials(
   creds: Partial<AliDocMindCredentials>,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const resolved = resolveCredentials(creds);
-  const client = createClient(resolved);
+  const { $Docmind } = await loadAliDocMind();
+  const client = await createClient(resolved);
   try {
     const res = await client.queryDocParserStatus(
       new $Docmind.QueryDocParserStatusRequest({ id: 'verify-connection-probe' }),

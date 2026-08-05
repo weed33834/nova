@@ -34,6 +34,30 @@ It is not just a slide generator. It is a full teaching system with role separat
   <p><em>Home page: enter any topic, or open the cached demo to try a full classroom instantly</em></p>
 </div>
 
+## Demo Video
+
+> ~10 min walkthrough: **real LLM generation flow** (topic → outline → agents → slides → classroom) + **full classroom interaction** (playback / 24-scene browse / 14 settings tabs).
+
+<p align="center">
+  <video src="assets/Nova-完整演示-最终版.mp4" controls width="900" poster="docs/screenshots/04-classroom-playback.png">
+    Your browser does not support the video tag. <a href="assets/Nova-完整演示-最终版.mp4">Download the video</a>.
+  </video>
+</p>
+
+### Screenshots
+
+| Home & topic input | LLM generation | Classroom playback |
+|:---:|:---:|:---:|
+| ![Home](docs/screenshots/01-home.png) | ![Generating](docs/screenshots/03-llm-generating.png) | ![Classroom](docs/screenshots/04-classroom-playback.png) |
+
+| Scene sidebar | Interactive lab | Quiz scene |
+|:---:|:---:|:---:|
+| ![Sidebar](docs/screenshots/05-sidebar-scenes.png) | ![Lab](docs/screenshots/09-interactive-lab.png) | ![Quiz](docs/screenshots/10-quiz-scene.png) |
+
+| Settings panel | Token usage | Model config |
+|:---:|:---:|:---:|
+| ![Settings](docs/screenshots/06-settings-panel.png) | ![Token](docs/screenshots/07-settings-token.png) | ![Models](docs/screenshots/08-settings-models.png) |
+
 ## Quick Start
 
 ### Prerequisites
@@ -48,6 +72,12 @@ git clone https://gitcode.com/badhope/nova.git
 cd nova
 pnpm install
 ```
+
+> **Slow install?** See [docs/DEPENDENCY-TIERING.md](docs/DEPENDENCY-TIERING.md) for tiered installs:
+> - Just want to run it fast: `pnpm install --prod` (skips dev toolchain, ~1–2 min)
+> - Maintainers, install extras on demand: `node scripts/install-tiers.mjs core|extras|all`
+>
+> Missing optional features (charts, math, code highlight, MCP, document parsing, …) **never block startup** — they degrade gracefully (plain text / placeholder / guided error). Open **Settings → Capability Status** to see what's installed vs. missing and copy the install command in one click.
 
 ### Configure
 
@@ -231,8 +261,26 @@ nova/
 |----------|-----|------|
 | **GitCode (primary)** | https://gitcode.com/badhope/nova | Canonical source, issues & PRs |
 | GitHub (mirror) | https://github.com/weed33834/nova | Read-only mirror |
+| Gitee (mirror) | https://gitee.com/badhope/nova | Read-only mirror |
 
-> GitCode is the primary development platform. GitHub is a read-only mirror — please open issues and pull requests on GitCode.
+> GitCode is the primary development platform. Please open issues and pull requests on GitCode. The three mirrors are kept in sync on every push.
+
+## FAQ
+
+**Q: The "Start" button on the home page is disabled (grey)?**
+A: No usable LLM provider is configured. Check `OPENAI_API_KEY` in `.env.local`, or configure server-side credentials in `server-providers.yml` (recommended — keys stay server-side).
+
+**Q: Generation fails with "model returned no valid scene content"?**
+A: Usually the model's quota is exhausted or temporarily unavailable. Run `node scripts/verify-models.mjs` to probe availability, then set a working model in `DEFAULT_MODEL` / `LLM_FALLBACK_MODELS`. Verified working: `qwen3.8-max` (fast) and `glm-5.2` (stable).
+
+**Q: `pnpm dev` is slow on classroom routes / ChunkLoadError?**
+A: Dev mode compiles routes on demand (tens of seconds on first visit). For demos/recordings, use `pnpm build && pnpm start` (production mode — all routes precompiled).
+
+**Q: How do I enable the "Edit Course" (Pro mode) button?**
+A: Set `NEXT_PUBLIC_NOVA_EDITOR_ENABLED=true` in `.env.local` and rebuild. This variable is inlined into client bundles at build time — runtime-only changes won't take effect.
+
+**Q: Other startup issues?**
+A: See [docs/OPERATIONS-HANDBOOK.md](docs/OPERATIONS-HANDBOOK.md) — a troubleshooting handbook with 17 historical issues (symptom → root cause → fix → prevention) and a pre-flight checklist.
 
 ## Contributing
 

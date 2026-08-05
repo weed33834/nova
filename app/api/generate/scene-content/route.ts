@@ -144,6 +144,24 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     const effectiveOutline = applyOutlineFallbacks(outline, !!languageModel, {
       allowProceduralSkill: vocationalActive,
     });
+    // title 兜底：模型产出的部分 outline 可能缺 title（实测 scene-content 收到
+    // undefined 标题直接 500，整门课程生成中断）。用 type/stageId 兜底，至少
+    // 保证生成不因缺标题而中断。
+    if (!effectiveOutline.title) {
+      effectiveOutline.title =
+        (effectiveOutline.type ? `场景-${effectiveOutline.type}` : '场景') + `-${stageId.slice(0, 6)}`;
+    }
+    // type 同样兜底：如果 type 缺失，生成逻辑无法选择正确的 prompt/fallback，
+    // 统一降级为 slide（幻灯片场景是最基础的生成类型，容错性最高）。
+    if (!effectiveOutline.type) {
+      effectiveOutline.type = 'slide';
+    }
+    // image 类型兜底：image 场景需要图片生成 provider（server-providers.yml 需配置 image），
+    // 若未配置或 LLM 不支持图片生成，降级为 slide 避免硬失败。
+    // 用 (as string) 绕过 TS 收窄（SceneOutline.type 字面量不含 'image'，但运行时可能收到）。
+    if ((effectiveOutline.type as string) === 'image') {
+      effectiveOutline.type = 'slide';
+    }
 
     // ── Filter images assigned to this outline ──
     let assignedImages: PdfImage[] | undefined;

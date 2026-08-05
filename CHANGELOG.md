@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] — 2026-08-05
+
+### Added
+
+- **Tiered install & capability detection** — New dependency tiering system:
+  - `lib/capabilities.ts` — capability registry mapping 9 optional features to their npm packages (charts, code highlight, math, agent framework, MCP, document parsing, object storage, zip export, fonts).
+  - `GET /api/capabilities` — runtime detection via `createRequire.resolve` (no package loading); the settings panel now shows a **capability status card** (green ✓ installed / grey ⚠ missing + one-click copy of the install command).
+  - `scripts/install-tiers.mjs` — `node scripts/install-tiers.mjs core|extras|all` for staged installs (Core 83 / Extras 30).
+- **Optional-dependency downgrade for every Extras feature** — static imports replaced with `type`-only imports + runtime `await import()`; missing packages degrade gracefully instead of failing the build:
+  - shiki code highlight → plain `<pre>` fallback
+  - echarts charts → placeholder hint
+  - katex/temml math → raw LaTeX passthrough (new `lib/math-loader.ts` preload/cache helper)
+  - @langchain/langgraph orchestration → direct single-agent LLM fallback in `stateless-generate`; `AISdkLangGraphAdapter` no longer extends `BaseChatModel`
+  - MCP SDK → 501 + install guidance; jszip / @aws-sdk S3 / @alicloud docmind → actionable "pnpm add …" errors
+- **Demo video & docs** — Merged full walkthrough video (`assets/Nova-完整演示-最终版.mp4`), `docs/OPERATIONS-HANDBOOK.md` (17 historical issues: symptom → root cause → fix → prevention, startup checklist, log triage table), `docs/DEPENDENCY-TIERING.md`, `scripts/verify-models.mjs` (live model probe).
+- **README** — Demo video embed, 3×3 screenshot wall, FAQ, tiered install quick-start, three-platform mirrors (GitCode primary / GitHub / Gitee).
+
+### Changed
+
+- **Capability registry** — `@assistant-ui/*`, `streamdown`, `@xyflow/react` and `prosemirror-*` moved to Core (product-critical interactions, never downgraded).
+- **`lib/quiz/math-text.ts`** — `parseQuizMathText` / `renderQuizMathText` converted to async for lazy KaTeX loading.
+- **`scripts/mcp-server.ts`** — awaits `createNovaMcpServer()` (now async).
+
+### Fixed
+
+- **scene-content generation** — `image` outline type now falls back to `slide` when no image provider is configured, avoiding hard failures.
+- **MCP route** — restored `NextResponse` import and made the Nova MCP server creation async-compatible.
+- **Orchestration type safety** — removed implicit-any in `director-graph` callbacks; `getCheckpointer()` is now async with a lazy `MemorySaver` import.
+
 ## [0.1.3] — 2026-08-04
 
 ### Fixed

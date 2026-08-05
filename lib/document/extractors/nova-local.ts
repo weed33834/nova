@@ -11,7 +11,6 @@
  */
 
 import yaml from 'js-yaml';
-import JSZip from 'jszip';
 import { DOCUMENT_MIME_TYPES } from '../mime';
 import type { DocumentExtractorProvider, DocumentArtifact, DocumentBlock } from '../types';
 
@@ -248,7 +247,12 @@ function parseHTML(text: string): string {
 
 // ─── EPUB ───────────────────────────────────────────────────────────────────
 async function parseEPUB(buffer: Buffer): Promise<string> {
-  const zip = await JSZip.loadAsync(buffer);
+  // 动态加载 jszip（可选依赖）：未安装时降级为提示信息，不阻断其他格式解析
+  const jszipMod = await import('jszip').catch(() => null);
+  if (!jszipMod) {
+    return 'EPUB 解析需要可选依赖 jszip，请执行 pnpm add jszip 后重试。';
+  }
+  const zip = await jszipMod.default.loadAsync(buffer);
 
   // Find the container.xml to locate the OPF file
   const containerFile = zip.file('META-INF/container.xml');

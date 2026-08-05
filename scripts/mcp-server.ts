@@ -74,7 +74,7 @@ const log = createLogger('NovaMCPStdio');
 
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
-  const server = createNovaMcpServer();
+  const server = await createNovaMcpServer(); // createNovaMcpServer 为 async（可选依赖懒加载）
 
   // 优雅退出：收到 SIGINT/SIGTERM 时关闭 transport，让客户端感知断开。
   const shutdown = async (signal: string) => {

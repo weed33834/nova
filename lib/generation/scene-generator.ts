@@ -6,7 +6,10 @@
  */
 
 import { nanoid } from 'nanoid';
-import katex from 'katex';
+import { getKatex, preloadKatex } from '@/lib/math-loader';
+
+// katex 为可选依赖：预取一次，同步渲染路径通过 getKatex() 访问（未安装返回 null 降级）
+preloadKatex();
 import { MAX_VISION_IMAGES } from '@/lib/constants/generation';
 import { sortDocumentImagesForVision } from '@/lib/document/bundle';
 import type {
@@ -54,6 +57,18 @@ import type {
 import type { ThinkingConfig } from '@/lib/types/provider';
 import { createLogger } from '@/lib/logger';
 const log = createLogger('Generation');
+
+// 与 lib/types/widgets.ts 的 WidgetType 保持一致，用于校验模型产出的 widgetType。
+// 模型有概率臆造枚举外的值（实测 "discussion"），必须在进入 widget 生成前拦截并降级。
+const VALID_WIDGET_TYPES = new Set<string>([
+  'simulation',
+  'diagram',
+  'code',
+  'game',
+  'visualization3d',
+  'procedural-skill',
+  'knowledge-graph',
+]);
 
 const INTERACTIVE_WIDGET_ACTIONS = [
   'widget_highlight',
@@ -248,6 +263,29 @@ export async function generateSceneContent(
         widgetType: 'simulation' as WidgetType,
         widgetOutline: { concept: outline.title },
       };
+    }
+
+    // 模型可能臆造出枚举外的 widgetType（实测如 "discussion"），此前会一路走到
+    // generateWidgetContent 的 default 分支返回 null，被上层当成硬失败返回 500，
+    // 导致整个场景乃至课程生成中断。这里统一降级为 simulation，保证生成不被单点击穿。
+    // 注意：widgetType 可能缺失（undefined），先判空再查枚举，否则 TS 类型检查报错。
+    if (!outline.widgetType || !VALID_WIDGET_TYPES.has(outline.widgetType)) {
+      log.warn(
+        `Interactive outline "${outline.title}" has unsupported widgetType "${outline.widgetType}", falling back to simulation`,
+      );
+      outline = {
+        ...outline,
+        widgetType: 'simulation' as WidgetType,
+        widgetOutline: outline.widgetOutline ?? { concept: outline.title },
+      };
+    }
+
+    // widgetOutline 缺失同样会让 generateWidgetContent 直接返回 null
+    if (!outline.widgetOutline) {
+      log.warn(
+        `Interactive outline "${outline.title}" missing widgetOutline, filling minimal outline`,
+      );
+      outline = { ...outline, widgetOutline: { concept: outline.title } };
     }
 
     // Route to widget generation (handles all 5 types)
@@ -546,6 +584,8 @@ function processLatexElements(
       }
 
       try {
+        const katex = getKatex();
+        if (!katex) return el; // katex 未安装：降级为原样 LaTeX 文本
         const html = katex.renderToString(latexStr, {
           throwOnError: false,
           displayMode: true,

@@ -13,7 +13,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
+// 仅保留类型引用（type-only import 编译期擦除，不产生运行时 require）；
+// 运行时通过动态 import('shiki') 加载，未安装时降级为纯文本（见 highlightCode）。
+import type { BundledLanguage, ShikiTransformer } from 'shiki';
+import type { codeToHtml } from 'shiki';
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -57,13 +60,27 @@ export async function highlightCode(
 ) {
   const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
 
+  // 动态加载 shiki：未安装时（分级安装 core 模式）降级为纯文本 <pre>，
+  // 避免静态 import 导致构建期 Module not found。已安装则正常语法高亮。
+  let codeToHtmlFn: typeof codeToHtml;
+  try {
+    const shiki = await import('shiki');
+    codeToHtmlFn = shiki.codeToHtml;
+  } catch {
+    const esc = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return [
+      `<pre class="overflow-x-auto p-3 text-xs rounded-lg bg-muted/60"><code>${esc}</code></pre>`,
+      `<pre class="overflow-x-auto p-3 text-xs rounded-lg bg-muted/60"><code>${esc}</code></pre>`,
+    ];
+  }
+
   return await Promise.all([
-    codeToHtml(code, {
+    codeToHtmlFn(code, {
       lang: language,
       theme: 'one-light',
       transformers,
     }),
-    codeToHtml(code, {
+    codeToHtmlFn(code, {
       lang: language,
       theme: 'one-dark-pro',
       transformers,

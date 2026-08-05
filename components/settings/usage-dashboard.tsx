@@ -1,10 +1,35 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import * as echarts from 'echarts/core';
-import { LineChart } from 'echarts/charts';
-import { GridComponent, TooltipComponent } from 'echarts/components';
-import { SVGRenderer } from 'echarts/renderers';
+// echarts 为可选依赖（charts 能力）：运行时动态加载，未安装降级为占位提示
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let echartsLib: any = null;
+let echartsPromise: Promise<void> | null = null;
+function loadUsageEcharts() {
+  if (!echartsPromise) {
+    echartsPromise = (async () => {
+      try {
+        const [core, charts, components, renderers] = await Promise.all([
+          import('echarts/core'),
+          import('echarts/charts'),
+          import('echarts/components'),
+          import('echarts/renderers'),
+        ]);
+        const echarts = core as typeof import('echarts/core');
+        echarts.use([
+          charts.LineChart,
+          components.GridComponent,
+          components.TooltipComponent,
+          renderers.SVGRenderer,
+        ]);
+        echartsLib = echarts;
+      } catch {
+        echartsLib = null;
+      }
+    })();
+  }
+  return echartsPromise;
+}
 import { Loader2, RefreshCw, BarChart3, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -13,7 +38,6 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { useTheme } from '@/lib/hooks/use-theme';
 import { cn } from '@/lib/utils';
 
-echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
 type UsageKind = 'llm' | 'image' | 'video' | 'tts' | 'asr';
 type UsageUnit = 'token' | 'image' | 'second' | 'character';
@@ -84,7 +108,8 @@ export function UsageDashboard() {
   const [quota, setQuota] = useState<QuotaMap | null>(null);
   const [loading, setLoading] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
-  const chartInstance = useRef<echarts.ECharts | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartInstance = useRef<any>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -144,10 +169,22 @@ export function UsageDashboard() {
   // Daily REQUESTS trend — unit-agnostic so it works across all modalities.
   // Area-only with a soft gradient + faint line, theme-aware, to avoid the
   // harsh solid stroke in dark mode.
+  // 动态加载 echarts（可选依赖），未安装时跳过图表渲染
+  const [chartReady, setChartReady] = useState(false);
   useEffect(() => {
-    if (!chartRef.current) return;
+    let cancelled = false;
+    void loadUsageEcharts().then(() => {
+      if (!cancelled) setChartReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!chartRef.current || !echartsLib) return;
     if (!chartInstance.current) {
-      chartInstance.current = echarts.init(chartRef.current, undefined, { renderer: 'svg' });
+      chartInstance.current = echartsLib.init(chartRef.current, undefined, { renderer: 'svg' });
     }
     const chart = chartInstance.current;
     const axis = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';

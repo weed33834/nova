@@ -5,7 +5,7 @@
  * ZIP contains: full.md + images/ + content_list.json
  */
 
-import JSZip from 'jszip';
+// 注意：jszip 为可选依赖，仅运行时动态 import（见 parseMinerUZip），勿恢复静态 import
 import type { PDFParserConfig } from './types';
 import type { ParsedPdfContent } from '@/lib/types/pdf';
 import { extractMinerUResult } from './mineru-parser';
@@ -16,6 +16,7 @@ import {
   MINERU_IMAGE_MIMES,
 } from '@/lib/document/mime';
 import { createLogger } from '@/lib/logger';
+// 注意：jszip 为可选依赖，仅运行时动态 import（见 parseMinerUZip），勿恢复静态 import
 import { sleep } from '@/lib/utils/async';
 
 const log = createLogger('MinerUCloud');
@@ -140,9 +141,14 @@ async function parseMinerUZip(zipUrl: string): Promise<ParsedPdfContent> {
   }
 
   const zipBuf = Buffer.from(await zipRes.arrayBuffer());
-  let zip: Awaited<ReturnType<typeof JSZip.loadAsync>>;
+  // 动态加载 jszip（可选依赖）：未安装时给出明确指引
+  const jszipMod = await import('jszip').catch(() => null);
+  if (!jszipMod) {
+    throw new Error('MinerU Cloud ZIP 解析需要可选依赖 jszip，请执行 pnpm add jszip 后重试。');
+  }
+  let zip: Awaited<ReturnType<typeof jszipMod.default.loadAsync>>;
   try {
-    zip = await JSZip.loadAsync(zipBuf);
+    zip = await jszipMod.default.loadAsync(zipBuf);
   } catch (e) {
     throw new Error(`MinerU Cloud ZIP parse failed: ${e instanceof Error ? e.message : String(e)}`);
   }

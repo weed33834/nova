@@ -22,7 +22,7 @@ import type { LanguageModel } from 'ai';
 import type { StatelessChatRequest, StatelessEvent, ParsedAction } from '@/lib/types/chat';
 import type { ThinkingConfig } from '@/lib/types/provider';
 import type { WhiteboardActionRecord } from './types';
-import { createOrchestrationGraph, buildInitialState } from './director-graph';
+// director-graph 为动态加载（内部 langgraph 为可选依赖）：未安装时走 fallbackGenerate 直通降级
 import { isCheckpointingEnabled } from './checkpointer';
 import { createThreadId } from './thread-id';
 import { parse as parsePartialJson, Allow } from 'partial-json';
@@ -307,6 +307,92 @@ export function finalizeParser(state: ParserState): ParseResult {
   return result;
 }
 
+// ==================== 直通降级（LangGraph 未安装时） ====================
+
+/**
+ * 降级直通生成：不依赖 LangGraph，直接把当前请求交给 AI 模型生成一轮回复。
+ * 单 agent 场景下与 graph 模式行为等价（无多 agent 编排/动作解析）。
+ * 仅在 @langchain/langgraph 未安装时使用，保证 core-only 安装仍可对话。
+ */
+async function* fallbackGenerate(
+  request: StatelessChatRequest,
+  abortSignal: AbortSignal,
+  languageModel: LanguageModel,
+  thinkingConfig?: ThinkingConfig,
+): AsyncGenerator<StatelessEvent> {
+  const { convertMessagesToOpenAI } = await import('./summarizers/message-converter');
+  const { callLLM } = await import('@/lib/ai/llm');
+  const { useAgentRegistry } = await import('@/lib/orchestration/registry/store');
+
+  const agentId = request.config.agentIds[0] ?? 'teacher';
+  const agent =
+    request.config.agentConfigs?.find((c) => c.id === agentId) ??
+    useAgentRegistry.getState().getAgent(agentId);
+  const agentName = agent?.name ?? agentId;
+  const messageId = `assistant-${agentId}-${Date.now()}`;
+
+  log.warn(
+    '[StatelessGenerate] LangGraph 未安装，使用直通降级模式（单 agent 直接生成）',
+  );
+
+  yield {
+    type: 'agent_start',
+    data: {
+      messageId,
+      agentId,
+      agentName,
+      agentAvatar: agent?.avatar,
+      agentColor: agent?.color,
+    },
+  };
+
+  let fullContent = '';
+  try {
+    const aiMessages = convertMessagesToOpenAI(request.messages, agentId);
+    const result = await callLLM(
+      { model: languageModel, messages: aiMessages, abortSignal },
+      'chat-fallback',
+      undefined,
+      thinkingConfig,
+    );
+    fullContent = result.text || '';
+    if (fullContent) {
+      yield { type: 'text_delta', data: { content: fullContent } };
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    log.error('[StatelessGenerate] fallback error:', msg);
+    yield { type: 'error', data: { message: msg } };
+    return;
+  }
+
+  const prevResponses = request.directorState?.agentResponses ?? [];
+  const prevLedger = request.directorState?.whiteboardLedger ?? [];
+  const prevTurnCount = request.directorState?.turnCount ?? 0;
+  yield {
+    type: 'done',
+    data: {
+      totalActions: 0,
+      totalAgents: 1,
+      agentHadContent: fullContent.length > 0,
+      directorState: {
+        turnCount: prevTurnCount + 1,
+        agentResponses: [
+          ...prevResponses,
+          {
+            agentId,
+            agentName,
+            contentPreview: fullContent.slice(0, 100),
+            actionCount: 0,
+            whiteboardActions: [],
+          },
+        ],
+        whiteboardLedger: prevLedger,
+      },
+    },
+  };
+}
+
 // ==================== Main Generation Function ====================
 
 /**
@@ -330,28 +416,44 @@ export async function* statelessGenerate(
   );
 
   try {
-    const graph = createOrchestrationGraph();
-    const initialState = buildInitialState(request, languageModel, thinkingConfig);
+    // LangGraph 为可选依赖：未安装时 createOrchestrationGraph 抛错 → 走直通降级
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let stream: any;
+    try {
+      const { createOrchestrationGraph, buildInitialState } = await import('./director-graph');
+      const graph = await createOrchestrationGraph();
+      const initialState = buildInitialState(request, languageModel, thinkingConfig);
 
-    // When checkpointing is enabled, LangGraph requires a `thread_id` in
-    // `configurable` at invocation (a checkpointer with no thread_id throws).
-    //
-    // We mint a FRESH thread_id per request rather than reusing a per-session
-    // one. This graph's client re-sends the full accumulated `directorState`
-    // (agentResponses / whiteboardLedger) on every request, and those channels
-    // use append reducers. Reusing a thread_id would load the prior checkpoint
-    // and append the re-sent values again — compounding duplication that
-    // inflates turn counts and trips max_turns early. A per-request thread_id
-    // keeps each run independent (no double-accumulation) while still letting
-    // the checkpointer snapshot in-flight state for inspection / resume-by-id.
-    // Per-session resumption (thread-id.ts `getThreadId`) is reserved for a
-    // future migration to server-managed incremental state.
-    const stream = await graph.stream(initialState, {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      streamMode: 'custom' as any,
-      signal: abortSignal,
-      ...(isCheckpointingEnabled() ? { configurable: { thread_id: createThreadId() } } : {}),
-    });
+      // When checkpointing is enabled, LangGraph requires a `thread_id` in
+      // `configurable` at invocation (a checkpointer with no thread_id throws).
+      //
+      // We mint a FRESH thread_id per request rather than reusing a per-session
+      // one. This graph's client re-sends the full accumulated `directorState`
+      // (agentResponses / whiteboardLedger) on every request, and those channels
+      // use append reducers. Reusing a thread_id would load the prior checkpoint
+      // and append the re-sent values again — compounding duplication that
+      // inflates turn counts and trips max_turns early. A per-request thread_id
+      // keeps each run independent (no double-accumulation) while still letting
+      // the checkpointer snapshot in-flight state for inspection / resume-by-id.
+      // Per-session resumption (thread-id.ts `getThreadId`) is reserved for a
+      // future migration to server-managed incremental state.
+      stream = await graph.stream(initialState, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        streamMode: 'custom' as any,
+        signal: abortSignal,
+        ...(isCheckpointingEnabled() ? { configurable: { thread_id: createThreadId() } } : {}),
+      });
+
+      // 内层 try 结束：graph 构建 + stream 就绪，继续消费 stream（下方代码）
+    } catch (e) {
+      // LangGraph 未安装（core-only 安装）→ 直通降级生成
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/LangGraph|langgraph|@langchain/.test(msg)) {
+        yield* fallbackGenerate(request, abortSignal, languageModel, thinkingConfig);
+        return;
+      }
+      throw e; // 其他错误照常抛出
+    }
 
     let totalActions = 0;
     let totalAgents = 0;

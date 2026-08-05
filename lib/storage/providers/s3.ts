@@ -14,7 +14,8 @@
  *
  * If S3_BUCKET is not set, the provider is inactive and falls back to Noop.
  */
-import { S3Client, PutObjectCommand, HeadObjectCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
+// @aws-sdk/client-s3 为可选依赖：仅 type import（编译期擦除）+ 运行时动态 import（ensureClient）
+import type { S3Client } from '@aws-sdk/client-s3';
 import type { StorageProvider, StorageType } from '../types';
 import { createLogger } from '@/lib/logger';
 
@@ -27,26 +28,38 @@ const PATH_PREFIX: Record<StorageType, string> = {
 };
 
 export class S3StorageProvider implements StorageProvider {
-  private client: S3Client;
+  private client: S3Client | null = null;
   private bucket: string;
   private publicBaseUrl: string;
 
   constructor() {
-    const region = process.env.S3_REGION || 'us-east-1';
+    // 不在构造函数初始化 S3Client（依赖可选包 @aws-sdk/client-s3），首次使用时懒加载
     this.bucket = process.env.S3_BUCKET!;
     this.publicBaseUrl = process.env.S3_PUBLIC_BASE_URL || '';
+  }
 
-    this.client = new S3Client({
-      region,
-      endpoint: process.env.S3_ENDPOINT,
-      credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
-      },
-      forcePathStyle: !process.env.S3_ENDPOINT?.includes('amazonaws.com'),
-    });
-
-    log.info('S3 storage provider initialized', { bucket: this.bucket, region });
+  /** 懒加载 S3Client：未安装可选依赖时给出明确指引 */
+  private async ensureClient(): Promise<S3Client> {
+    if (this.client) return this.client;
+    try {
+      const { S3Client } = await import('@aws-sdk/client-s3');
+      const region = process.env.S3_REGION || 'us-east-1';
+      this.client = new S3Client({
+        region,
+        endpoint: process.env.S3_ENDPOINT,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+        },
+        forcePathStyle: !process.env.S3_ENDPOINT?.includes('amazonaws.com'),
+      });
+      log.info('S3 storage provider initialized', { bucket: this.bucket, region });
+      return this.client;
+    } catch {
+      throw new Error(
+        'S3 存储需要可选依赖 @aws-sdk/client-s3，请执行 pnpm add @aws-sdk/client-s3 后重试。',
+      );
+    }
   }
 
   private buildKey(hash: string, type: StorageType): string {
@@ -79,7 +92,9 @@ export class S3StorageProvider implements StorageProvider {
       return this.buildUrl(key);
     }
 
-    await this.client.send(
+    const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+    const client = await this.ensureClient();
+    await client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
@@ -95,7 +110,9 @@ export class S3StorageProvider implements StorageProvider {
 
   async exists(hash: string, type: StorageType): Promise<boolean> {
     try {
-      await this.client.send(
+      const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
+      const client = await this.ensureClient();
+      await client.send(
         new HeadObjectCommand({
           Bucket: this.bucket,
           Key: this.buildKey(hash, type),
@@ -122,7 +139,9 @@ export class S3StorageProvider implements StorageProvider {
   /** 启动时检查 bucket 是否可访问 */
   async healthCheck(): Promise<boolean> {
     try {
-      await this.client.send(
+      const { HeadBucketCommand } = await import('@aws-sdk/client-s3');
+      const client = await this.ensureClient();
+      await client.send(
         new HeadBucketCommand({ Bucket: this.bucket }),
       );
       return true;

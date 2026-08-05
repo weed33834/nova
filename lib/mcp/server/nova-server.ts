@@ -21,7 +21,8 @@
  * 技能清单通过 `nova://skills` 资源让外部客户端知晓有哪些技能。
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+// MCP SDK 为可选依赖：仅 type import + 运行时动态加载（createNovaMcpServer）
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { getPromptRegistry, type PromptRegistryEntry } from '@/lib/prompts/registry';
 import { SKILL_CATALOG } from '@/lib/agent/tools/registry';
@@ -68,14 +69,23 @@ type ParseDocumentArgs = z.infer<typeof ParseDocumentSchema>;
  *     完成的能力（文件解析 + 清单读取 + 提示词模板回填）。
  *   - 工厂每次都返回全新实例，便于多会话/多传输隔离。
  */
-export function createNovaMcpServer(): McpServer {
-  const server = new McpServer(NOVA_SERVER_INFO, {
+export async function createNovaMcpServer(): Promise<McpServer> {
+  // MCP SDK 为可选依赖：运行时动态加载
+  let McpServerCtor: typeof import('@modelcontextprotocol/sdk/server/mcp.js')['McpServer'];
+  try {
+    ({ McpServer: McpServerCtor } = await import('@modelcontextprotocol/sdk/server/mcp.js'));
+  } catch {
+    throw new Error(
+      'MCP 服务需要可选依赖 @modelcontextprotocol/sdk，请执行 pnpm add @modelcontextprotocol/sdk 后重试。',
+    );
+  }
+  const server = new McpServerCtor(NOVA_SERVER_INFO, {
     instructions:
       'Nova MCP server — exposes Nova file parsing, skill/prompt/format catalogs. ' +
       'Use `parse_document` to extract text from structured/web/code/academic files.',
   });
 
-  registerParseDocumentTool(server);
+  await registerParseDocumentTool(server);
   registerStaticResources(server);
   registerPromptCatalog(server);
 
@@ -84,7 +94,7 @@ export function createNovaMcpServer(): McpServer {
 
 // ─── 工具：parse_document ────────────────────────────────────────────────────
 
-function registerParseDocumentTool(server: McpServer): void {
+async function registerParseDocumentTool(server: McpServer): Promise<void> {
   server.registerTool(
     'parse_document',
     {

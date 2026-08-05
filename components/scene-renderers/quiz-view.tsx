@@ -51,7 +51,21 @@ const QuizMathText = memo(function QuizMathText({
   className?: string;
   allowDisplayMode?: boolean;
 }) {
-  const segments = useMemo(() => renderQuizMathText(text), [text]);
+  const [segments, setSegments] = useState<
+    Awaited<ReturnType<typeof renderQuizMathText>> | null
+  >(null);
+  // renderQuizMathText 为 async（katex 可选依赖动态加载）：异步渲染，完成后更新
+  useEffect(() => {
+    let cancelled = false;
+    void renderQuizMathText(text).then((result) => {
+      if (!cancelled) setSegments(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [text]);
+
+  if (!segments) return <span className={className}>{text}</span>;
   if (segments.length === 1 && segments[0].type === 'text') {
     return <span className={className}>{segments[0].value}</span>;
   }

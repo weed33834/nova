@@ -21,9 +21,10 @@
  * chunks via config.writer() for real-time SSE delivery.
  */
 
-import { Annotation, StateGraph, START, END } from '@langchain/langgraph';
-import { SystemMessage, HumanMessage, AIMessage } from '@langchain/core/messages';
-import type { LangGraphRunnableConfig } from '@langchain/langgraph';
+// LangGraph / LangChain 为可选依赖（agentFramework 能力）：
+// 全部改为运行时动态加载（loadLangGraph / loadLangChainMessages），
+// 未安装时 createOrchestrationGraph 抛错，由 stateless-generate 捕获走直通降级。
+// 注意：勿恢复静态 import —— 否则 core-only 安装会在构建期解析失败。
 import type { LanguageModel } from 'ai';
 
 import { AISdkLangGraphAdapter } from './ai-sdk-adapter';
@@ -46,25 +47,70 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('DirectorGraph');
 
+// ==================== 可选依赖懒加载 ====================
+
+/** LangGraph 模块缓存（可选依赖 @langchain/langgraph） */
+let langGraphMod: typeof import('@langchain/langgraph') | null = null;
+async function loadLangGraph(): Promise<typeof import('@langchain/langgraph')> {
+  if (!langGraphMod) {
+    langGraphMod = await import('@langchain/langgraph').catch(() => null);
+    if (!langGraphMod) {
+      throw new Error(
+        '多智能体编排需要可选依赖 @langchain/langgraph，请执行 pnpm add @langchain/langgraph 后重试。',
+      );
+    }
+  }
+  return langGraphMod;
+}
+
+/** LangChain 消息类缓存（可选依赖 @langchain/core/messages） */
+let lcMsgMod: typeof import('@langchain/core/messages') | null = null;
+async function loadLangChainMessages(): Promise<typeof import('@langchain/core/messages')> {
+  if (!lcMsgMod) {
+    lcMsgMod = await import('@langchain/core/messages').catch(() => null);
+    if (!lcMsgMod) {
+      throw new Error(
+        '多智能体编排需要可选依赖 @langchain/core，请执行 pnpm add @langchain/core 后重试。',
+      );
+    }
+  }
+  return lcMsgMod;
+}
+
+/** LangGraph RunnableConfig 的本地最小类型（避免 type import 可选包） */
+type LangGraphRunnableConfig = {
+  writer?: unknown;
+  signal?: AbortSignal;
+};
+
 // ==================== State Definition ====================
 
 /**
  * LangGraph state annotation for the orchestration graph
+ * （惰性构建：由 createOrchestrationGraph 首次调用时初始化）
  */
-const OrchestratorState = Annotation.Root({
-  // Input (set once at graph entry)
-  messages: Annotation<StatelessChatRequest['messages']>,
-  storeState: Annotation<StatelessChatRequest['storeState']>,
-  availableAgentIds: Annotation<string[]>,
-  languageModel: Annotation<LanguageModel>,
-  thinkingConfig: Annotation<ThinkingConfig | null>,
-  discussionContext: Annotation<{ topic: string; prompt?: string } | null>,
-  triggerAgentId: Annotation<string | null>,
-  userProfile: Annotation<{ nickname?: string; bio?: string } | null>,
-  /** Session ID for inter-agent messaging (optional — enables peer-message injection) */
-  sessionId: Annotation<string | null>,
-  /** Request-scoped agent configs for generated agents (not in the default registry) */
-  agentConfigOverrides: Annotation<Record<string, AgentConfig>>,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let OrchestratorState: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type OrchestratorStateType = any;
+
+async function initOrchestratorState() {
+  if (OrchestratorState) return;
+  const { Annotation } = await loadLangGraph();
+  OrchestratorState = Annotation.Root({
+    // Input (set once at graph entry)
+    messages: Annotation<StatelessChatRequest['messages']>,
+    storeState: Annotation<StatelessChatRequest['storeState']>,
+    availableAgentIds: Annotation<string[]>,
+    languageModel: Annotation<LanguageModel>,
+    thinkingConfig: Annotation<ThinkingConfig | null>,
+    discussionContext: Annotation<{ topic: string; prompt?: string } | null>,
+    triggerAgentId: Annotation<string | null>,
+    userProfile: Annotation<{ nickname?: string; bio?: string } | null>,
+    /** Session ID for inter-agent messaging (optional — enables peer-message injection) */
+    sessionId: Annotation<string | null>,
+    /** Request-scoped agent configs for generated agents (not in the default registry) */
+    agentConfigOverrides: Annotation<Record<string, AgentConfig>>,
 
   // Mutable (updated by nodes)
   currentAgentId: Annotation<string | null>,
@@ -80,8 +126,7 @@ const OrchestratorState = Annotation.Root({
   shouldEnd: Annotation<boolean>,
   totalActions: Annotation<number>,
 });
-
-type OrchestratorStateType = typeof OrchestratorState.State;
+}
 
 /**
  * Look up an agent config: request-scoped overrides first, then global registry.
@@ -153,9 +198,11 @@ async function directorNode(
   }
 
   // ── Multi agent: LLM-based decision ──
-  const agents: AgentConfig[] = state.availableAgentIds
-    .map((id) => resolveAgent(state, id))
-    .filter((a): a is AgentConfig => a != null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agents: AgentConfig[] = (state.availableAgentIds as any[])
+    .map((id: string) => resolveAgent(state, id))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((a: AgentConfig | undefined): a is AgentConfig => a != null);
 
   if (agents.length === 0) {
     return { shouldEnd: true };
@@ -181,6 +228,7 @@ async function directorNode(
   const adapter = new AISdkLangGraphAdapter(state.languageModel, state.thinkingConfig ?? undefined);
 
   try {
+    const { SystemMessage, HumanMessage } = await loadLangChainMessages();
     const result = await adapter._generate(
       [new SystemMessage(prompt), new HumanMessage('Decide which agent should speak next.')],
       { signal: config.signal } as Record<string, unknown>,
@@ -219,7 +267,7 @@ async function directorNode(
     const selectedAgent = agents.find((a) => a.id === decision.nextAgentId);
     if (selectedAgent) {
       const turnsTaken = state.agentResponses.filter(
-        (r) => r.agentId === decision.nextAgentId,
+        (r: AgentTurnSummary) => r.agentId === decision.nextAgentId,
       ).length;
       if (hasExceededMaxTurns(selectedAgent.role, turnsTaken)) {
         log.info(
@@ -232,10 +280,10 @@ async function directorNode(
       // cooldown window (e.g. evaluator: 30s between turns) by ending the
       // discussion rather than dispatching too soon.
       const lastTurnTimestamp = state.agentResponses
-        .filter((r) => r.agentId === decision.nextAgentId)
-        .map((r) => r.timestamp)
-        .filter((t): t is number => t !== undefined)
-        .sort((a, b) => b - a)[0];
+        .filter((r: AgentTurnSummary) => r.agentId === decision.nextAgentId)
+        .map((r: AgentTurnSummary) => r.timestamp)
+        .filter((t: number | undefined): t is number => t !== undefined)
+        .sort((a: number, b: number) => b - a)[0];
       if (isInCooldown(selectedAgent.role, lastTurnTimestamp)) {
         log.info(
           `[Director] Agent "${selectedAgent.name}" (role: ${selectedAgent.role}) is in cooldown, ending discussion`,
@@ -269,7 +317,7 @@ async function directorNode(
     // silence — critical for classroom scenarios where students are waiting.
     const eligibleAgents = agents.filter((a) => {
       const turnsTaken = state.agentResponses.filter(
-        (r) => r.agentId === a.id,
+        (r: AgentTurnSummary) => r.agentId === a.id,
       ).length;
       return !hasExceededMaxTurns(a.role, turnsTaken);
     });
@@ -297,8 +345,9 @@ async function directorNode(
   }
 }
 
-function directorCondition(state: OrchestratorStateType): 'agent_generate' | typeof END {
-  return state.shouldEnd ? END : 'agent_generate';
+function directorCondition(state: OrchestratorStateType): 'agent_generate' | string {
+  // END 用字符串字面量（LangGraph 支持按名引用特殊节点，避免依赖动态导入的 END 常量）
+  return state.shouldEnd ? '__end__' : 'agent_generate';
 }
 
 // ==================== Agent Generate Node ====================
@@ -345,7 +394,7 @@ async function runAgentGeneration(
   // Compute effective actions: filter by scene type for defense-in-depth
   // e.g. spotlight/laser stripped for non-slide scenes even if in static allowedActions
   const currentScene = state.storeState.currentSceneId
-    ? state.storeState.scenes.find((s) => s.id === state.storeState.currentSceneId)
+    ? state.storeState.scenes.find((s: { id: string }) => s.id === state.storeState.currentSceneId)
     : undefined;
   const sceneType = currentScene?.type;
   const effectiveActions = getEffectiveActions(agentConfig.allowedActions, sceneType);
@@ -370,6 +419,7 @@ async function runAgentGeneration(
   const openaiMessages = convertMessagesToOpenAI(state.messages, agentId);
   const adapter = new AISdkLangGraphAdapter(state.languageModel, state.thinkingConfig ?? undefined);
 
+  const { SystemMessage, HumanMessage, AIMessage } = await loadLangChainMessages();
   const lcMessages = [
     new SystemMessage(effectiveSystemPrompt),
     ...openaiMessages.map((m) =>
@@ -577,7 +627,9 @@ async function agentGenerateNode(
  * server graph does not loop. There is no `maxTurns` — the topology itself
  * is the bound.
  */
-export function createOrchestrationGraph() {
+export async function createOrchestrationGraph() {
+  await initOrchestratorState();
+  const { StateGraph, START, END } = await loadLangGraph();
   const graph = new StateGraph(OrchestratorState)
     .addNode('director', directorNode)
     .addNode('agent_generate', agentGenerateNode)
@@ -596,7 +648,7 @@ export function createOrchestrationGraph() {
   // stateless-generate.ts); otherwise LangGraph throws.
   if (isCheckpointingEnabled()) {
     log.info('[DirectorGraph] Compiling graph with MemorySaver checkpointer');
-    return graph.compile({ checkpointer: getCheckpointer() });
+    return graph.compile({ checkpointer: await getCheckpointer() });
   }
   return graph.compile();
 }
@@ -609,7 +661,8 @@ export function buildInitialState(
   request: StatelessChatRequest,
   languageModel: LanguageModel,
   thinkingConfig?: ThinkingConfig,
-): typeof OrchestratorState.State {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
   // Build request-scoped agent config overrides for generated agents.
   // These travel with each request — no server-side persistence needed.
   const agentConfigOverrides: Record<string, AgentConfig> = {};

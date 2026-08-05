@@ -317,6 +317,14 @@ const THINKING_CAPABILITIES: Record<string, ThinkingCapability> = {
   [getModelMetadataKey('glm', 'glm-4.6v')]: toggleCapability('glm'),
   [getModelMetadataKey('glm', 'glm-4.6v-flash')]: toggleCapability('glm'),
 
+  // 阿里云百炼网关经 openai 兼容模式托管的同名模型（本机 .env.local 的
+  // OPENAI_MODELS 走 openai provider，需同等的 thinking 元数据才能注入
+  // thinking: {type:"disabled"}，避免推理模型 reasoning 帧拖垮 SSE 流式）
+  [getModelMetadataKey('openai', 'glm-5.2')]: glm52Effort,
+  [getModelMetadataKey('openai', 'deepseek-v4-flash')]: deepseekEffort,
+  [getModelMetadataKey('openai', 'deepseek-v4-flash-0731')]: deepseekEffort,
+  [getModelMetadataKey('openai', 'qwen3.8-max')]: qwenBudgetEnabled,
+
   [getModelMetadataKey('qwen', 'qwen3.7-plus')]: qwenBudgetEnabled,
   [getModelMetadataKey('qwen', 'qwen3.7-max')]: qwenBudgetEnabled,
   [getModelMetadataKey('qwen', 'qwen3.6-max-preview')]: qwenBudgetDisabled,

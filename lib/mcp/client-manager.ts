@@ -11,9 +11,8 @@
  * orphaned by dev hot-reloads.
  */
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+// MCP SDK 为可选依赖：仅 type import + 运行时动态加载
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { MCPServersConfig, MCPServerConfig, MCPDiscoveredTool } from './config';
 import { createLogger } from '@/lib/logger';
@@ -97,8 +96,17 @@ export class MCPClientManager {
     await this.disconnect(config.id);
 
     try {
-      const transport = this.buildTransport(config);
-      const client = new Client({ name: 'nova-agent', version: '1.0.0' }, { capabilities: {} });
+      // MCP SDK 为可选依赖：运行时动态加载，未安装时连接失败并给出明确指引
+      let ClientCtor: typeof import('@modelcontextprotocol/sdk/client/index.js')['Client'];
+      try {
+        ({ Client: ClientCtor } = await import('@modelcontextprotocol/sdk/client/index.js'));
+      } catch {
+        throw new Error(
+          'MCP 接入需要可选依赖 @modelcontextprotocol/sdk，请执行 pnpm add @modelcontextprotocol/sdk 后重试。',
+        );
+      }
+      const transport = await this.buildTransport(config);
+      const client = new ClientCtor({ name: 'nova-agent', version: '1.0.0' }, { capabilities: {} });
       await client.connect(transport);
       const result = await client.listTools();
       const tools: MCPDiscoveredTool[] = (result.tools ?? []).map((t) => ({
@@ -132,12 +140,23 @@ export class MCPClientManager {
     }
   }
 
-  private buildTransport(config: MCPServerConfig): Transport {
+  private async buildTransport(config: MCPServerConfig): Promise<Transport> {
+    // 动态加载 transport 类（MCP SDK 为可选依赖）
+    let stdioCtor: typeof import('@modelcontextprotocol/sdk/client/stdio.js')['StdioClientTransport'];
+    let httpCtor: typeof import('@modelcontextprotocol/sdk/client/streamableHttp.js')['StreamableHTTPClientTransport'];
+    try {
+      ({ StdioClientTransport: stdioCtor } = await import('@modelcontextprotocol/sdk/client/stdio.js'));
+      ({ StreamableHTTPClientTransport: httpCtor } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js'));
+    } catch {
+      throw new Error(
+        'MCP 接入需要可选依赖 @modelcontextprotocol/sdk，请执行 pnpm add @modelcontextprotocol/sdk 后重试。',
+      );
+    }
     if (config.transport === 'stdio') {
       if (!config.command) {
         throw new Error('stdio transport requires a "command"');
       }
-      return new StdioClientTransport({
+      return new stdioCtor({
         command: config.command,
         args: config.args,
         env: config.env,
@@ -157,7 +176,7 @@ export class MCPClientManager {
     }
     const headers: Record<string, string> = {};
     if (config.authToken) headers.Authorization = `Bearer ${config.authToken}`;
-    return new StreamableHTTPClientTransport(parsedUrl, {
+    return new httpCtor(parsedUrl, {
       requestInit: { headers },
     });
   }

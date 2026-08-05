@@ -401,7 +401,7 @@ export async function POST(req: NextRequest) {
     }
 
     log.info(
-      `Generating outlines: "${requirements.requirement.substring(0, 50)}" [model=${modelString}]`,
+      `Generating outlines: "${requirements.requirement?.substring(0, 50) ?? '(empty)'}" [model=${modelString}]`,
     );
 
     // Create SSE stream with heartbeat to prevent connection timeout

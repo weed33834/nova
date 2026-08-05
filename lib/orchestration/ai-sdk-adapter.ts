@@ -4,12 +4,13 @@
  * Provides LangChain-compatible interface for LLM calls.
  * Uses the unified callLLM / streamLLM layer which goes through
  * Vercel AI SDK, supporting all providers (OpenAI, Anthropic, Google, etc.).
+ *
+ * 注意：不继承 @langchain/core 的 BaseChatModel（可选依赖）——
+ * _generate/streamGenerate 均为自实现（走 callLLM/streamLLM），
+ * 消息按 role/content 字段判断，不依赖 langchain 消息类。
+ * 这样 core-only 安装（未装 @langchain）时本文件可正常编译加载。
  */
 
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { BaseMessage, HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
-import { CallbackManagerForLLMRun } from '@langchain/core/callbacks/manager';
-import { ChatResult } from '@langchain/core/outputs';
 import type { LanguageModel } from 'ai';
 
 import { callLLM, streamLLM } from '@/lib/ai/llm';
@@ -34,18 +35,24 @@ export type StreamChunk =
     }
   | { type: 'done'; content: string };
 
+/** langchain BaseMessage 的兼容结构（按字段判断，不引入包） */
+interface CompatMessage {
+  role?: string;
+  type?: string;
+  content?: unknown;
+}
+
 /**
  * Adapter to use any AI SDK LanguageModel with LangGraph
  *
  * Accepts a LanguageModel instance (from getModel()) instead of raw
  * API credentials, enabling support for all providers.
  */
-export class AISdkLangGraphAdapter extends BaseChatModel {
+export class AISdkLangGraphAdapter {
   private languageModel: LanguageModel;
   private thinking?: ThinkingConfig;
 
   constructor(languageModel: LanguageModel, thinking?: ThinkingConfig) {
-    super({});
     this.languageModel = languageModel;
     this.thinking = thinking;
   }
@@ -59,29 +66,38 @@ export class AISdkLangGraphAdapter extends BaseChatModel {
   }
 
   /**
-   * Convert LangChain messages to AI SDK message format
+   * Convert LangChain-compatible messages to AI SDK message format.
+   * 按 role/type/content 字段判断（兼容 langchain BaseMessage 与普通对象）。
    */
   private convertMessages(
-    messages: BaseMessage[],
+    messages: unknown[],
   ): { role: 'system' | 'user' | 'assistant'; content: string }[] {
     return messages.map((msg) => {
-      if (msg instanceof HumanMessage) {
-        return { role: 'user' as const, content: msg.content as string };
-      } else if (msg instanceof AIMessage) {
-        return { role: 'assistant' as const, content: msg.content as string };
-      } else if (msg instanceof SystemMessage) {
-        return { role: 'system' as const, content: msg.content as string };
-      } else {
-        return { role: 'user' as const, content: msg.content as string };
-      }
+      const m = msg as CompatMessage;
+      const content =
+        typeof m.content === 'string'
+          ? m.content
+          : m.content === undefined || m.content === null
+            ? ''
+            : JSON.stringify(m.content);
+      const role =
+        m.role === 'system' || m.type === 'system'
+          ? ('system' as const)
+          : m.role === 'assistant' || m.type === 'ai'
+            ? ('assistant' as const)
+            : ('user' as const);
+      return { role, content };
     });
   }
 
   async _generate(
-    messages: BaseMessage[],
-    _options?: this['ParsedCallOptions'],
-    _runManager?: CallbackManagerForLLMRun,
-  ): Promise<ChatResult> {
+    messages: unknown[],
+    _options?: unknown,
+    _runManager?: unknown,
+  ): Promise<{
+    generations: { text: string; message: { content: string } }[];
+    llmOutput: Record<string, never>;
+  }> {
     const aiMessages = this.convertMessages(messages);
 
     try {
@@ -101,8 +117,8 @@ export class AISdkLangGraphAdapter extends BaseChatModel {
         textLength: content.length,
       });
 
-      // Create AI message
-      const aiMessage = new AIMessage({ content });
+      // 普通对象即可（下游仅读取 generations[].text）
+      const aiMessage = { content };
 
       return {
         generations: [
@@ -126,7 +142,7 @@ export class AISdkLangGraphAdapter extends BaseChatModel {
    * Uses streamLLM which goes through Vercel AI SDK's streamText.
    */
   async *streamGenerate(
-    messages: BaseMessage[],
+    messages: unknown[],
     options?: { tools?: Record<string, unknown>; signal?: AbortSignal },
   ): AsyncGenerator<StreamChunk> {
     const aiMessages = this.convertMessages(messages);

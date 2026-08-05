@@ -1,4 +1,7 @@
-import temml from 'temml';
+import { getTemml, preloadTemml } from '@/lib/math-loader';
+
+// temml 为可选依赖：预取一次，同步渲染路径通过 getTemml() 访问
+preloadTemml();
 import { mml2omml } from 'mathml2omml';
 import { createLogger } from '@/lib/logger';
 
@@ -69,6 +72,11 @@ function postProcessOmml(omml: string, szHundredths?: number): string {
  */
 export function latexToOmml(latex: string, fontSize?: number): string | null {
   try {
+    const temml = getTemml();
+    if (!temml) {
+      log.warn('PPTX 公式导出需要可选依赖 temml，请执行 pnpm add temml');
+      return null;
+    }
     const mathml = temml.renderToString(latex);
     const cleaned = stripUnsupportedMathML(mathml);
     const omml = String(mml2omml(cleaned));

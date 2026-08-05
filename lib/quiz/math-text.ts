@@ -1,4 +1,5 @@
-import katex from 'katex';
+// katex 为可选依赖（math 能力）：运行时动态加载，未安装时返回 null（上层降级为纯文本）
+import type katexType from 'katex';
 
 export type QuizMathTextSegment =
   | {
@@ -54,7 +55,14 @@ export function isLikelyStandaloneMathText(value: string): boolean {
   return true;
 }
 
-export function renderLatexToHtml(value: string, displayMode = false): string | null {
+export async function renderLatexToHtml(value: string, displayMode = false): Promise<string | null> {
+  // katex 为可选依赖：动态加载，未安装时返回 null（调用方降级为纯文本）
+  let katex: typeof katexType;
+  try {
+    ({ default: katex } = await import('katex'));
+  } catch {
+    return null;
+  }
   try {
     return katex.renderToString(escapeLiteralPercents(value), {
       displayMode,
@@ -80,7 +88,7 @@ function escapeLiteralPercents(value: string): string {
   return escaped;
 }
 
-export function parseQuizMathText(value: string): QuizMathTextSegment[] {
+export async function parseQuizMathText(value: string): Promise<QuizMathTextSegment[]> {
   const segments: QuizMathTextSegment[] = [];
   let cursor = 0;
 
@@ -103,7 +111,7 @@ export function parseQuizMathText(value: string): QuizMathTextSegment[] {
     const latex = value.slice(mathStart, closeIndex).trim();
     if (latex) {
       const shouldRender = opening.delimiter.open !== '$' || isLikelyDelimitedMathText(latex);
-      const html = shouldRender ? renderLatexToHtml(latex, opening.delimiter.displayMode) : null;
+      const html = shouldRender ? await renderLatexToHtml(latex, opening.delimiter.displayMode) : null;
       if (html) {
         segments.push({
           type: 'math',
@@ -134,7 +142,7 @@ export function parseQuizMathText(value: string): QuizMathTextSegment[] {
   return mergeTextSegments(segments);
 }
 
-function parseEmbeddedMathText(value: string): QuizMathTextSegment[] | null {
+async function parseEmbeddedMathText(value: string): Promise<QuizMathTextSegment[] | null> {
   const segments: QuizMathTextSegment[] = [];
   let cursor = 0;
   let hasMath = false;
@@ -148,7 +156,7 @@ function parseEmbeddedMathText(value: string): QuizMathTextSegment[] | null {
     if (!candidate || candidate.start < cursor) continue;
     if (!isLikelyEmbeddedMathText(candidate.value)) continue;
 
-    const html = renderLatexToHtml(candidate.value, false);
+    const html = await renderLatexToHtml(candidate.value, false);
     if (!html) continue;
 
     if (candidate.start > cursor) {
@@ -218,21 +226,21 @@ function isLikelyDelimitedMathText(value: string): boolean {
   return false;
 }
 
-export function renderQuizMathText(value: string): QuizMathTextSegment[] {
+export async function renderQuizMathText(value: string): Promise<QuizMathTextSegment[]> {
   const likelyStandalone = isLikelyStandaloneMathText(value);
   const hasExplicitDelimiter = EXPLICIT_DELIMITER_RE.test(value);
 
   if (!hasExplicitDelimiter && !likelyStandalone) {
-    return parseEmbeddedMathText(value) ?? [{ type: 'text', value }];
+    return (await parseEmbeddedMathText(value)) ?? [{ type: 'text', value }];
   }
 
-  const delimited = parseQuizMathText(value);
+  const delimited = await parseQuizMathText(value);
   if (delimited.some((segment) => segment.type === 'math')) return delimited;
 
   if (!likelyStandalone) return [{ type: 'text', value }];
 
   const latex = value.trim();
-  const html = renderLatexToHtml(latex, false);
+  const html = await renderLatexToHtml(latex, false);
   if (!html) return [{ type: 'text', value }];
 
   const prefix = value.slice(0, value.indexOf(latex));

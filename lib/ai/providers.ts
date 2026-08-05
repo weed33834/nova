@@ -1574,7 +1574,11 @@ export function getModel(config: ModelConfig): ModelWithInfo {
       // wrapper that injects vendor-specific thinking params into the HTTP
       // body. The thinking config is read from AsyncLocalStorage, set by
       // callLLM / streamLLM at call time.
-      if (config.providerId !== 'openai') {
+      // openai provider 使用自定义 baseURL（如阿里云百炼兼容网关）时同样需要
+      // 注入 thinking: {type:"disabled"}，否则推理模型（glm-5.2/qwen）的
+      // reasoning 帧会拖垮流式生成（SSE 超时、outlines 解析为 0）。
+      const isCustomOpenAI = config.providerId === 'openai' && !!effectiveBaseUrl && effectiveBaseUrl !== 'https://api.openai.com/v1';
+      if (config.providerId !== 'openai' || isCustomOpenAI) {
         const providerId = config.providerId;
         const compatFetch = async (url: RequestInfo | URL, init?: RequestInit) => {
           // Read thinking config from globalThis (set by thinking-context.ts)

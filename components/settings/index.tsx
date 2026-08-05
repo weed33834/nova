@@ -76,6 +76,7 @@ import { ModelEditDialog } from './model-edit-dialog';
 import { AddProviderDialog, type NewProviderData } from './add-provider-dialog';
 import { AddAudioProviderDialog, type NewAudioProviderData } from './add-audio-provider-dialog';
 import { isCustomTTSProvider, isCustomASRProvider } from '@/lib/audio/types';
+import { CapabilityStatusCard } from './capability-status';
 import type { SettingsSection, EditingModel } from '@/lib/types/settings';
 
 // ─── Provider List Column (reusable) ───
@@ -1258,6 +1259,8 @@ export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsD
 
             {/* Content — tighter padding on mobile (p-3) vs desktop (p-5) */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-5">
+              {/* 能力状态卡片：可选依赖是否已安装，未安装的显示灰色 + 安装引导 */}
+              <CapabilityStatusCard />
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeSection}

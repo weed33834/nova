@@ -1,24 +1,45 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import tinycolor from 'tinycolor2';
 import type { ChartData, ChartOptions, ChartType } from '@nova/dsl';
 import { getChartOption } from './chartOption';
 
-import * as echarts from 'echarts/core';
-import { BarChart, LineChart, PieChart, ScatterChart, RadarChart } from 'echarts/charts';
-import { LegendComponent } from 'echarts/components';
-import { SVGRenderer } from 'echarts/renderers';
-
-echarts.use([
-  BarChart,
-  LineChart,
-  PieChart,
-  ScatterChart,
-  RadarChart,
-  LegendComponent,
-  SVGRenderer,
-]);
+/**
+ * ECharts 为可选依赖（charts 能力）：运行时动态加载，未安装时降级为占位提示。
+ * 保持 ECharts 按需注册（core + 各图表 + SVG 渲染器）。
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let echartsLib: any = null;
+let echartsPromise: Promise<void> | null = null;
+function loadEcharts() {
+  if (!echartsPromise) {
+    echartsPromise = (async () => {
+      try {
+        const [core, charts, components, renderers] = await Promise.all([
+          import('echarts/core'),
+          import('echarts/charts'),
+          import('echarts/components'),
+          import('echarts/renderers'),
+        ]);
+        const echarts = core as typeof import('echarts/core');
+        echarts.use([
+          charts.BarChart,
+          charts.LineChart,
+          charts.PieChart,
+          charts.ScatterChart,
+          charts.RadarChart,
+          components.LegendComponent,
+          renderers.SVGRenderer,
+        ]);
+        echartsLib = echarts;
+      } catch {
+        echartsLib = null; // 未安装 echarts
+      }
+    })();
+  }
+  return echartsPromise;
+}
 
 interface ChartProps {
   width: number;
@@ -36,59 +57,50 @@ export function Chart({
   height: _height,
   type,
   data,
-  themeColors: rawThemeColors,
+  themeColors,
   textColor,
   lineColor,
   options,
 }: ChartProps) {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartInstance = useRef<echarts.ECharts | null>(null);
+  const chartRef = useRef<HTMLDivElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartInstance = useRef<any>(null);
+  const [ready, setReady] = useState(false);
 
-  // Generate theme colors
-  const themeColors = useMemo(() => {
-    let colors: string[] = [];
-    if (rawThemeColors.length >= 10) {
-      colors = rawThemeColors;
-    } else if (rawThemeColors.length === 1) {
-      colors = tinycolor(rawThemeColors[0])
-        .analogous(10)
-        .map((color) => color.toRgbString());
-    } else {
-      const len = rawThemeColors.length;
-      const supplement = tinycolor(rawThemeColors[len - 1])
-        .analogous(10 + 1 - len)
-        .map((color) => color.toRgbString());
-      colors = [...rawThemeColors.slice(0, len - 1), ...supplement];
-    }
-    return colors;
-  }, [rawThemeColors]);
-
-  // Update chart option
-  const updateOption = useMemo(() => {
+  // 动态加载 echarts（可选依赖）
+  useEffect(() => {
+    let cancelled = false;
+    void loadEcharts().then(() => {
+      if (!cancelled) setReady(true);
+    });
     return () => {
-      if (!chartInstance.current) return;
-
-      const option = getChartOption({
-        type,
-        data,
-        themeColors,
-        textColor,
-        lineColor,
-        lineSmooth: options?.lineSmooth || false,
-        stack: options?.stack || false,
-      });
-
-      if (option) {
-        chartInstance.current.setOption(option, true);
-      }
+      cancelled = true;
     };
-  }, [type, data, themeColors, textColor, lineColor, options]);
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateOption = useCallbackRef(() => {
+    const echarts = echartsLib;
+    if (!echarts || !chartRef.current) return;
+    const option = getChartOption({
+      type,
+      data,
+      themeColors,
+      textColor,
+      lineColor,
+      lineSmooth: options?.lineSmooth || false,
+      stack: options?.stack || false,
+    });
+    if (option) {
+      chartInstance.current?.setOption(option, true);
+    }
+  });
 
   // Initialize chart
   useEffect(() => {
-    if (!chartRef.current) return;
+    if (!ready || !chartRef.current || !echartsLib) return;
 
-    chartInstance.current = echarts.init(chartRef.current, null, {
+    chartInstance.current = echartsLib.init(chartRef.current, null, {
       renderer: 'svg',
     });
     updateOption();
@@ -104,12 +116,29 @@ export function Chart({
       chartInstance.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Init-only effect: chart setup and resize observer
-  }, []);
+  }, [ready]);
 
   // Update chart when props change
   useEffect(() => {
     updateOption();
   }, [updateOption]);
 
+  if (!ready) {
+    return (
+      <div className="chart w-full h-full flex items-center justify-center text-xs text-muted-foreground/60">
+        📊 图表渲染需要可选依赖 echarts（pnpm add echarts）
+      </div>
+    );
+  }
+
   return <div ref={chartRef} className="chart w-full h-full" />;
+}
+
+/**
+ * 缓存回调引用：避免每次渲染重建 updateOption 导致 effect 重复触发。
+ */
+function useCallbackRef<T extends (...args: never[]) => unknown>(fn: T): T {
+  const ref = useRef(fn);
+  ref.current = fn;
+  return useMemo(() => ((...args: never[]) => ref.current(...args)) as T, []);
 }

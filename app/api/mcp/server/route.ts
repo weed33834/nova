@@ -20,7 +20,9 @@
  *     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
  */
 import type { NextRequest } from 'next/server';
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import { NextResponse } from 'next/server';
+// MCP SDK 为可选依赖：仅 type import + 运行时动态加载
+import type { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { isMCPExposureEnabled } from '@/lib/mcp/config';
 import { createNovaMcpServer } from '@/lib/mcp/server/nova-server';
 import { createLogger } from '@/lib/logger';
@@ -109,7 +111,19 @@ async function handleMcpRequest(req: NextRequest): Promise<Response> {
     // 被 SDK 内部定时器/监听器持有，无法被 sweeper 清理，造成内存泄漏。
     // 解决：用临时 key 注册到 sessions Map，sweeper 会按 lastActivity 清理。
     const tempKey = `pending-${Date.now()}-${crypto.randomUUID()}`;
-    const transport = new WebStandardStreamableHTTPServerTransport({
+    // 动态加载 transport + server（MCP SDK 为可选依赖）
+    let TransportCtor: typeof import('@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js')['WebStandardStreamableHTTPServerTransport'];
+    try {
+      ({ WebStandardStreamableHTTPServerTransport: TransportCtor } = await import(
+        '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
+      ));
+    } catch {
+      return NextResponse.json(
+        { error: 'MCP 服务需要可选依赖 @modelcontextprotocol/sdk，请执行 pnpm add @modelcontextprotocol/sdk 后重试。' },
+        { status: 501 },
+      );
+    }
+    const transport = new TransportCtor({
       sessionIdGenerator: () => crypto.randomUUID(),
       onsessioninitialized: (newId) => {
         sessions.set(newId, { transport });
@@ -124,7 +138,7 @@ async function handleMcpRequest(req: NextRequest): Promise<Response> {
         log.info(`MCP session closed: ${closedId}`);
       },
     });
-    const mcpServer = createNovaMcpServer();
+    const mcpServer = await createNovaMcpServer();
     await mcpServer.connect(transport);
     state = { transport };
     sessions.set(tempKey, state);
